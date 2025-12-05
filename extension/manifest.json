@@ -6,7 +6,7 @@
   "author": "Assistance Micro Design",
   "homepage_url": "https://github.com/assistance-micro-design/thunderbird-mcp",
 
-  "applications": {
+  "browser_specific_settings": {
     "gecko": {
       "id": "thunderbird-mcp@assistance-micro-design.com",
       "strict_min_version": "128.0"
@@ -25,14 +25,54 @@
     "messagesTags",
     "accountsRead",
     "accountsFolders",
-    "addressBooks",
-    "nativeMessaging"
+    "addressBooks"
   ],
+
+  "host_permissions": [
+    "ws://localhost:9876/*",
+    "http://localhost:9876/*"
+  ],
+
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'; connect-src 'self' ws://localhost:9876"
+  },
 
   "icons": {
     "48": "icons/icon-48.png",
     "96": "icons/icon-96.png"
   },
 
-  "default_locale": "en"
+  "default_locale": "en",
+
+  "experiment_apis": {
+    "calendar_calendars": {
+      "schema": "experiments/calendar/schema/calendar-calendars.json",
+      "parent": {
+        "scopes": ["addon_parent"],
+        "script": "experiments/calendar/parent/ext-calendar-calendars.js",
+        "paths": [["calendar", "calendars"]]
+      }
+    },
+    "calendar_items": {
+      "schema": "experiments/calendar/schema/calendar-items.json",
+      "parent": {
+        "scopes": ["addon_parent"],
+        "script": "experiments/calendar/parent/ext-calendar-items.js",
+        "paths": [["calendar", "items"]]
+      }
+    },
+    "calendar_timezones": {
+      "schema": "experiments/calendar/schema/calendar-timezones.json",
+      "parent": {
+        "scopes": ["addon_parent"],
+        "script": "experiments/calendar/parent/ext-calendar-timezones.js",
+        "paths": [["calendar", "timezones"]]
+      },
+      "child": {
+        "scopes": ["addon_child"],
+        "script": "experiments/calendar/child/ext-calendar-timezones.js",
+        "paths": [["calendar", "timezones"]]
+      }
+    }
+  }
 }

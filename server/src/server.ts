@@ -13,7 +13,7 @@ import {
   ReadResourceRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
 
-import { initializeNativeClient } from './native-messaging/client.js';
+import { initializeWebSocketBridge, stopWebSocketBridge } from './websocket/bridge.js';
 import { allTools, getToolHandler, toolExists } from './tools/index.js';
 import { resources, resourceTemplates, getResourceHandler } from './resources/index.js';
 import logger from './utils/logger.js';
@@ -148,9 +148,11 @@ export class ThunderbirdMcpServer {
     logger.info('Starting Thunderbird MCP Server');
 
     try {
-      // Initialize native messaging client
-      logger.info('Initializing native messaging client');
-      await initializeNativeClient({
+      // Initialize WebSocket bridge for Thunderbird communication
+      const wsPort = parseInt(process.env.THUNDERBIRD_PORT || '9876', 10);
+      logger.info(`Initializing WebSocket bridge on port ${wsPort}`);
+      await initializeWebSocketBridge({
+        port: wsPort,
         timeout: 30000,
         maxPendingRequests: 100,
       });
@@ -169,6 +171,7 @@ export class ThunderbirdMcpServer {
    */
   async stop(): Promise<void> {
     logger.info('Stopping Thunderbird MCP Server');
+    await stopWebSocketBridge();
     await this.server.close();
   }
 }

@@ -4,7 +4,7 @@
  * @module resources/handlers
  */
 
-import { getNativeClient } from '../native-messaging/client.js';
+import { getNativeClient } from '../websocket/client-adapter.js';
 import { MessageActions } from '../types/native-messaging.js';
 import type { ResourceContentsItem } from '../types/mcp.js';
 import logger from '../utils/logger.js';

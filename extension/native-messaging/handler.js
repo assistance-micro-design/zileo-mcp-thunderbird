@@ -7,55 +7,53 @@ import { FoldersAPI } from '../api/folders.js';
 import { ContactsAPI } from '../api/contacts.js';
 import { AccountsAPI } from '../api/accounts.js';
 import { TagsAPI } from '../api/tags.js';
+import { CalendarAPI } from '../api/calendar.js';
 
 /**
- * Handle incoming native message and dispatch to appropriate API
- * @param {Object} message - Native message from MCP server
- * @returns {Promise<Object>} Response object
+ * Handle incoming message and dispatch to appropriate API
+ * @param {Object} message - Message from MCP server (via WebSocket or native messaging)
+ * @returns {Promise<Object>} Response object with data
  */
 export async function handleNativeMessage(message) {
-  const { id, method, params } = message;
+  // Support both 'action' (WebSocket) and 'method' (legacy) format
+  const { id, action, method, params } = message;
+  const requestMethod = action || method;
 
   try {
     // Validate message format
-    if (!id || !method) {
-      return createErrorResponse(id, -32600, 'Invalid Request', {
-        reason: 'Missing id or method'
-      });
+    if (!requestMethod) {
+      throw new Error('Missing action or method in request');
     }
 
     // Route to appropriate handler
-    const result = await dispatch(method, params || {});
+    const result = await dispatch(requestMethod, params || {});
 
-    return {
-      id,
-      result: {
-        content: [
-          {
-            type: 'text',
-            text: JSON.stringify(result)
-          }
-        ]
-      }
-    };
+    // Return data directly for WebSocket format
+    return { data: result };
 
   } catch (error) {
     console.error('[Handler] Error processing request:', error);
-    return createErrorResponse(id, -32603, 'Internal error', {
-      error: error.message,
-      stack: error.stack
-    });
+    throw error;
   }
 }
 
 /**
  * Dispatch method to appropriate API handler
- * @param {string} method - Method name
+ * @param {string} method - Method name (formats: 'messages.search' or 'thunderbird_messages_search')
  * @param {Object} params - Method parameters
  * @returns {Promise<any>} Method result
  */
 async function dispatch(method, params) {
-  const [domain, action] = method.split('_').slice(1); // Remove 'thunderbird_' prefix
+  let domain, action;
+
+  // Support both formats: 'messages.search' and 'thunderbird_messages_search'
+  if (method.includes('.')) {
+    // New format: 'messages.search'
+    [domain, action] = method.split('.');
+  } else {
+    // Legacy format: 'thunderbird_messages_search'
+    [domain, action] = method.split('_').slice(1);
+  }
 
   switch (domain) {
     case 'messages':
@@ -78,6 +76,15 @@ async function dispatch(method, params) {
 
     case 'tags':
       return await handleTagsAPI(action, params);
+
+    case 'calendars':
+      return await handleCalendarsAPI(action, params);
+
+    case 'events':
+      return await handleEventsAPI(action, params);
+
+    case 'tasks':
+      return await handleTasksAPI(action, params);
 
     default:
       throw new Error(`Unknown domain: ${domain}`);
@@ -261,6 +268,93 @@ async function handleTagsAPI(action, params) {
 
     default:
       throw new Error(`Unknown tags action: ${action}`);
+  }
+}
+
+/**
+ * Handle Calendars API calls
+ */
+async function handleCalendarsAPI(action, params) {
+  switch (action) {
+    case 'list':
+      return await CalendarAPI.listCalendars();
+
+    case 'get':
+      return await CalendarAPI.getCalendar(params.calendarId);
+
+    default:
+      throw new Error(`Unknown calendars action: ${action}`);
+  }
+}
+
+/**
+ * Handle Events API calls
+ */
+async function handleEventsAPI(action, params) {
+  switch (action) {
+    case 'search':
+      return await CalendarAPI.searchEvents(params);
+
+    case 'list':
+      return await CalendarAPI.listEvents(
+        params.calendarId,
+        params.dateFrom,
+        params.dateTo,
+        params.limit
+      );
+
+    case 'get':
+      return await CalendarAPI.getEvent(params.calendarId, params.eventId);
+
+    case 'create':
+      return await CalendarAPI.createEvent(params.calendarId, params);
+
+    case 'update':
+      return await CalendarAPI.updateEvent(params.calendarId, params.eventId, params);
+
+    case 'move':
+      return await CalendarAPI.moveEvent(
+        params.calendarId,
+        params.eventId,
+        params.newStart,
+        params.newEnd
+      );
+
+    case 'delete':
+      await CalendarAPI.deleteEvent(params.calendarId, params.eventId);
+      return { success: true };
+
+    default:
+      throw new Error(`Unknown events action: ${action}`);
+  }
+}
+
+/**
+ * Handle Tasks API calls
+ */
+async function handleTasksAPI(action, params) {
+  switch (action) {
+    case 'list':
+      return await CalendarAPI.listTasks(params);
+
+    case 'get':
+      return await CalendarAPI.getTask(params.calendarId, params.taskId);
+
+    case 'create':
+      return await CalendarAPI.createTask(params.calendarId, params);
+
+    case 'update':
+      return await CalendarAPI.updateTask(params.calendarId, params.taskId, params);
+
+    case 'complete':
+      return await CalendarAPI.completeTask(params.calendarId, params.taskId);
+
+    case 'delete':
+      await CalendarAPI.deleteTask(params.calendarId, params.taskId);
+      return { success: true };
+
+    default:
+      throw new Error(`Unknown tasks action: ${action}`);
   }
 }
 
