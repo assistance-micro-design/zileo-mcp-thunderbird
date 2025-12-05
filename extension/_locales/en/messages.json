@@ -1,0 +1,38 @@
+{
+  "extensionName": {
+    "message": "Thunderbird MCP Server",
+    "description": "Name of the extension"
+  },
+  "extensionDescription": {
+    "message": "Model Context Protocol server for Thunderbird - enables AI assistants to interact with emails, contacts, and calendars",
+    "description": "Description of the extension"
+  },
+  "nativeMessagingConnected": {
+    "message": "Native messaging connected successfully",
+    "description": "Success message when native messaging connects"
+  },
+  "nativeMessagingDisconnected": {
+    "message": "Native messaging disconnected",
+    "description": "Message when native messaging disconnects"
+  },
+  "nativeMessagingError": {
+    "message": "Error connecting to native messaging host",
+    "description": "Error message for native messaging connection failures"
+  },
+  "permissionDenied": {
+    "message": "Permission denied",
+    "description": "Error message for permission denied"
+  },
+  "resourceNotFound": {
+    "message": "Resource not found",
+    "description": "Error message for resource not found"
+  },
+  "invalidRequest": {
+    "message": "Invalid request",
+    "description": "Error message for invalid requests"
+  },
+  "internalError": {
+    "message": "Internal error",
+    "description": "Error message for internal errors"
+  }
+}

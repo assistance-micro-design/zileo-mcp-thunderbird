@@ -1,0 +1,29 @@
+{
+  "name": "thunderbird-mcp",
+  "version": "1.0.0",
+  "description": "MCP Server for Thunderbird email client",
+  "private": true,
+  "workspaces": [
+    "server",
+    "extension"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces",
+    "test": "npm run test --workspaces",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/assistance-micro-design/thunderbird-mcp"
+  },
+  "author": "Assistance Micro Design",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.5.0",
+    "eslint": "^9.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.0.0",
+    "@typescript-eslint/parser": "^8.0.0"
+  }
+}
