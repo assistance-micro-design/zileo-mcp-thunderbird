@@ -68,13 +68,6 @@ export const resourceTemplates: McpResourceTemplate[] = [
 ];
 
 /**
- * Check if a URI is a valid resource
- */
-export function isValidResourceUri(uri: string): boolean {
-  return getResourceHandler(uri) !== undefined;
-}
-
-/**
  * Export handler functions
  */
 export { getResourceHandler } from './handlers.js';

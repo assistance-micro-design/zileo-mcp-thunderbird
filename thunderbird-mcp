@@ -1,0 +1,3 @@
+#!/bin/bash
+cd /home/seb-hp/apps/Thunderbird-mcp/server
+exec node dist/index.js "$@"

@@ -22,39 +22,6 @@ export function createJsonRpcError(
 }
 
 /**
- * Create a parse error (-32700)
- */
-export function createParseError(details?: string): JsonRpcError {
-  return createJsonRpcError(
-    JsonRpcErrorCode.ParseError,
-    'Parse error',
-    details
-  );
-}
-
-/**
- * Create an invalid request error (-32600)
- */
-export function createInvalidRequestError(details?: string): JsonRpcError {
-  return createJsonRpcError(
-    JsonRpcErrorCode.InvalidRequest,
-    'Invalid request',
-    details
-  );
-}
-
-/**
- * Create a method not found error (-32601)
- */
-export function createMethodNotFoundError(method: string): JsonRpcError {
-  return createJsonRpcError(
-    JsonRpcErrorCode.MethodNotFound,
-    'Method not found',
-    { method }
-  );
-}
-
-/**
  * Create an invalid params error (-32602)
  */
 export function createInvalidParamsError(details: unknown): JsonRpcError {
@@ -83,16 +50,6 @@ export function createThunderbirdNotRunningError(): JsonRpcError {
   return createJsonRpcError(
     McpErrorCode.ThunderbirdNotRunning,
     'Thunderbird is not running or extension is not connected'
-  );
-}
-
-/**
- * Create an extension not installed error (-32001)
- */
-export function createExtensionNotInstalledError(): JsonRpcError {
-  return createJsonRpcError(
-    McpErrorCode.ExtensionNotInstalled,
-    'Thunderbird MCP extension is not installed'
   );
 }
 
@@ -126,28 +83,6 @@ export function createOperationTimeoutError(operation: string, timeout: number):
     McpErrorCode.OperationTimeout,
     'Operation timeout',
     { operation, timeout }
-  );
-}
-
-/**
- * Create a request cancelled error (-32800)
- */
-export function createRequestCancelledError(reason?: string): JsonRpcError {
-  return createJsonRpcError(
-    McpErrorCode.RequestCancelled,
-    'Request cancelled',
-    reason
-  );
-}
-
-/**
- * Create a content too large error (-32801)
- */
-export function createContentTooLargeError(size: number, limit: number): JsonRpcError {
-  return createJsonRpcError(
-    McpErrorCode.ContentTooLarge,
-    'Content too large',
-    { size, limit }
   );
 }
 
@@ -193,17 +128,5 @@ export function nativeErrorToJsonRpc(nativeError: unknown): JsonRpcError {
   return createInternalError(
     nativeError instanceof Error ? nativeError.message : 'Unknown error',
     nativeError
-  );
-}
-
-/**
- * Type guard for JSON-RPC errors
- */
-export function isJsonRpcError(value: unknown): value is JsonRpcError {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    'code' in value &&
-    'message' in value
   );
 }

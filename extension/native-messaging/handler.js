@@ -16,7 +16,7 @@ import { CalendarAPI } from '../api/calendar.js';
  */
 export async function handleNativeMessage(message) {
   // Support both 'action' (WebSocket) and 'method' (legacy) format
-  const { id, action, method, params } = message;
+  const { action, method, params } = message;
   const requestMethod = action || method;
 
   try {
@@ -356,18 +356,4 @@ async function handleTasksAPI(action, params) {
     default:
       throw new Error(`Unknown tasks action: ${action}`);
   }
-}
-
-/**
- * Create standardized error response
- */
-function createErrorResponse(id, code, message, data) {
-  return {
-    id,
-    error: {
-      code,
-      message,
-      data
-    }
-  };
 }

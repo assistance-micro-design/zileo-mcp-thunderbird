@@ -116,13 +116,6 @@ export function toolExists(name: string): boolean {
 }
 
 /**
- * Get all tool names
- */
-export function getToolNames(): string[] {
-  return Object.keys(toolHandlers);
-}
-
-/**
  * Export tool definitions and handlers
  */
 export {

@@ -64,11 +64,4 @@ const logger = winston.createLogger({
   ],
 });
 
-// Stream interface for Morgan or other middleware
-export const stream = {
-  write: (message: string) => {
-    logger.info(message.trim());
-  },
-};
-
 export default logger;

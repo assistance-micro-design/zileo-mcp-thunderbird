@@ -474,36 +474,6 @@ export const CalendarAPI = {
   },
 
   /**
-   * Extract start date from jCal item
-   * @private
-   */
-  _extractStart(item) {
-    try {
-      if (item.item && Array.isArray(item.item)) {
-        const props = item.item[1];
-        const dtstart = props.find(p => p[0] === 'dtstart');
-        return dtstart ? dtstart[3] : null;
-      }
-    } catch (e) {}
-    return null;
-  },
-
-  /**
-   * Extract end date from jCal item
-   * @private
-   */
-  _extractEnd(item) {
-    try {
-      if (item.item && Array.isArray(item.item)) {
-        const props = item.item[1];
-        const dtend = props.find(p => p[0] === 'dtend');
-        return dtend ? dtend[3] : null;
-      }
-    } catch (e) {}
-    return null;
-  },
-
-  /**
    * Extract due date from jCal task
    * @private
    */
@@ -516,22 +486,6 @@ export const CalendarAPI = {
       }
     } catch (e) {}
     return null;
-  },
-
-  /**
-   * Extract attendees from jCal item
-   * @private
-   */
-  _extractAttendees(item) {
-    try {
-      if (item.item && Array.isArray(item.item)) {
-        const props = item.item[1];
-        return props
-          .filter(p => p[0] === 'attendee')
-          .map(a => a[3].replace('mailto:', ''));
-      }
-    } catch (e) {}
-    return [];
   },
 
   /**
