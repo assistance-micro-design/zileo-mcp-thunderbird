@@ -1,0 +1,35 @@
+# Thunderbird MCP Server - Development Dockerfile
+# With hot-reload support for development
+
+FROM node:20-alpine
+
+# Install development tools
+RUN apk add --no-cache git
+
+WORKDIR /app
+
+# Copy package files
+COPY package.json package-lock.json ./
+COPY server/package.json ./server/
+
+# Install all dependencies including devDependencies
+RUN npm ci --workspace=server
+
+# Copy source code
+COPY server/ ./server/
+
+# Create logs directory
+RUN mkdir -p /app/logs
+
+# Environment variables
+ENV NODE_ENV=development
+ENV LOG_LEVEL=debug
+ENV THUNDERBIRD_PORT=9876
+
+# Expose WebSocket port
+EXPOSE 9876
+
+WORKDIR /app/server
+
+# Run with tsx for hot-reload
+CMD ["npx", "tsx", "watch", "src/index.ts"]

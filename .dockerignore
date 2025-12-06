@@ -1,0 +1,55 @@
+# Docker ignore file for Thunderbird MCP
+
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Build outputs
+dist/
+**/dist/
+*.tgz
+
+# Extension build artifacts
+*.xpi
+
+# Development files
+.git/
+.gitignore
+.env
+.env.*
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Test files
+coverage/
+.nyc_output/
+tests/
+**/*.test.ts
+**/*.spec.ts
+
+# Documentation (not needed in container)
+docs/
+*.md
+!README.md
+
+# Logs (will be mounted as volume)
+logs/
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Claude/AI files
+claudedocs/
+.claude/
+
+# Temporary files
+tmp/
+temp/
+*.tmp

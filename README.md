@@ -71,11 +71,11 @@ This is a monorepo containing two main components:
 
 ### Prerequisites
 
-- Node.js 20.x or higher
+- Node.js 20.x or higher (or Docker)
 - Thunderbird 128.x or higher
 - npm package manager
 
-### Setup
+### Option 1: Standard Setup
 
 1. Clone the repository:
 ```bash
@@ -97,11 +97,29 @@ npm run build
    - Open Thunderbird
    - Go to Tools > Add-ons and Themes
    - Click the gear icon > Install Add-on From File
-   - Select `dist/thunderbird-mcp-extension-1.0.7.xpi`
+   - Select `dist/thunderbird-mcp-extension-1.1.0.xpi`
+
+### Option 2: Docker Setup
+
+1. Clone and build:
+```bash
+git clone https://github.com/assistance-micro-design/thunderbird-mcp.git
+cd thunderbird-mcp
+docker-compose build
+```
+
+2. Start the server:
+```bash
+docker-compose up -d
+```
+
+3. Install the Thunderbird extension (same as above)
+
+See [Docker Setup Guide](./docs/docker-setup.md) for detailed Docker configuration.
 
 ## Configuration
 
-### MCP Server Configuration
+### MCP Server Configuration (Standard)
 
 Add to your MCP client configuration (e.g., Claude Desktop `~/.config/Claude/claude_desktop_config.json`):
 
@@ -115,6 +133,45 @@ Add to your MCP client configuration (e.g., Claude Desktop `~/.config/Claude/cla
         "THUNDERBIRD_PORT": "9876",
         "LOG_LEVEL": "info"
       }
+    }
+  }
+}
+```
+
+### MCP Server Configuration (Docker)
+
+For Docker deployment, configure your MCP client:
+
+```json
+{
+  "mcpServers": {
+    "thunderbird": {
+      "command": "docker",
+      "args": [
+        "exec", "-i", "thunderbird-mcp-server",
+        "node", "/app/server/dist/index.js"
+      ],
+      "env": {
+        "LOG_LEVEL": "info"
+      }
+    }
+  }
+}
+```
+
+Or run Docker directly (without docker-compose):
+
+```json
+{
+  "mcpServers": {
+    "thunderbird": {
+      "command": "docker",
+      "args": [
+        "run", "-i", "--rm",
+        "--network", "host",
+        "-e", "THUNDERBIRD_PORT=9876",
+        "thunderbird-mcp:latest"
+      ]
     }
   }
 }
@@ -353,4 +410,4 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 ---
 
-**Status**: Production Ready | **Version**: 1.0.0 | **Tools**: 47 | **Last Updated**: 2025-12-05
+**Status**: Production Ready | **Version**: 1.1.0 | **Tools**: 47 | **Last Updated**: 2025-12-05

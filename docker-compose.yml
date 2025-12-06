@@ -1,0 +1,93 @@
+# Thunderbird MCP Server - Docker Compose Configuration
+#
+# Usage:
+#   docker-compose up -d           # Start in background
+#   docker-compose logs -f         # View logs
+#   docker-compose down            # Stop and remove
+#
+# For MCP client integration (Claude Desktop, etc.):
+#   Use the stdio transport by running the container interactively
+#   or configure your MCP client to use the Docker command
+
+version: '3.8'
+
+services:
+  thunderbird-mcp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: thunderbird-mcp:latest
+    container_name: thunderbird-mcp-server
+
+    # Environment configuration
+    environment:
+      - NODE_ENV=production
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - THUNDERBIRD_PORT=${THUNDERBIRD_PORT:-9876}
+
+    # Port mapping for WebSocket connection to Thunderbird extension
+    # The extension connects to this port from the host
+    ports:
+      - "${THUNDERBIRD_PORT:-9876}:9876"
+
+    # Volume for persistent logs
+    volumes:
+      - thunderbird-mcp-logs:/app/logs
+
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 64M
+
+    # Restart policy
+    restart: unless-stopped
+
+    # Network configuration
+    networks:
+      - mcp-network
+
+    # Health check
+    healthcheck:
+      test: ["CMD", "node", "-e", "console.log('healthy')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # Optional: Development mode with hot reload
+  thunderbird-mcp-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    image: thunderbird-mcp:dev
+    container_name: thunderbird-mcp-dev
+    profiles:
+      - dev
+
+    environment:
+      - NODE_ENV=development
+      - LOG_LEVEL=debug
+      - THUNDERBIRD_PORT=9876
+
+    ports:
+      - "9876:9876"
+
+    volumes:
+      - ./server/src:/app/server/src:ro
+      - thunderbird-mcp-logs:/app/logs
+
+    networks:
+      - mcp-network
+
+volumes:
+  thunderbird-mcp-logs:
+    driver: local
+
+networks:
+  mcp-network:
+    driver: bridge
