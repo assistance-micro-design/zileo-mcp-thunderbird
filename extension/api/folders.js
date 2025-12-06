@@ -11,20 +11,29 @@ export const FoldersAPI = {
    * @returns {Promise<Array>} Array of folders
    */
   async list(accountId, includeSubFolders = true) {
-    if (accountId) {
-      const account = await messenger.accounts.get(accountId);
-      return this._flattenFolders(account.folders, includeSubFolders);
-    } else {
-      const accounts = await messenger.accounts.list();
-      const allFolders = [];
+    const accounts = await messenger.accounts.list();
+    const allFolders = [];
 
-      for (const account of accounts) {
-        const folders = this._flattenFolders(account.folders, includeSubFolders);
-        allFolders.push(...folders);
+    for (const account of accounts) {
+      // Filter by accountId if provided
+      if (accountId && account.id !== accountId) {
+        continue;
       }
 
-      return allFolders;
+      // Get folders from account (they're in the account object from list())
+      const folders = this._flattenFolders(account.folders, includeSubFolders);
+
+      // Add account info to each folder for clarity
+      const foldersWithAccount = folders.map(folder => ({
+        ...folder,
+        accountId: account.id,
+        accountName: account.name
+      }));
+
+      allFolders.push(...foldersWithAccount);
     }
+
+    return allFolders;
   },
 
   /**

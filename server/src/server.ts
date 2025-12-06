@@ -149,13 +149,20 @@ export class ThunderbirdMcpServer {
 
     try {
       // Initialize WebSocket bridge for Thunderbird communication
+      // This is optional - if it fails, MCP server still works but tools will fail
       const wsPort = parseInt(process.env.THUNDERBIRD_PORT || '9876', 10);
       logger.info(`Initializing WebSocket bridge on port ${wsPort}`);
-      await initializeWebSocketBridge({
-        port: wsPort,
-        timeout: 30000,
-        maxPendingRequests: 100,
-      });
+      try {
+        await initializeWebSocketBridge({
+          port: wsPort,
+          timeout: 30000,
+          maxPendingRequests: 100,
+        });
+        logger.info('WebSocket bridge initialized successfully');
+      } catch (wsError) {
+        logger.warn(`WebSocket bridge failed to start: ${wsError instanceof Error ? wsError.message : 'Unknown error'}`);
+        logger.warn('MCP server will continue but Thunderbird tools will not work until WebSocket is available');
+      }
 
       // Connect server to transport
       await this.server.connect(this.transport);

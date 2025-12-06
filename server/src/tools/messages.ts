@@ -391,7 +391,7 @@ export async function handleMessagesArchive(args: unknown): Promise<ToolCallResu
 export const messageTools: McpTool[] = [
   {
     name: 'thunderbird_messages_search',
-    description: 'Search for messages with advanced filters (subject, from, to, body, tags, dates, etc.)',
+    description: 'Search for messages with advanced filters. IMPORTANT: Use thunderbird_messages_list_unread for unread messages, or use filters without folderId to search all folders.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -404,19 +404,19 @@ export const messageTools: McpTool[] = [
         flagged: { type: 'boolean', description: 'Filter by flagged status' },
         dateFrom: { type: 'string', description: 'Start date (ISO 8601)' },
         dateTo: { type: 'string', description: 'End date (ISO 8601)' },
-        folderId: { type: 'string', description: 'Limit to specific folder' },
-        accountId: { type: 'string', description: 'Limit to specific account' },
+        folderId: { type: 'string', description: 'Folder ID from thunderbird_folders_list (NOT a name like "INBOX", use the full path returned by folders_list)' },
+        accountId: { type: 'string', description: 'Account ID from thunderbird_accounts_list' },
         limit: { type: 'number', description: 'Maximum results (default: 50, max: 1000)', default: 50 },
       },
     },
   },
   {
     name: 'thunderbird_messages_list',
-    description: 'List messages in a specific folder with pagination',
+    description: 'List messages in a specific folder with pagination. IMPORTANT: First call thunderbird_folders_list to get valid folder IDs.',
     inputSchema: {
       type: 'object',
       properties: {
-        folderId: { type: 'string', description: 'Folder ID to list messages from' },
+        folderId: { type: 'string', description: 'Folder ID from thunderbird_folders_list output (e.g. "imap://user@server/INBOX", NOT just "INBOX")' },
         limit: { type: 'number', description: 'Maximum results per page (default: 100, max: 1000)', default: 100 },
         offset: { type: 'number', description: 'Number of messages to skip (default: 0)', default: 0 },
       },
