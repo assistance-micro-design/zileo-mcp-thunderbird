@@ -38,13 +38,15 @@ const customFormat = winston.format.combine(
 );
 
 // Create logger instance
+// IMPORTANT: Use stderr for console output to avoid interfering with MCP stdio protocol
 const logger = winston.createLogger({
   levels,
   level: process.env.LOG_LEVEL || 'info',
   format: customFormat,
   transports: [
-    // Console transport with colors
+    // Console transport - write to STDERR (not stdout) for MCP compatibility
     new winston.transports.Console({
+      stderrLevels: ['error', 'warn', 'info', 'debug'], // All levels to stderr
       format: winston.format.combine(
         winston.format.colorize(),
         customFormat
