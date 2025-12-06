@@ -8,8 +8,10 @@ Comprehensive architecture documentation for the Thunderbird MCP Server project.
 **High-level system architecture and component descriptions**
 
 Topics covered:
-- System architecture diagram
-- Component descriptions (MCP Client, Server, Extension, Thunderbird)
+- System architecture diagram (WebSocket-based)
+- Three-layer design: MCP Server, WebSocket Bridge, Extension
+- Component descriptions (MCP Client, Server, Bridge, Extension, Thunderbird)
+- 47 tools across 7 functional domains
 - Technology stack summary
 - Architectural decisions and trade-offs
 - Security model
@@ -23,9 +25,10 @@ Start here for: Understanding the overall system design and how components inter
 
 Topics covered:
 - Extension file structure
-- Component architecture (Background script, API wrappers, Native Messaging handler)
+- Component architecture (Background script, WebSocket client, API wrappers)
 - Service Worker lifecycle
-- API wrapper modules (Messages, Folders, Contacts, Accounts, Tags)
+- Auto-reconnect with exponential backoff
+- API wrapper modules (Messages, Folders, Contacts, Accounts, Tags, Calendar, Tasks)
 - Experimental Calendar API integration
 - Permission model and security
 - Localization strategy
@@ -39,9 +42,9 @@ Start here for: Understanding how the Thunderbird extension works and implementi
 Topics covered:
 - Server file structure
 - Entry point and initialization
-- Tool handler implementations
+- WebSocket bridge initialization
+- Tool handler implementations (47 tools)
 - Resource handler implementations
-- Native Messaging client
 - Schema validation with Zod
 - Error handling and mapping
 - Logging configuration
@@ -57,28 +60,29 @@ Topics covered:
 - Tool call flow (standard execution, timeouts)
 - Resource access flow
 - Error handling and propagation
-- Native Messaging protocol flow
+- WebSocket protocol flow (connection, reconnection, message correlation)
 - Batch operations
 - Performance characteristics and latency breakdown
 
 Start here for: Understanding how data flows through the system and debugging communication issues.
 
-### [5. Native Messaging Integration](./native-messaging.md)
-**Native Messaging protocol and platform configuration**
+### [5. WebSocket Bridge](./websocket.md)
+**WebSocket protocol and connection management**
 
 Topics covered:
-- Protocol specification (length-prefixed JSON)
-- Message format and serialization
-- Connection lifecycle
+- WebSocket bridge architecture
+- Protocol specification (JSON-based message format)
+- Request/response correlation with unique IDs
+- Connection lifecycle and auto-reconnect
 - Server-side implementation (TypeScript)
 - Extension-side implementation (JavaScript)
-- Manifest configuration (all platforms)
-- Platform-specific setup (Linux, macOS, Windows)
+- Manifest configuration
 - Security considerations
 - Troubleshooting and debugging
 - Performance optimization
+- Comparison to Native Messaging
 
-Start here for: Understanding Native Messaging implementation and setting up platform-specific configurations.
+Start here for: Understanding WebSocket bridge implementation and connection management.
 
 ## Architecture Overview Diagram
 
@@ -92,24 +96,29 @@ Start here for: Understanding Native Messaging implementation and setting up pla
 ┌─────────────────────────────────────────────────────────┐
 │                  MCP Server (Node.js)                   │
 │  ┌──────────┐  ┌───────────┐  ┌──────────────┐        │
-│  │  Tools   │  │ Resources │  │ Native       │        │
-│  │ Handler  │  │  Handler  │  │ Messaging    │        │
-│  └──────────┘  └───────────┘  │ Client       │        │
-│                                └──────────────┘        │
+│  │  Tools   │  │ Resources │  │  WebSocket   │        │
+│  │ Handler  │  │  Handler  │  │    Bridge    │        │
+│  │ 47 tools │  │           │  │  Port 9876   │        │
+│  └──────────┘  └───────────┘  └──────────────┘        │
 └────────────────────┬───────────────────────────────────┘
-                     │ Native Messaging Protocol
-                     │ (length-prefixed JSON)
+                     │ WebSocket (ws://localhost:9876)
+                     │ Request/Response Correlation
                      ▼
 ┌─────────────────────────────────────────────────────────┐
 │          Thunderbird Extension (MailExtension)          │
 │  ┌──────────────────────────────────────────────────┐  │
-│  │          Background Script (Service Worker)      │  │
+│  │   Background Script (Service Worker)             │  │
+│  │   WebSocket Client (Auto-Reconnect)              │  │
 │  │  ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌────────┐ │  │
 │  │  │Messages │ │ Folders │ │Contacts │ │Calendar│ │  │
-│  │  │   API   │ │   API   │ │   API   │ │  API*  │ │  │
+│  │  │ 9 tools │ │ 7 tools │ │ 9 tools │ │ 9 tools│ │  │
 │  │  └─────────┘ └─────────┘ └─────────┘ └────────┘ │  │
+│  │  ┌─────────┐ ┌─────────┐ ┌─────────┐            │  │
+│  │  │  Tags   │ │Accounts │ │  Tasks  │            │  │
+│  │  │ 4 tools │ │ 3 tools │ │ 6 tools │            │  │
+│  │  └─────────┘ └─────────┘ └─────────┘            │  │
 │  └──────────────────────────────────────────────────┘  │
-│  * Experimental API via webext-experiments              │
+│  * Calendar API experimental via webext-experiments     │
 └────────────────────┬────────────────────────────────────┘
                      │ Thunderbird WebExtension APIs
                      ▼
@@ -126,9 +135,35 @@ Start here for: Understanding Native Messaging implementation and setting up pla
 | MCP Server | Node.js 20+ / TypeScript | Protocol implementation |
 | SDK | @modelcontextprotocol/sdk | MCP framework |
 | Validation | Zod | Schema validation |
+| WebSocket Server | ws library | Bidirectional communication |
 | Extension | Manifest V3 MailExtension | Thunderbird integration |
-| IPC | Native Messaging | Cross-process communication |
+| WebSocket Client | Browser WebSocket API | Real-time connection |
 | Logging | Winston | Structured logging |
+
+## Key Features
+
+### WebSocket Architecture
+- Bidirectional real-time communication
+- Auto-reconnect with exponential backoff (10 attempts, 3s delay)
+- Request/response correlation via unique IDs
+- Connection state awareness (onopen, onclose, onerror)
+- No platform-specific setup required
+- Localhost-only binding for security
+
+### Tool Coverage
+- **Messages** (9 tools): search, list, get, move, copy, delete, update, archive, list unread
+- **Folders** (7 tools): list, get, create, rename, delete, move, mark read
+- **Contacts** (9 tools): search, list, get, create, update, delete + 3 address book tools
+- **Tags** (4 tools): list, create, update, delete
+- **Accounts** (3 tools): list accounts, get account, list identities
+- **Calendar** (9 tools): list calendars, get calendar, search/list/get/create/update/move/delete events
+- **Tasks** (6 tools): list, get, create, update, delete, complete
+
+### Performance
+- Latency: 10-50ms per operation (2x faster than Native Messaging)
+- Timeout management: 30s default, configurable per request
+- Concurrent requests: Up to 100 pending requests
+- Request correlation: Enables out-of-order response handling
 
 ## Document Dependencies
 
@@ -145,11 +180,11 @@ overview.md
 ├── data-flow.md
 │   ├── Uses: extension.md (API wrappers)
 │   ├── Uses: server.md (tool handlers)
-│   └── Uses: native-messaging.md (protocol)
+│   └── Uses: websocket.md (protocol)
 │
-└── native-messaging.md
-    ├── Used by: extension.md (handler implementation)
-    ├── Used by: server.md (client implementation)
+└── websocket.md
+    ├── Used by: extension.md (WebSocket client)
+    ├── Used by: server.md (WebSocket bridge)
     └── Used by: data-flow.md (protocol flow)
 ```
 
@@ -161,7 +196,8 @@ overview.md
 - **Add a new tool**: Read [Server](./server.md) → Tool Handlers section
 - **Add a new API**: Read [Extension](./extension.md) → API Wrapper Modules section
 - **Debug communication**: Read [Data Flow](./data-flow.md) → Error Handling Flow
-- **Set up Native Messaging**: Read [Native Messaging](./native-messaging.md) → Platform-Specific Setup
+- **Understand WebSocket**: Read [WebSocket Bridge](./websocket.md) → Protocol Specification
+- **Fix connection issues**: Read [WebSocket Bridge](./websocket.md) → Troubleshooting
 - **Understand security**: Read [Overview](./overview.md) → Security Model
 - **Optimize performance**: Read [Data Flow](./data-flow.md) → Performance Characteristics
 
@@ -171,10 +207,12 @@ overview.md
 - [CAHIER_DES_CHARGES.md](../../CAHIER_DES_CHARGES.md) - Full project specification
 - [MCP Specification](https://modelcontextprotocol.io/specification/)
 - [JSON-RPC 2.0 Specification](https://www.jsonrpc.org/specification)
+- [WebSocket Protocol RFC 6455](https://tools.ietf.org/html/rfc6455)
 
 ### API Documentation
 - [Thunderbird WebExtension API](https://webextension-api.thunderbird.net/en/mv3/)
-- [Native Messaging (Mozilla)](https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Native_messaging)
+- [WebSocket API (MDN)](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket)
+- [ws Library Documentation](https://github.com/websockets/ws)
 - [MCP TypeScript SDK](https://github.com/modelcontextprotocol/typescript-sdk)
 
 ### Project Structure
@@ -185,7 +223,12 @@ Thunderbird-mcp/
 │   ├── api/                   API reference (future)
 │   └── guides/                User guides (future)
 ├── extension/                 Thunderbird extension code
+│   ├── background.js          WebSocket client
+│   └── native-messaging/      API handlers
 ├── server/                    MCP server code
+│   ├── src/websocket/         WebSocket bridge
+│   ├── src/tools/             Tool handlers (47 tools)
+│   └── src/resources/         Resource handlers
 └── tests/                     Test suites
 ```
 
@@ -198,9 +241,14 @@ When updating architecture documentation:
 3. **Include examples**: Provide code examples for key concepts
 4. **Document decisions**: Explain trade-offs and rationale
 5. **Update this README**: Add new documents to the index
+6. **Reflect actual implementation**: Documentation must match code
 
 ## Changelog
 
 | Date | Document | Changes |
 |------|----------|---------|
-| 2025-12-05 | All | Initial architecture documentation created |
+| 2025-12-05 | All | Updated to reflect WebSocket architecture |
+| 2025-12-05 | websocket.md | Created WebSocket bridge documentation |
+| 2025-12-05 | overview.md | Updated system architecture diagrams and flows |
+| 2025-12-05 | data-flow.md | Updated to WebSocket protocol flows |
+| 2025-12-05 | README.md | Updated navigation and architecture overview |

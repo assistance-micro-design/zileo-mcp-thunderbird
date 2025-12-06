@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document details the data flows through the Thunderbird MCP system, illustrating how requests travel from MCP clients through the server, Native Messaging bridge, and Thunderbird extension to access email data.
+This document details the data flows through the Thunderbird MCP system, illustrating how requests travel from MCP clients through the server, WebSocket bridge, and Thunderbird extension to access email data.
 
 ## MCP Lifecycle Flow
 
@@ -14,19 +14,23 @@ The initialization sequence establishes the MCP server connection and negotiates
 sequenceDiagram
     participant Client as MCP Client<br/>(Claude)
     participant Server as MCP Server
-    participant NM as Native Messaging<br/>Client
+    participant Bridge as WebSocket Bridge
     participant Ext as Thunderbird<br/>Extension
 
     Client->>Server: initialize<br/>{protocolVersion, clientInfo}
     Server->>Server: Validate Protocol Version
-    Server->>NM: Connect to Extension
-    NM->>Ext: Spawn/Connect Native Host
-    Ext-->>NM: Connection Established
-    NM-->>Server: Connected
+    Server->>Bridge: Start WebSocket Server (Port 9876)
+    Bridge->>Bridge: Listen on localhost:9876
+
+    Ext->>Ext: Extension Startup
+    Ext->>Bridge: WebSocket Connect
+    Bridge-->>Ext: Connection Established
+    Ext->>Bridge: {type:notification, event:ready}
+    Bridge-->>Server: Emit 'connected'
 
     Server-->>Client: initialized<br/>{capabilities, serverInfo}
 
-    Note over Client,Server: Capabilities Negotiated:<br/>- tools: {listChanged: true}<br/>- resources: {listChanged: true}<br/>- prompts: {listChanged: false}
+    Note over Client,Server: Capabilities Negotiated:<br/>- tools: 47 tools across 7 domains<br/>- resources: {listChanged: true}<br/>- prompts: {listChanged: false}
 
     Client->>Server: Notification: initialized
 
@@ -36,10 +40,12 @@ sequenceDiagram
 **Steps**:
 1. **Client Initialize**: Client sends `initialize` with protocol version and client info
 2. **Server Validation**: Server validates protocol compatibility
-3. **Native Messaging Connection**: Server connects to extension via Native Messaging
-4. **Capability Negotiation**: Server responds with supported capabilities
-5. **Client Confirmation**: Client sends `initialized` notification
-6. **Ready State**: System ready to handle tool and resource requests
+3. **WebSocket Bridge Start**: Server starts WebSocket server on port 9876
+4. **Extension Connect**: Extension connects to WebSocket on startup
+5. **Ready Notification**: Extension sends ready notification with capabilities
+6. **Capability Negotiation**: Server responds with supported capabilities
+7. **Client Confirmation**: Client sends `initialized` notification
+8. **Ready State**: System ready to handle tool and resource requests
 
 **Capabilities Exchanged**:
 ```json
@@ -50,15 +56,14 @@ sequenceDiagram
     },
     "resources": {
       "listChanged": true
-    },
-    "prompts": {
-      "listChanged": false
     }
   },
   "serverInfo": {
     "name": "thunderbird-mcp",
     "version": "1.0.0"
-  }
+  },
+  "tools": 47,
+  "domains": ["messages", "folders", "contacts", "tags", "accounts", "calendar", "tasks"]
 }
 ```
 
@@ -73,8 +78,7 @@ sequenceDiagram
     participant Client as MCP Client
     participant Server as MCP Server
     participant Validator as Schema<br/>Validator
-    participant NMClient as Native<br/>Messaging<br/>Client
-    participant Protocol as Native<br/>Messaging<br/>Protocol
+    participant Bridge as WebSocket<br/>Bridge
     participant Extension as Extension<br/>Handler
     participant API as Thunderbird<br/>API
     participant TB as Thunderbird<br/>Data
@@ -90,10 +94,12 @@ sequenceDiagram
 
     Validator-->>Server: Valid Parameters
 
-    Server->>NMClient: Send Request<br/>{method: "messages.search", params: {...}}
+    Server->>Bridge: sendRequest(action, params)
+    Bridge->>Bridge: Generate Request ID<br/>(req_{counter}_{timestamp})
+    Bridge->>Bridge: Create Pending Promise
+    Bridge->>Bridge: Set Timeout (30s)
 
-    NMClient->>Protocol: Serialize Message<br/>(4-byte length + JSON)
-    Protocol->>Extension: Write to stdin
+    Bridge->>Extension: WS Send<br/>{id, type:request, action, params}
 
     Extension->>Extension: Parse Request
     Extension->>API: messenger.messages.query(params)
@@ -104,15 +110,17 @@ sequenceDiagram
     API-->>Extension: Message List
 
     Extension->>Extension: Format Response
-    Extension->>Protocol: Write to stdout<br/>(4-byte length + JSON)
+    Extension->>Bridge: WS Send<br/>{id, type:response, success, data}
 
-    Protocol->>NMClient: Deserialize Message
-    NMClient-->>Server: Response Data
+    Bridge->>Bridge: Match Request ID
+    Bridge->>Bridge: Clear Timeout
+    Bridge->>Bridge: Resolve Promise
+    Bridge-->>Server: Response Data
 
     Server->>Server: Format MCP Response
     Server-->>Client: result<br/>{content: [{type: "text", text: "..."}]}
 
-    Note over Client,TB: Total Latency: ~50-200ms
+    Note over Client,TB: Total Latency: ~10-50ms
 ```
 
 **Detailed Steps**:
@@ -126,13 +134,15 @@ sequenceDiagram
    - Zod schema validates all parameters
    - Returns validation error if invalid
 
-3. **Native Messaging Request**:
-   - Server sends request to Native Messaging client
-   - Client serializes message with length prefix
-   - Message written to extension's stdin
+3. **WebSocket Request**:
+   - Server sends request to WebSocket bridge
+   - Bridge generates unique request ID (format: `req_{counter}_{timestamp}`)
+   - Creates pending promise for response tracking
+   - Sets timeout (default: 30s)
+   - Sends JSON message over WebSocket
 
 4. **Extension Processing**:
-   - Extension parses incoming message
+   - Extension parses incoming WebSocket message
    - Routes to appropriate API wrapper
    - Calls Thunderbird WebExtension API
 
@@ -143,16 +153,18 @@ sequenceDiagram
 
 6. **Response Pipeline**:
    - Extension formats response
-   - Serializes and writes to stdout
-   - Server deserializes response
-   - Formats as MCP content
+   - Sends JSON message over WebSocket with matching request ID
+   - Bridge correlates response by ID
+   - Clears timeout
+   - Resolves pending promise
+   - Server formats as MCP content
    - Returns to client
 
 **Error Handling**:
 - Validation errors: Return immediately with code -32602
 - Permission errors: Return code -32002
 - Not found errors: Return code -32003
-- Timeout errors: Return code -32004 after 10-30s
+- Timeout errors: Return code -32004 after 30s
 - Internal errors: Return code -32603
 
 ### Tool Call with Timeout
@@ -161,29 +173,31 @@ sequenceDiagram
 sequenceDiagram
     participant Client as MCP Client
     participant Server as MCP Server
-    participant NMClient as Native<br/>Messaging<br/>Client
+    participant Bridge as WebSocket<br/>Bridge
     participant Extension as Extension
 
     Client->>Server: tools/call<br/>{name: "thunderbird_messages_search"}
 
-    Server->>NMClient: send(request, timeout: 30000)
-    NMClient->>NMClient: Start 30s Timer
-    NMClient->>Extension: Request via Native Messaging
+    Server->>Bridge: sendRequest(action, params, timeout: 30000)
+    Bridge->>Bridge: Generate ID + Create Promise
+    Bridge->>Bridge: Start 30s Timeout Timer
+    Bridge->>Extension: WS Send Request
 
     par Request Processing
         Extension->>Extension: Long-running Query
     and Timeout Monitor
-        NMClient->>NMClient: Wait for Response or Timeout
+        Bridge->>Bridge: Wait for Response or Timeout
     end
 
     alt Response Before Timeout
-        Extension-->>NMClient: Response
-        NMClient->>NMClient: Clear Timer
-        NMClient-->>Server: Result
+        Extension-->>Bridge: WS Send Response
+        Bridge->>Bridge: Match ID + Clear Timeout
+        Bridge-->>Server: Result
         Server-->>Client: result
     else Timeout Reached
-        NMClient->>NMClient: Timeout Expired
-        NMClient-->>Server: TimeoutError
+        Bridge->>Bridge: Timeout Expired
+        Bridge->>Bridge: Delete Pending Request
+        Bridge-->>Server: TimeoutError
         Server-->>Client: error<br/>{code: -32004, message: "Operation timeout"}
     end
 ```
@@ -205,7 +219,7 @@ sequenceDiagram
     participant Client as MCP Client
     participant Server as MCP Server
     participant ResHandler as Resource<br/>Handler
-    participant NMClient as Native<br/>Messaging<br/>Client
+    participant Bridge as WebSocket<br/>Bridge
     participant Extension as Extension
     participant TB as Thunderbird<br/>Data
 
@@ -221,12 +235,12 @@ sequenceDiagram
     Server->>ResHandler: Match URI Pattern
     ResHandler->>ResHandler: Parse URI<br/>(extract accountId if present)
 
-    ResHandler->>NMClient: Request Data<br/>{method: "messages.listUnread"}
-    NMClient->>Extension: Native Messaging Request
+    ResHandler->>Bridge: sendRequest(action, params)
+    Bridge->>Extension: WS Send Request
     Extension->>TB: Query Unread Messages
     TB-->>Extension: Message List
-    Extension-->>NMClient: Response
-    NMClient-->>ResHandler: Unread Messages Data
+    Extension-->>Bridge: WS Send Response
+    Bridge-->>ResHandler: Unread Messages Data
 
     ResHandler->>ResHandler: Format as MCP Resource<br/>{uri, mimeType, text}
     ResHandler-->>Server: Resource Content
@@ -268,33 +282,34 @@ sequenceDiagram
 sequenceDiagram
     participant Client as MCP Client
     participant Server as MCP Server
-    participant NMClient as Native<br/>Messaging
+    participant Bridge as WebSocket<br/>Bridge
     participant Extension as Extension
     participant TB as Thunderbird API
 
     Client->>Server: tools/call<br/>{name: "thunderbird_messages_move"}
 
-    Server->>NMClient: Send Request
-    NMClient->>Extension: Native Messaging Request
+    Server->>Bridge: sendRequest(action, params)
+    Bridge->>Extension: WS Send Request
     Extension->>TB: messenger.messages.move()
 
     alt Permission Denied
         TB-->>Extension: Error: Permission Denied
         Extension->>Extension: Map to Error Code
-        Extension-->>NMClient: {error: {code: -32002, message: "Permission denied"}}
-        NMClient-->>Server: PermissionError
+        Extension-->>Bridge: WS Send<br/>{success:false, error:{code:-32002}}
+        Bridge->>Bridge: Reject Promise
+        Bridge-->>Server: PermissionError
         Server->>Server: Map to MCP Error
         Server-->>Client: error<br/>{code: -32002, message: "Permission denied"}
     else Resource Not Found
         TB-->>Extension: Error: Message Not Found
-        Extension-->>NMClient: {error: {code: -32003, message: "Resource not found"}}
-        NMClient-->>Server: NotFoundError
+        Extension-->>Bridge: WS Send<br/>{success:false, error:{code:-32003}}
+        Bridge-->>Server: NotFoundError
         Server-->>Client: error<br/>{code: -32003, message: "Resource not found"}
-    else Internal Error
-        TB-->>Extension: Unexpected Error
-        Extension-->>NMClient: {error: {code: -32603, message: "Internal error"}}
-        NMClient-->>Server: ThunderbirdError
-        Server-->>Client: error<br/>{code: -32603, message: "Internal error"}}
+    else Connection Lost
+        Bridge--xExtension: Connection Closed
+        Bridge->>Bridge: Reject All Pending
+        Bridge-->>Server: ConnectionError
+        Server-->>Client: error<br/>{code: -32000, message: "Not connected"}
     end
 ```
 
@@ -307,8 +322,7 @@ sequenceDiagram
 | Method Not Found | -32601 | Unknown tool/method |
 | Invalid Params | -32602 | Schema validation failed |
 | Internal Error | -32603 | Unexpected error |
-| Thunderbird Not Running | -32000 | Extension unreachable |
-| Extension Not Installed | -32001 | Extension missing |
+| Extension Not Connected | -32000 | WebSocket not connected |
 | Permission Denied | -32002 | Insufficient permissions |
 | Resource Not Found | -32003 | Entity doesn't exist |
 | Operation Timeout | -32004 | Request exceeded timeout |
@@ -335,102 +349,100 @@ sequenceDiagram
     Note over Client: Client displays validation error to user
 ```
 
-## Native Messaging Protocol Flow
+## WebSocket Protocol Flow
 
-### Message Serialization
-
-The Native Messaging protocol uses length-prefixed JSON messages for bidirectional communication.
+### Connection and Reconnection
 
 ```mermaid
 sequenceDiagram
-    participant Server as MCP Server<br/>Process
-    participant Protocol as Protocol<br/>Layer
-    participant Stdio as stdin/stdout<br/>Pipes
-    participant Extension as Extension<br/>Process
+    participant Extension as Extension
+    participant Bridge as WebSocket Bridge
 
-    Note over Server,Extension: Request Flow
+    Note over Extension,Bridge: Initial Connection
 
-    Server->>Protocol: JavaScript Object<br/>{id, method, params}
-    Protocol->>Protocol: JSON.stringify()
-    Protocol->>Protocol: Create Buffer<br/>4-byte length + JSON
-    Protocol->>Stdio: Write to stdin
+    Extension->>Bridge: Connect ws://localhost:9876
+    Bridge->>Extension: Connection Accepted (onopen)
+    Extension->>Bridge: {type:notification, event:ready}
 
-    Stdio->>Extension: Bytes Stream
-    Extension->>Extension: Read 4-byte Length Prefix
-    Extension->>Extension: Read N Bytes (JSON)
-    Extension->>Extension: JSON.parse()
-    Extension->>Extension: Process Request
+    Note over Extension,Bridge: Active Communication
 
-    Note over Server,Extension: Response Flow
+    Bridge--xExtension: Connection Lost (Server Restart)
 
-    Extension->>Extension: JSON.stringify(response)
-    Extension->>Extension: Create Buffer<br/>4-byte length + JSON
-    Extension->>Stdio: Write to stdout
+    Extension->>Extension: handleClose() Event
+    Extension->>Extension: reconnectAttempts = 1
+    Extension->>Extension: Wait 3 seconds
 
-    Stdio->>Protocol: Bytes Stream
-    Protocol->>Protocol: Read 4-byte Length Prefix
-    Protocol->>Protocol: Read N Bytes (JSON)
-    Protocol->>Protocol: JSON.parse()
-    Protocol->>Server: JavaScript Object<br/>{id, result/error}
+    Extension->>Bridge: Reconnect Attempt 1/10
+
+    alt Reconnect Success
+        Bridge->>Extension: Connection Accepted
+        Extension->>Extension: Reset reconnectAttempts = 0
+        Extension->>Bridge: {type:notification, event:ready}
+        Note over Extension,Bridge: Connection Restored
+    else Reconnect Failed
+        Extension->>Extension: reconnectAttempts = 2
+        Extension->>Extension: Wait 3 seconds
+        Extension->>Bridge: Reconnect Attempt 2/10
+
+        alt Max Attempts Reached
+            Extension->>Extension: After 10 attempts
+            Extension->>Extension: Give Up
+            Note over Extension: Manual restart required
+        end
+    end
 ```
 
-**Message Format**:
-```
-┌─────────────┬──────────────────────────────────┐
-│   4 bytes   │         N bytes                  │
-│   Length    │       JSON Payload               │
-│ (UInt32LE)  │                                  │
-└─────────────┴──────────────────────────────────┘
-```
-
-**Example Serialization**:
-```javascript
-// Request object
-const request = {
-  id: "req-001",
-  method: "messages.search",
-  params: { subject: "invoice" }
-};
-
-// Serialized
-// Length: 4 bytes = 0x3E000000 (62 in little-endian)
-// JSON: {"id":"req-001","method":"messages.search","params":{"subject":"invoice"}}
-```
-
-### Connection Lifecycle
+### Message Correlation
 
 ```mermaid
-stateDiagram-v2
-    [*] --> Disconnected
+sequenceDiagram
+    participant Server as MCP Server
+    participant Bridge as WebSocket Bridge
+    participant Extension as Extension
 
-    Disconnected --> Connecting: server.connect()
-    Connecting --> Connected: Extension responds
-    Connecting --> Failed: Timeout/Error
+    Note over Server,Extension: Request Correlation
 
-    Connected --> Active: First request
-    Active --> Active: Ongoing requests
-    Active --> Idle: No pending requests
-    Idle --> Active: New request
+    Server->>Bridge: sendRequest("messages.search", params)
+    Bridge->>Bridge: ID = req_1_1733410000000
+    Bridge->>Bridge: pendingRequests.set(ID, promise)
+    Bridge->>Extension: WS Send {id: ID, action, params}
 
-    Connected --> Disconnected: Extension exits
-    Active --> Reconnecting: Connection lost
-    Idle --> Reconnecting: Connection lost
+    par Multiple Concurrent Requests
+        Server->>Bridge: sendRequest("folders.list", {})
+        Bridge->>Bridge: ID = req_2_1733410000100
+        Bridge->>Bridge: pendingRequests.set(ID, promise)
+        Bridge->>Extension: WS Send {id: ID, action, params}
+    and
+        Server->>Bridge: sendRequest("contacts.search", {})
+        Bridge->>Bridge: ID = req_3_1733410000200
+        Bridge->>Bridge: pendingRequests.set(ID, promise)
+        Bridge->>Extension: WS Send {id: ID, action, params}
+    end
 
-    Reconnecting --> Connected: Reconnect success
-    Reconnecting --> Failed: Reconnect failed
+    Extension-->>Bridge: WS Send {id: req_2_..., success, data}
+    Bridge->>Bridge: Match ID req_2_...
+    Bridge->>Bridge: Resolve promise for req_2
+    Bridge-->>Server: Response for folders.list
 
-    Failed --> [*]
-    Disconnected --> [*]
+    Extension-->>Bridge: WS Send {id: req_1_..., success, data}
+    Bridge->>Bridge: Match ID req_1_...
+    Bridge->>Bridge: Resolve promise for req_1
+    Bridge-->>Server: Response for messages.search
+
+    Extension-->>Bridge: WS Send {id: req_3_..., success, data}
+    Bridge->>Bridge: Match ID req_3_...
+    Bridge->>Bridge: Resolve promise for req_3
+    Bridge-->>Server: Response for contacts.search
+
+    Note over Server,Extension: Responses can arrive out of order<br/>Correlation by ID ensures correct matching
 ```
 
-**States**:
-- **Disconnected**: No connection to extension
-- **Connecting**: Spawning/connecting to native host
-- **Connected**: Connection established, idle
-- **Active**: Processing requests
-- **Idle**: Connected but no active requests
-- **Reconnecting**: Attempting to restore connection
-- **Failed**: Connection permanently failed
+**Request ID Format**:
+- Server-generated: `req_{counter}_{timestamp}`
+- Extension-generated: `ext_{timestamp}_{random}`
+- Unique per request
+- Used for response correlation
+- Prevents response mismatching
 
 ## Batch Operations Flow
 
@@ -440,13 +452,13 @@ stateDiagram-v2
 sequenceDiagram
     participant Client as MCP Client
     participant Server as MCP Server
-    participant NMClient as Native<br/>Messaging
+    participant Bridge as WebSocket<br/>Bridge
     participant Extension as Extension
 
     Client->>Server: tools/call<br/>{name: "thunderbird_messages_move",<br/>arguments: {messageIds: ["1","2","3"], ...}}
 
-    Server->>NMClient: Single Request<br/>{method: "messages.move", params: {...}}
-    NMClient->>Extension: Native Messaging
+    Server->>Bridge: sendRequest(action, params)
+    Bridge->>Extension: WS Send Request
 
     Extension->>Extension: Batch Process
 
@@ -456,54 +468,16 @@ sequenceDiagram
 
     Extension->>Extension: Collect Results<br/>Success: ["1","2","3"]<br/>Failed: []
 
-    Extension-->>NMClient: Batch Response<br/>{moved: ["1","2","3"], errors: []}
-    NMClient-->>Server: Result
+    Extension-->>Bridge: WS Send Response<br/>{success:true, data:{moved:["1","2","3"]}}
+    Bridge-->>Server: Result
     Server-->>Client: result<br/>{content: [{type: "text", text: "Moved 3 messages"}]}
 ```
 
 **Batch Operation Benefits**:
-- Single round-trip for multiple items
+- Single WebSocket round-trip for multiple items
 - Atomic semantics (all or partial success)
 - Detailed error reporting per item
 - Better performance than sequential calls
-
-## Real-Time Event Flow (Future)
-
-### Resource Subscription (Planned)
-
-```mermaid
-sequenceDiagram
-    participant Client as MCP Client
-    participant Server as MCP Server
-    participant Extension as Extension
-    participant TB as Thunderbird
-
-    Client->>Server: resources/subscribe<br/>{uri: "thunderbird://inbox/unread"}
-    Server->>Extension: Subscribe to Events
-    Extension->>TB: Register onMessageReceived Listener
-
-    TB-->>Extension: Event: New Message
-    Extension->>Extension: Check if Unread
-    Extension-->>Server: Notification<br/>{resource: "...", updated: true}
-    Server-->>Client: notifications/resources/updated<br/>{uri: "thunderbird://inbox/unread"}
-
-    Client->>Server: resources/read<br/>{uri: "thunderbird://inbox/unread"}
-    Server-->>Client: Updated Resource Content
-
-    Note over Client,TB: Live updates continue...
-
-    Client->>Server: resources/unsubscribe<br/>{uri: "thunderbird://inbox/unread"}
-    Server->>Extension: Unsubscribe
-    Extension->>TB: Remove Listener
-```
-
-**Planned Event Types**:
-- New message received
-- Message marked as read/unread
-- Message moved/deleted
-- Contact updated
-- Calendar event created/modified
-- Task status changed
 
 ## Performance Characteristics
 
@@ -518,61 +492,72 @@ gantt
     section MCP Layer
     Schema Validation      :a1, 0, 5
 
-    section Native Messaging
-    Serialization         :a2, 5, 10
-    IPC Transfer          :a3, 10, 20
+    section WebSocket Bridge
+    Generate ID & Promise  :a2, 5, 7
+    Serialize JSON         :a3, 7, 9
+    WS Send                :a4, 9, 11
+
+    section Network
+    Localhost Transfer     :a5, 11, 13
 
     section Extension
-    Deserialization       :a4, 20, 25
-    API Routing           :a5, 25, 30
+    Parse JSON             :a6, 13, 15
+    Route to Handler       :a7, 15, 18
 
     section Thunderbird API
-    Database Query        :a6, 30, 180
+    Database Query         :a8, 18, 45
 
     section Response
-    Result Formatting     :a7, 180, 185
-    IPC Transfer Back     :a8, 185, 195
-    MCP Formatting        :a9, 195, 200
+    Format Response        :a9, 45, 47
+    WS Send Back           :a10, 47, 49
+    Match & Resolve        :a11, 49, 50
 ```
 
 **Typical Latencies**:
 - Schema validation: 1-5ms
-- Serialization: 1-5ms
-- IPC transfer: 5-10ms each way
-- Extension routing: 5-10ms
-- Thunderbird API: 20-150ms (varies by operation)
-- Total: 50-200ms typical
+- Request ID generation: 1-2ms
+- JSON serialization: 1-2ms
+- WebSocket transfer (localhost): 1-2ms each way
+- Extension routing: 2-3ms
+- Thunderbird API: 10-30ms (varies by operation)
+- Total: 10-50ms typical
+
+**Comparison to Native Messaging**:
+- Native Messaging: 20-50ms overhead
+- WebSocket: 10-20ms overhead
+- Improvement: ~2x faster
 
 ### Throughput Considerations
 
 **Bottlenecks**:
-1. **Native Messaging Bandwidth**: ~1MB/s theoretical limit
-2. **Single-threaded Extension**: Sequential request processing
+1. **Single WebSocket Connection**: Full-duplex, but single thread
+2. **Extension Processing**: Sequential request handling
 3. **Thunderbird API**: Database lock contention
-4. **IPC Overhead**: Fixed cost per message
+4. **Pending Request Limit**: Max 100 concurrent requests
 
 **Optimization Strategies**:
 - Use pagination for large result sets
 - Batch operations where possible
-- Cache folder structures
-- Minimize full message body retrieval
-- Consider parallel connections (future)
+- Request correlation enables concurrent requests
+- Timeout management prevents queue buildup
 
 ## Data Flow Summary
 
 ### Request Types Comparison
 
-| Flow Type | Latency | Caching | Real-time | Use Case |
-|-----------|---------|---------|-----------|----------|
-| Tool Call | 50-200ms | No | No | Action execution |
-| Resource Read | 30-100ms | Optional | No | Context retrieval |
-| Resource Subscribe | N/A | No | Yes | Live updates (future) |
-| Batch Operation | 100-500ms | No | No | Bulk actions |
+| Flow Type | Latency | Connection | Real-time | Use Case |
+|-----------|---------|------------|-----------|----------|
+| Tool Call | 10-50ms | WebSocket | No | Action execution |
+| Resource Read | 15-40ms | WebSocket | No | Context retrieval |
+| Notification | <5ms | WebSocket | Yes | Status updates |
+| Batch Operation | 50-200ms | WebSocket | No | Bulk actions |
 
 ### Key Takeaways
 
-1. **Validation Happens Early**: Client-side and server-side validation before expensive operations
-2. **Error Codes Are Consistent**: Standardized JSON-RPC codes across all layers
-3. **Protocol Is Stateless**: Each request is independent (except subscriptions in future)
-4. **Timeouts Protect Resources**: All operations have reasonable timeout limits
-5. **Batching Improves Performance**: Single request for multiple items reduces overhead
+1. **WebSocket Provides Better Performance**: ~2x faster than Native Messaging
+2. **Request Correlation Enables Concurrency**: Multiple requests in flight simultaneously
+3. **Auto-Reconnect Improves Reliability**: Automatic recovery from connection loss
+4. **Validation Happens Early**: Client-side and server-side validation before expensive operations
+5. **Error Codes Are Consistent**: Standardized JSON-RPC codes across all layers
+6. **Timeouts Protect Resources**: All operations have reasonable timeout limits
+7. **Batching Improves Performance**: Single request for multiple items reduces overhead

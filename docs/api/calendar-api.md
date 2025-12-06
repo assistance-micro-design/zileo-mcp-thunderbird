@@ -2,13 +2,13 @@
 
 This document describes all MCP tools for calendar and event operations in the Thunderbird MCP Server.
 
-> **EXPERIMENTAL**: This API uses the experimental `calendarProvider` WebExtension API and may change in future Thunderbird versions.
+**EXPERIMENTAL**: This API uses the experimental `browser.calendar` WebExtension API (webext-experiments) and may change in future Thunderbird versions.
 
 ## Overview
 
 The Calendar API provides comprehensive calendar management including events, tasks, and calendar operations. This module enables LLMs to create, read, update, and delete calendar entries and manage multiple calendars.
 
-**Permission Required**: `calendarProvider` (experimental)
+**Permission Required**: Experimental calendar API
 
 ---
 
@@ -19,6 +19,7 @@ The Calendar API provides comprehensive calendar management including events, ta
 List all calendars configured in Thunderbird.
 
 #### Description
+
 Retrieves all calendars including local, network (CalDAV), and other calendar sources.
 
 #### Parameters
@@ -28,38 +29,25 @@ None
 #### Response Format
 
 ```json
-{
-  "type": "text",
-  "text": "[{
-    \"id\": \"calendar-1\",
-    \"name\": \"Personal Calendar\",
-    \"type\": \"storage\",
-    \"color\": \"#3366CC\",
-    \"readOnly\": false,
-    \"enabled\": true,
-    \"url\": \"moz-storage-calendar://\",
-    \"eventCount\": 145,
-    \"taskCount\": 23
-  }, {
-    \"id\": \"calendar-2\",
-    \"name\": \"Work Calendar (CalDAV)\",
-    \"type\": \"caldav\",
-    \"color\": \"#FF6600\",
-    \"readOnly\": false,
-    \"enabled\": true,
-    \"url\": \"https://caldav.example.com/calendars/work\",
-    \"eventCount\": 89,
-    \"taskCount\": 12
-  }]"
-}
+[
+  {
+    "id": "calendar-1",
+    "name": "Personal Calendar",
+    "type": "storage",
+    "color": "#3366CC",
+    "readOnly": false,
+    "enabled": true
+  },
+  {
+    "id": "calendar-2",
+    "name": "Work Calendar (CalDAV)",
+    "type": "caldav",
+    "color": "#FF6600",
+    "readOnly": false,
+    "enabled": true
+  }
+]
 ```
-
-#### Calendar Types
-
-- `storage` - Local storage calendar (default)
-- `caldav` - CalDAV network calendar
-- `ics` - ICS file-based calendar
-- `memory` - Temporary memory-only calendar
 
 #### Example Request
 
@@ -82,7 +70,8 @@ None
 Get detailed information about a specific calendar.
 
 #### Description
-Retrieves complete metadata for a calendar including capabilities and statistics.
+
+Retrieves complete metadata for a calendar.
 
 #### Parameters
 
@@ -94,28 +83,12 @@ Retrieves complete metadata for a calendar including capabilities and statistics
 
 ```json
 {
-  "type": "text",
-  "text": "{
-    \"id\": \"calendar-1\",
-    \"name\": \"Personal Calendar\",
-    \"type\": \"storage\",
-    \"color\": \"#3366CC\",
-    \"readOnly\": false,
-    \"enabled\": true,
-    \"url\": \"moz-storage-calendar://\",
-    \"capabilities\": {
-      \"canCreateEvents\": true,
-      \"canModifyEvents\": true,
-      \"canDeleteEvents\": true,
-      \"canCreateTasks\": true,
-      \"supportsAttendees\": true,
-      \"supportsRecurrence\": true,
-      \"supportsAlarms\": true
-    },
-    \"eventCount\": 145,
-    \"taskCount\": 23,
-    \"timezone\": \"Europe/Paris\"
-  }"
+  "id": "calendar-1",
+  "name": "Personal Calendar",
+  "type": "storage",
+  "color": "#3366CC",
+  "readOnly": false,
+  "enabled": true
 }
 ```
 
@@ -144,54 +117,35 @@ Retrieves complete metadata for a calendar including capabilities and statistics
 Search for events across calendars using various criteria.
 
 #### Description
-Performs advanced event search with support for text query, date ranges, and calendar filtering.
+
+Performs event search with support for text query, date ranges, and calendar filtering.
 
 #### Parameters
 
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `query` | string | No | Search term to match in event title, description, or location |
-| `calendarId` | string | No | Specific calendar to search within (omit for all calendars) |
-| `dateFrom` | string | Yes | Start of date range (ISO 8601 format) |
-| `dateTo` | string | Yes | End of date range (ISO 8601 format) |
-| `limit` | number | No | Maximum number of results (default: 100) |
+| Name | Type | Required | Default | Description |
+|------|------|----------|---------|-------------|
+| `query` | string | No | - | Search term to match in event title, description, or location |
+| `calendarId` | string | No | - | Specific calendar to search within (omit for all calendars) |
+| `dateFrom` | string | Yes | - | Start of date range (ISO 8601 format) |
+| `dateTo` | string | Yes | - | End of date range (ISO 8601 format) |
+| `limit` | number | No | 100 | Maximum number of results (1-500) |
 
 #### Response Format
 
 ```json
-{
-  "type": "text",
-  "text": "[{
-    \"id\": \"event-123\",
-    \"calendarId\": \"calendar-1\",
-    \"title\": \"Team Meeting\",
-    \"description\": \"Weekly team sync\",
-    \"location\": \"Conference Room A\",
-    \"start\": \"2025-03-20T14:00:00Z\",
-    \"end\": \"2025-03-20T15:00:00Z\",
-    \"isAllDay\": false,
-    \"status\": \"CONFIRMED\",
-    \"organizer\": {
-      \"name\": \"Jean Dupont\",
-      \"email\": \"jean.dupont@example.com\"
-    },
-    \"attendees\": [{
-      \"name\": \"Marie Martin\",
-      \"email\": \"marie.martin@example.com\",
-      \"status\": \"ACCEPTED\",
-      \"role\": \"REQ-PARTICIPANT\"
-    }],
-    \"recurrence\": {
-      \"frequency\": \"WEEKLY\",
-      \"interval\": 1,
-      \"until\": \"2025-06-20T14:00:00Z\"
-    },
-    \"alarms\": [{
-      \"trigger\": \"-PT15M\",
-      \"action\": \"DISPLAY\"
-    }]
-  }]"
-}
+[
+  {
+    "id": "event-123",
+    "calendarId": "calendar-1",
+    "type": "event",
+    "title": "Team Meeting",
+    "start": "2025-03-20T14:00:00Z",
+    "end": "2025-03-20T15:00:00Z",
+    "description": "Weekly team sync",
+    "location": "Conference Room A",
+    "attendees": ["marie.martin@example.com", "pierre.durand@example.com"]
+  }
+]
 ```
 
 #### Example Request
@@ -220,16 +174,17 @@ Performs advanced event search with support for text query, date ranges, and cal
 List events from a specific calendar within a date range.
 
 #### Description
-Retrieves all events in a calendar for a specified time period, including recurring event instances.
+
+Retrieves all events in a calendar for a specified time period.
 
 #### Parameters
 
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `calendarId` | string | Yes | ID of the calendar to list events from |
-| `dateFrom` | string | Yes | Start of date range (ISO 8601 format) |
-| `dateTo` | string | Yes | End of date range (ISO 8601 format) |
-| `limit` | number | No | Maximum number of events (default: 500) |
+| Name | Type | Required | Default | Description |
+|------|------|----------|---------|-------------|
+| `calendarId` | string | Yes | - | ID of the calendar to list events from |
+| `dateFrom` | string | Yes | - | Start of date range (ISO 8601 format) |
+| `dateTo` | string | Yes | - | End of date range (ISO 8601 format) |
+| `limit` | number | No | 100 | Maximum number of events (1-500) |
 
 #### Response Format
 
@@ -260,7 +215,8 @@ Same as `thunderbird_events_search` response format.
 Get detailed information about a specific event.
 
 #### Description
-Retrieves complete event details including all properties, attendees, recurrence rules, and alarms.
+
+Retrieves complete event details including all properties and attendees.
 
 #### Parameters
 
@@ -273,31 +229,15 @@ Retrieves complete event details including all properties, attendees, recurrence
 
 ```json
 {
-  "type": "text",
-  "text": "{
-    \"id\": \"event-123\",
-    \"calendarId\": \"calendar-1\",
-    \"title\": \"Quarterly Review Meeting\",
-    \"description\": \"Q1 2025 performance review and planning session\",
-    \"location\": \"Main Conference Room\",
-    \"start\": \"2025-03-25T09:00:00Z\",
-    \"end\": \"2025-03-25T11:00:00Z\",
-    \"isAllDay\": false,
-    \"status\": \"CONFIRMED\",
-    \"transparency\": \"OPAQUE\",
-    \"priority\": 5,
-    \"organizer\": {
-      \"name\": \"Jean Dupont\",
-      \"email\": \"jean.dupont@example.com\"
-    },
-    \"attendees\": [...],
-    \"recurrence\": null,
-    \"alarms\": [...],
-    \"attachments\": [],
-    \"categories\": [\"Work\", \"Important\"],
-    \"created\": \"2025-02-15T10:30:00Z\",
-    \"lastModified\": \"2025-03-01T14:22:00Z\"
-  }"
+  "id": "event-123",
+  "calendarId": "calendar-1",
+  "type": "event",
+  "title": "Quarterly Review Meeting",
+  "start": "2025-03-25T09:00:00Z",
+  "end": "2025-03-25T11:00:00Z",
+  "description": "Q1 2025 performance review and planning session",
+  "location": "Main Conference Room",
+  "attendees": ["jean.dupont@example.com", "marie.martin@example.com"]
 }
 ```
 
@@ -325,98 +265,46 @@ Retrieves complete event details including all properties, attendees, recurrence
 Create a new calendar event.
 
 #### Description
-Creates a new event with support for attendees, recurrence patterns, and alarms.
+
+Creates a new event with support for attendees and recurrence patterns.
 
 #### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `calendarId` | string | Yes | ID of the calendar to create event in |
-| `title` | string | Yes | Event title/summary |
+| `title` | string | Yes | Event title/summary (1-500 characters) |
 | `start` | string | Yes | Start date/time (ISO 8601 format) |
 | `end` | string | Yes | End date/time (ISO 8601 format) |
-| `location` | string | No | Event location |
+| `location` | string | No | Event location (max 500 characters) |
 | `description` | string | No | Detailed event description |
-| `attendees` | object[] | No | Array of attendee objects |
+| `attendees` | string[] | No | Array of attendee email addresses |
 | `recurrence` | object | No | Recurrence rule definition |
-| `alarms` | object[] | No | Array of alarm/reminder definitions |
-| `isAllDay` | boolean | No | All-day event flag (default: false) |
-| `categories` | string[] | No | Event categories/tags |
-
-#### Attendee Object
-
-```json
-{
-  "name": "Marie Martin",
-  "email": "marie.martin@example.com",
-  "role": "REQ-PARTICIPANT",
-  "status": "NEEDS-ACTION"
-}
-```
-
-#### Attendee Roles
-
-- `REQ-PARTICIPANT` - Required participant
-- `OPT-PARTICIPANT` - Optional participant
-- `CHAIR` - Meeting chair/organizer
-- `NON-PARTICIPANT` - Informational only
-
-#### Attendee Status
-
-- `NEEDS-ACTION` - No response yet
-- `ACCEPTED` - Accepted invitation
-- `DECLINED` - Declined invitation
-- `TENTATIVE` - Tentatively accepted
-- `DELEGATED` - Delegated to another person
 
 #### Recurrence Object
 
-```json
-{
-  "frequency": "WEEKLY",
-  "interval": 1,
-  "count": 10,
-  "until": "2025-06-20T14:00:00Z",
-  "byDay": ["MO", "WE", "FR"],
-  "byMonth": [1, 6, 12]
-}
-```
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `frequency` | string | Yes | One of: `daily`, `weekly`, `monthly`, `yearly` |
+| `interval` | number | No | Interval between occurrences (e.g., 2 for every other week) |
+| `until` | string | No | End date for recurrence (ISO 8601) |
+| `count` | number | No | Number of occurrences |
 
-#### Recurrence Frequencies
-
-- `DAILY` - Daily recurrence
-- `WEEKLY` - Weekly recurrence
-- `MONTHLY` - Monthly recurrence
-- `YEARLY` - Yearly recurrence
-
-#### Alarm Object
-
-```json
-{
-  "trigger": "-PT15M",
-  "action": "DISPLAY",
-  "description": "Meeting starts in 15 minutes"
-}
-```
-
-#### Alarm Actions
-
-- `DISPLAY` - Show notification
-- `EMAIL` - Send email reminder
-- `AUDIO` - Play sound
+**Note**: Use either `until` or `count`, not both.
 
 #### Response Format
 
 ```json
 {
-  "type": "text",
-  "text": "{
-    \"success\": true,
-    \"eventId\": \"event-456\",
-    \"calendarId\": \"calendar-1\",
-    \"title\": \"Team Meeting\",
-    \"start\": \"2025-03-20T14:00:00Z\"
-  }"
+  "id": "event-456",
+  "calendarId": "calendar-1",
+  "type": "event",
+  "title": "Team Meeting",
+  "start": "2025-03-20T14:00:00Z",
+  "end": "2025-03-20T15:00:00Z",
+  "description": "",
+  "location": "",
+  "attendees": []
 }
 ```
 
@@ -456,31 +344,16 @@ Creates a new event with support for attendees, recurrence patterns, and alarms.
       "start": "2025-03-17T09:00:00Z",
       "end": "2025-03-17T09:30:00Z",
       "location": "Zoom Meeting Room",
-      "description": "Daily standup moved to Monday morning",
+      "description": "Weekly standup meeting",
       "attendees": [
-        {
-          "name": "Marie Martin",
-          "email": "marie.martin@example.com",
-          "role": "REQ-PARTICIPANT"
-        },
-        {
-          "name": "Pierre Durand",
-          "email": "pierre.durand@example.com",
-          "role": "REQ-PARTICIPANT"
-        }
+        "marie.martin@example.com",
+        "pierre.durand@example.com"
       ],
       "recurrence": {
-        "frequency": "WEEKLY",
+        "frequency": "weekly",
         "interval": 1,
-        "byDay": ["MO"],
-        "until": "2025-06-30T09:00:00Z"
-      },
-      "alarms": [
-        {
-          "trigger": "-PT10M",
-          "action": "DISPLAY"
-        }
-      ]
+        "count": 15
+      }
     }
   }
 }
@@ -493,16 +366,22 @@ Creates a new event with support for attendees, recurrence patterns, and alarms.
 Update an existing calendar event.
 
 #### Description
+
 Modifies event properties with support for updating single instances or entire recurring series.
 
 #### Parameters
 
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `eventId` | string | Yes | ID of the event to update |
-| `calendarId` | string | Yes | ID of the calendar containing the event |
-| `modifications` | object | Yes | Object containing fields to update |
-| `scope` | string | No | For recurring events: `this`, `all`, or `future` (default: `this`) |
+| Name | Type | Required | Default | Description |
+|------|------|----------|---------|-------------|
+| `eventId` | string | Yes | - | ID of the event to update |
+| `calendarId` | string | Yes | - | ID of the calendar containing the event |
+| `title` | string | No | - | New title (1-500 characters) |
+| `start` | string | No | - | New start date/time (ISO 8601) |
+| `end` | string | No | - | New end date/time (ISO 8601) |
+| `location` | string | No | - | New location (max 500 characters) |
+| `description` | string | No | - | New description |
+| `attendees` | string[] | No | - | New attendee list (email addresses) |
+| `scope` | string | No | `this` | For recurring events: `this`, `all`, or `future` |
 
 #### Modification Scope
 
@@ -514,13 +393,15 @@ Modifies event properties with support for updating single instances or entire r
 
 ```json
 {
-  "type": "text",
-  "text": "{
-    \"success\": true,
-    \"eventId\": \"event-123\",
-    \"scope\": \"this\",
-    \"updated\": [\"title\", \"location\", \"start\", \"end\"]
-  }"
+  "id": "event-123",
+  "calendarId": "calendar-1",
+  "type": "event",
+  "title": "Updated Meeting Title",
+  "start": "2025-03-20T15:00:00Z",
+  "end": "2025-03-20T16:00:00Z",
+  "description": "",
+  "location": "Building B, Room 301",
+  "attendees": []
 }
 ```
 
@@ -536,12 +417,10 @@ Modifies event properties with support for updating single instances or entire r
     "arguments": {
       "eventId": "event-123",
       "calendarId": "calendar-1",
-      "modifications": {
-        "title": "Updated Meeting Title",
-        "location": "Building B, Room 301",
-        "start": "2025-03-20T15:00:00Z",
-        "end": "2025-03-20T16:00:00Z"
-      },
+      "title": "Updated Meeting Title",
+      "location": "Building B, Room 301",
+      "start": "2025-03-20T15:00:00Z",
+      "end": "2025-03-20T16:00:00Z",
       "scope": "this"
     }
   }
@@ -555,7 +434,8 @@ Modifies event properties with support for updating single instances or entire r
 Move an event to a different time or date.
 
 #### Description
-Reschedules an event by updating its start and end times while preserving duration.
+
+Reschedules an event by updating its start and end times.
 
 #### Parameters
 
@@ -565,20 +445,20 @@ Reschedules an event by updating its start and end times while preserving durati
 | `calendarId` | string | Yes | ID of the calendar containing the event |
 | `newStart` | string | Yes | New start date/time (ISO 8601 format) |
 | `newEnd` | string | Yes | New end date/time (ISO 8601 format) |
-| `scope` | string | No | For recurring events: `this`, `all`, or `future` |
 
 #### Response Format
 
 ```json
 {
-  "type": "text",
-  "text": "{
-    \"success\": true,
-    \"eventId\": \"event-123\",
-    \"oldStart\": \"2025-03-20T14:00:00Z\",
-    \"newStart\": \"2025-03-21T10:00:00Z\",
-    \"scope\": \"this\"
-  }"
+  "id": "event-123",
+  "calendarId": "calendar-1",
+  "type": "event",
+  "title": "Team Meeting",
+  "start": "2025-03-21T10:00:00Z",
+  "end": "2025-03-21T11:00:00Z",
+  "description": "",
+  "location": "",
+  "attendees": []
 }
 ```
 
@@ -608,27 +488,22 @@ Reschedules an event by updating its start and end times while preserving durati
 Delete a calendar event.
 
 #### Description
+
 Removes an event from the calendar with support for deleting single or multiple instances of recurring events.
 
 #### Parameters
 
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `eventId` | string | Yes | ID of the event to delete |
-| `calendarId` | string | Yes | ID of the calendar containing the event |
-| `scope` | string | No | For recurring events: `this`, `all`, or `future` (default: `this`) |
+| Name | Type | Required | Default | Description |
+|------|------|----------|---------|-------------|
+| `eventId` | string | Yes | - | ID of the event to delete |
+| `calendarId` | string | Yes | - | ID of the calendar containing the event |
+| `scope` | string | No | `this` | For recurring events: `this`, `all`, or `future` |
 
 #### Response Format
 
 ```json
 {
-  "type": "text",
-  "text": "{
-    \"success\": true,
-    \"eventId\": \"event-123\",
-    \"scope\": \"this\",
-    \"deletedInstances\": 1
-  }"
+  "success": true
 }
 ```
 
@@ -659,51 +534,42 @@ Removes an event from the calendar with support for deleting single or multiple 
 List tasks from one or all calendars with filtering options.
 
 #### Description
+
 Retrieves tasks with optional filters for completion status, due date range, and calendar.
 
 #### Parameters
 
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `calendarId` | string | No | Specific calendar to list tasks from (omit for all) |
-| `completed` | boolean | No | Filter by completion status |
-| `dueBefore` | string | No | Include tasks due before this date (ISO 8601) |
-| `dueAfter` | string | No | Include tasks due after this date (ISO 8601) |
-| `limit` | number | No | Maximum number of results (default: 100) |
+| Name | Type | Required | Default | Description |
+|------|------|----------|---------|-------------|
+| `calendarId` | string | No | - | Specific calendar to list tasks from (omit for all) |
+| `completed` | boolean | No | - | Filter by completion status (true/false) |
+| `dueBefore` | string | No | - | Include tasks due before this date (ISO 8601) |
+| `dueAfter` | string | No | - | Include tasks due after this date (ISO 8601) |
+| `limit` | number | No | 100 | Maximum number of results (1-500) |
 
 #### Response Format
 
 ```json
-{
-  "type": "text",
-  "text": "[{
-    \"id\": \"task-123\",
-    \"calendarId\": \"calendar-1\",
-    \"title\": \"Complete project documentation\",
-    \"description\": \"Finalize API docs and user guide\",
-    \"dueDate\": \"2025-03-25T17:00:00Z\",
-    \"priority\": 1,
-    \"percentComplete\": 60,
-    \"status\": \"IN-PROCESS\",
-    \"completed\": null,
-    \"categories\": [\"Work\", \"Documentation\"]
-  }]"
-}
+[
+  {
+    "id": "task-123",
+    "calendarId": "calendar-1",
+    "type": "task",
+    "title": "Complete project documentation",
+    "description": "Finalize API docs and user guide",
+    "dueDate": "2025-03-25T17:00:00Z",
+    "completed": false,
+    "priority": 1
+  }
+]
 ```
 
-#### Task Priority
+#### Task Priority Values
 
 - `0` - Undefined
 - `1` - High priority
 - `5` - Medium priority (default)
 - `9` - Low priority
-
-#### Task Status
-
-- `NEEDS-ACTION` - Not started
-- `IN-PROCESS` - Work in progress
-- `COMPLETED` - Finished
-- `CANCELLED` - Cancelled
 
 #### Example Request
 
@@ -716,7 +582,8 @@ Retrieves tasks with optional filters for completion status, due date range, and
     "name": "thunderbird_tasks_list",
     "arguments": {
       "completed": false,
-      "dueBefore": "2025-03-31T23:59:59Z"
+      "dueBefore": "2025-03-31T23:59:59Z",
+      "limit": 50
     }
   }
 }
@@ -729,6 +596,7 @@ Retrieves tasks with optional filters for completion status, due date range, and
 Get detailed information about a specific task.
 
 #### Description
+
 Retrieves complete task details including all properties and metadata.
 
 #### Parameters
@@ -740,7 +608,18 @@ Retrieves complete task details including all properties and metadata.
 
 #### Response Format
 
-Same structure as task objects in `thunderbird_tasks_list` with additional metadata.
+```json
+{
+  "id": "task-123",
+  "calendarId": "calendar-1",
+  "type": "task",
+  "title": "Complete project documentation",
+  "description": "Finalize API docs and user guide",
+  "dueDate": "2025-03-25T17:00:00Z",
+  "completed": false,
+  "priority": 1
+}
+```
 
 #### Example Request
 
@@ -766,30 +645,31 @@ Same structure as task objects in `thunderbird_tasks_list` with additional metad
 Create a new task in a calendar.
 
 #### Description
-Creates a new task with optional due date, priority, and categorization.
+
+Creates a new task with optional due date, priority, and description.
 
 #### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `calendarId` | string | Yes | ID of the calendar to create task in |
-| `title` | string | Yes | Task title/summary |
+| `title` | string | Yes | Task title/summary (1-500 characters) |
 | `dueDate` | string | No | Due date/time (ISO 8601 format) |
 | `priority` | number | No | Priority level (0, 1, 5, or 9) |
 | `description` | string | No | Detailed task description |
-| `categories` | string[] | No | Task categories/tags |
 
 #### Response Format
 
 ```json
 {
-  "type": "text",
-  "text": "{
-    \"success\": true,
-    \"taskId\": \"task-456\",
-    \"calendarId\": \"calendar-1\",
-    \"title\": \"Review pull requests\"
-  }"
+  "id": "task-456",
+  "calendarId": "calendar-1",
+  "type": "task",
+  "title": "Review pull requests",
+  "description": "",
+  "dueDate": null,
+  "completed": false,
+  "priority": 0
 }
 ```
 
@@ -807,8 +687,7 @@ Creates a new task with optional due date, priority, and categorization.
       "title": "Prepare presentation slides",
       "dueDate": "2025-03-24T17:00:00Z",
       "priority": 1,
-      "description": "Create slides for client meeting on March 25",
-      "categories": ["Work", "Presentations"]
+      "description": "Create slides for client meeting on March 25"
     }
   }
 }
@@ -821,6 +700,7 @@ Creates a new task with optional due date, priority, and categorization.
 Update an existing task.
 
 #### Description
+
 Modifies task properties including completion status, priority, and other metadata.
 
 #### Parameters
@@ -829,18 +709,24 @@ Modifies task properties including completion status, priority, and other metada
 |------|------|----------|-------------|
 | `taskId` | string | Yes | ID of the task to update |
 | `calendarId` | string | Yes | ID of the calendar containing the task |
-| `modifications` | object | Yes | Object containing fields to update |
+| `title` | string | No | New title (1-500 characters) |
+| `dueDate` | string | No | New due date (ISO 8601) |
+| `priority` | number | No | New priority (0-9) |
+| `description` | string | No | New description |
+| `completed` | boolean | No | Completion status |
 
 #### Response Format
 
 ```json
 {
-  "type": "text",
-  "text": "{
-    \"success\": true,
-    \"taskId\": \"task-123\",
-    \"updated\": [\"percentComplete\", \"status\", \"priority\"]
-  }"
+  "id": "task-123",
+  "calendarId": "calendar-1",
+  "type": "task",
+  "title": "Complete project documentation",
+  "description": "Finalize API docs and user guide",
+  "dueDate": "2025-03-25T17:00:00Z",
+  "completed": false,
+  "priority": 1
 }
 ```
 
@@ -856,11 +742,8 @@ Modifies task properties including completion status, priority, and other metada
     "arguments": {
       "taskId": "task-123",
       "calendarId": "calendar-1",
-      "modifications": {
-        "percentComplete": 80,
-        "status": "IN-PROCESS",
-        "priority": 1
-      }
+      "priority": 1,
+      "completed": false
     }
   }
 }
@@ -873,6 +756,7 @@ Modifies task properties including completion status, priority, and other metada
 Delete a task from a calendar.
 
 #### Description
+
 Permanently removes a task.
 
 #### Parameters
@@ -886,11 +770,7 @@ Permanently removes a task.
 
 ```json
 {
-  "type": "text",
-  "text": "{
-    \"success\": true,
-    \"taskId\": \"task-123\"
-  }"
+  "success": true
 }
 ```
 
@@ -918,7 +798,8 @@ Permanently removes a task.
 Mark a task as completed.
 
 #### Description
-Convenience method to mark a task as 100% complete with completed timestamp.
+
+Convenience method to mark a task as completed (sets `completed: true`).
 
 #### Parameters
 
@@ -931,14 +812,14 @@ Convenience method to mark a task as 100% complete with completed timestamp.
 
 ```json
 {
-  "type": "text",
-  "text": "{
-    \"success\": true,
-    \"taskId\": \"task-123\",
-    \"completed\": \"2025-03-15T14:30:00Z\",
-    \"percentComplete\": 100,
-    \"status\": \"COMPLETED\"
-  }"
+  "id": "task-123",
+  "calendarId": "calendar-1",
+  "type": "task",
+  "title": "Complete project documentation",
+  "description": "Finalize API docs and user guide",
+  "dueDate": "2025-03-25T17:00:00Z",
+  "completed": true,
+  "priority": 1
 }
 ```
 
@@ -969,7 +850,7 @@ All calendar operations may return these error codes:
 |------|---------|-------------|
 | -32000 | Thunderbird not running | Thunderbird application is not active |
 | -32001 | Extension not installed | Thunderbird MCP extension not found |
-| -32002 | Permission denied | calendarProvider permission not granted |
+| -32002 | Permission denied | Calendar permission not granted |
 | -32003 | Resource not found | Calendar, event, or task not found |
 | -32004 | Operation timeout | Operation exceeded timeout limit (10s) |
 | -32602 | Invalid params | Invalid date format, recurrence rule, or missing required fields |
@@ -988,38 +869,39 @@ All calendar operations may return these error codes:
 
 ### Recurrence Patterns
 
-- Test recurrence rules with limited occurrences first
+- Test recurrence rules with limited occurrences first (`count` parameter)
 - Use `count` or `until` to prevent infinite recurrence
 - Consider timezone effects on recurring events
-- Validate `byDay` values: MO, TU, WE, TH, FR, SA, SU
+- Valid frequency values: `daily`, `weekly`, `monthly`, `yearly`
 
 ### Attendee Management
 
-- Always include email addresses for attendees
-- Set appropriate roles (REQ-PARTICIPANT vs OPT-PARTICIPANT)
-- Consider calendar invitation workflow
-- Handle attendee responses properly
+- Always provide valid email addresses for attendees
+- Attendees array contains email strings only
+- Calendar system handles invitation workflow
+- Check calendar capabilities for attendee support
 
 ### Calendar Selection
 
-- Check calendar capabilities before creating events
-- Respect read-only calendar status
-- Consider calendar synchronization delays for network calendars
+- Check calendar read-only status before creating/updating
+- Respect calendar permissions and capabilities
+- Consider calendar synchronization delays for network calendars (CalDAV)
 - Use local calendars for testing
 
 ### Performance
 
 - Limit date ranges in queries to improve performance
 - Use specific calendar IDs when possible
-- Implement pagination for large result sets
-- Cache calendar metadata
+- Set appropriate `limit` values (max 500)
+- Cache calendar metadata to reduce API calls
 
 ---
 
 ## Experimental API Notes
 
-The Calendar API uses Thunderbird's experimental WebExtension APIs:
+The Calendar API uses Thunderbird's experimental WebExtension APIs (webext-experiments):
 
+- API is implemented using experimental `browser.calendar` interface
 - API may change in future Thunderbird releases
 - Some features may not work with all calendar types
 - CalDAV synchronization may introduce delays
@@ -1027,17 +909,18 @@ The Calendar API uses Thunderbird's experimental WebExtension APIs:
 
 ### Known Limitations
 
-- Attachment support limited
-- Some complex recurrence patterns not supported
-- Timezone handling may vary
-- Calendar sharing features limited
+- Limited support for complex recurrence patterns
+- Timezone handling may vary by calendar type
+- Some calendar types may have restricted capabilities
+- Network calendar synchronization delays
 
 ### Testing Recommendations
 
 - Test with local storage calendars first
-- Verify network calendar compatibility
-- Handle API changes gracefully
-- Implement fallback mechanisms
+- Verify network calendar (CalDAV) compatibility separately
+- Handle API changes gracefully with error checking
+- Implement timeout and retry mechanisms
+- Test recurrence patterns thoroughly
 
 ---
 
@@ -1045,7 +928,7 @@ The Calendar API uses Thunderbird's experimental WebExtension APIs:
 
 - Event and task data stored in calendar databases
 - Network calendars may sync over internet
-- Attendee email addresses exposed
-- Calendar URLs may contain credentials
-- All operations require calendarProvider permission
+- Attendee email addresses exposed in API responses
+- All operations require calendar API permission
 - Experimental API may have security implications
+- Consider data privacy when sharing calendar information

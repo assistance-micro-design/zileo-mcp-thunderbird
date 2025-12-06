@@ -3,8 +3,9 @@
 **Projet**: thunderbird-mcp
 **Entreprise**: Assistance Micro Design
 **Repository**: https://github.com/assistance-micro-design/thunderbird-mcp
-**Version**: 1.0.0-draft
+**Version**: 1.0.0
 **Date**: Décembre 2025
+**Statut**: ✅ Implémenté
 
 ---
 
@@ -487,28 +488,31 @@ server/
 
 ## 10. Phases de Développement
 
-### Phase 1 - MVP (Semaines 1-3)
-- [x] Architecture Native Messaging
-- [ ] Module Messages (search, list, get, update)
-- [ ] Module Dossiers (list, get)
-- [ ] Module Tags (list, CRUD)
-- [ ] Serveur MCP basique (stdio)
+### Phase 1 - MVP ✅
+- [x] Architecture WebSocket (remplace Native Messaging)
+- [x] Module Messages (search, list, list_unread, get, update, move, copy, delete, archive)
+- [x] Module Dossiers (list, get, create, rename, delete, move, mark_read)
+- [x] Module Tags (list, create, update, delete)
+- [x] Serveur MCP avec SDK @modelcontextprotocol
 
-### Phase 2 - Contacts (Semaines 4-5)
-- [ ] Module Contacts CRUD complet
-- [ ] Module Carnets d'adresses
-- [ ] Ressources MCP (contacts/recent)
+### Phase 2 - Contacts ✅
+- [x] Module Contacts CRUD complet (search, list, get, create, update, delete)
+- [x] Module Carnets d'adresses (list, create, delete)
+- [x] Ressources MCP (contacts/recent)
+- [x] Support vCard 4.0
 
-### Phase 3 - Calendrier (Semaines 6-7)
-- [ ] Intégration API expérimentale
-- [ ] Module Événements CRUD
-- [ ] Module Tâches CRUD
-- [ ] Ressources calendrier
+### Phase 3 - Calendrier ✅ (Expérimental)
+- [x] Intégration API expérimentale (webext-experiments)
+- [x] Module Calendriers (list, get)
+- [x] Module Événements CRUD (search, list, get, create, update, move, delete)
+- [x] Module Tâches CRUD (list, get, create, update, delete, complete)
+- [x] Ressources calendrier (today, upcoming, tasks/pending)
 
-### Phase 4 - Production (Semaine 8)
-- [ ] Tests E2E complets
-- [ ] Documentation utilisateur
-- [ ] Scripts d'installation
+### Phase 4 - Production ✅
+- [x] Documentation utilisateur complète
+- [x] Scripts d'installation
+- [x] Extension XPI packagée
+- [ ] Tests E2E complets (framework configuré)
 - [ ] Publication AMO (addons.thunderbird.net)
 
 ---
