@@ -1,9 +1,0 @@
-{
-  "mcpServers": {
-    "thunderbird": {
-      "command": "node",
-      "args": ["dist/index.js"],
-      "cwd": "/home/seb-hp/apps/Thunderbird-mcp/server"
-    }
-  }
-}
