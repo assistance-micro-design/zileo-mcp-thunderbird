@@ -65,7 +65,7 @@ async function dispatch(method, params) {
     case 'contacts':
       return await handleContactsAPI(action, params);
 
-    case 'addressbooks':
+    case 'addressBooks':
       return await handleAddressBooksAPI(action, params);
 
     case 'accounts':
@@ -106,7 +106,13 @@ async function handleMessagesAPI(action, params) {
       return await MessagesAPI.listUnread(params.accountId, params.limit);
 
     case 'get':
-      return await MessagesAPI.get(params.messageId, params.format);
+      return await MessagesAPI.get(params.messageId, 'headers');
+
+    case 'getFull':
+      return await MessagesAPI.get(params.messageId, 'full');
+
+    case 'getRaw':
+      return await MessagesAPI.get(params.messageId, 'raw');
 
     case 'update':
       await MessagesAPI.update(params.messageId, params);
@@ -158,7 +164,7 @@ async function handleFoldersAPI(action, params) {
       await FoldersAPI.move(params.folderId, params.destinationFolderId);
       return { success: true };
 
-    case 'mark_read':
+    case 'markAsRead':
       await FoldersAPI.markAsRead(params.folderId);
       return { success: true };
 

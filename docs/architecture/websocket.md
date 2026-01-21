@@ -35,9 +35,112 @@ The WebSocket bridge provides bidirectional communication between the MCP server
 
 **Limitations**:
 - ⚠️ Requires localhost port availability
-- ⚠️ Single client connection enforced by bridge
+- ⚠️ Single Thunderbird extension connection (by design)
 - ⚠️ Security limited to localhost binding
 - ⚠️ No encryption (localhost-only mitigates risk)
+
+## Multi-Client Architecture (Docker)
+
+Starting with version 1.2.0, the WebSocket bridge supports multiple MCP client connections while maintaining a single Thunderbird extension connection. This architecture enables Docker deployments where multiple MCP instances share a common bridge.
+
+### Path-Based Routing
+
+The bridge uses HTTP upgrade path routing to differentiate connection types:
+
+| Path | Client Type | Max Connections | Purpose |
+|------|-------------|-----------------|---------|
+| `/` or `/thunderbird` | Thunderbird Extension | 1 | Handles API requests |
+| `/mcp` | MCP Client Instances | Unlimited | Sends requests via bridge |
+
+### Architecture Diagram
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│                       Docker Container                            │
+│  ┌────────────────────────────────────────────────────────────┐  │
+│  │           bridge-standalone.ts (port 9876)                  │  │
+│  │                WebSocket Bridge Server                      │  │
+│  │                                                             │  │
+│  │   HTTP Server with WebSocket Upgrade Routing                │  │
+│  │                                                             │  │
+│  │   /thunderbird (ou /)        │         /mcp                │  │
+│  │   └─ wssThunderbird          │         └─ wssMcp           │  │
+│  │   └─ 1 connexion max         │         └─ multi-clients    │  │
+│  └────────────────────────────────────────────────────────────┘  │
+│              ▲                               ▲                    │
+│              │                         ┌─────┴─────┐              │
+│   Extension Thunderbird           docker exec   docker exec      │
+│   (via host network)              (MCP #1)      (MCP #2)         │
+└──────────────────────────────────────────────────────────────────┘
+
+Endpoints:
+  - ws://localhost:9876/          → Extension Thunderbird
+  - ws://localhost:9876/mcp       → Clients MCP (multiples)
+  - http://localhost:9876/health  → Status JSON
+```
+
+### Request Flow (Multi-Client)
+
+```mermaid
+sequenceDiagram
+    participant MCP1 as MCP Client #1
+    participant MCP2 as MCP Client #2
+    participant Bridge as WebSocket Bridge
+    participant TB as Thunderbird Extension
+
+    Note over Bridge: Listening on port 9876
+
+    TB->>Bridge: Connect to /thunderbird
+    Bridge->>TB: Accept (single client)
+
+    MCP1->>Bridge: Connect to /mcp
+    Bridge->>MCP1: Accept + Welcome notification
+
+    MCP2->>Bridge: Connect to /mcp
+    Bridge->>MCP2: Accept + Welcome notification
+
+    MCP1->>Bridge: Request (messages.search)
+    Bridge->>TB: Relay request
+    TB->>Bridge: Response
+    Bridge->>MCP1: Relay response
+
+    MCP2->>Bridge: Request (folders.list)
+    Bridge->>TB: Relay request
+    TB->>Bridge: Response
+    Bridge->>MCP2: Relay response
+```
+
+### Bridge Client Mode
+
+When the MCP server detects an existing bridge (typically in Docker), it connects as a client instead of creating a server:
+
+```typescript
+// Auto-detection in initializeWebSocketBridge()
+const client = await tryConnectToExistingBridge(port);
+if (client) {
+  // Connect as client to /mcp path
+  return client;
+}
+// No bridge found, create server
+return new WebSocketBridge(options);
+```
+
+### Health Endpoint
+
+The bridge exposes an HTTP health endpoint:
+
+```bash
+curl http://localhost:9876/health
+```
+
+Response:
+```json
+{
+  "status": "ok",
+  "thunderbird": true,
+  "mcpClients": 2
+}
+```
 
 ## Protocol Specification
 

@@ -3,7 +3,7 @@
 **Projet**: thunderbird-mcp
 **Entreprise**: Assistance Micro Design
 **Repository**: https://github.com/assistance-micro-design/thunderbird-mcp
-**Version**: 1.1.0
+**Version**: 1.2.0
 **Date**: Décembre 2025
 **Statut**: ✅ Implémenté
 
@@ -38,7 +38,7 @@ Développer un serveur MCP (Model Context Protocol) permettant aux LLMs d'intera
 │                        CLIENT MCP                               │
 │              (Claude, GPT, Assistant IA, etc.)                  │
 └─────────────────────┬───────────────────────────────────────────┘
-                      │ JSON-RPC 2.0 (stdio/HTTP+SSE)
+                      │ JSON-RPC 2.0 (stdio)
                       ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │                    SERVEUR MCP                                  │
@@ -50,11 +50,11 @@ Développer un serveur MCP (Model Context Protocol) permettant aux LLMs d'intera
 │         └────────────────┼───────────────┘                      │
 │                          ▼                                      │
 │              ┌───────────────────────┐                          │
-│              │  Native Messaging     │                          │
-│              │      Bridge           │                          │
+│              │   WebSocket Bridge    │                          │
+│              │   (Client ou Server)  │                          │
 │              └───────────┬───────────┘                          │
 └──────────────────────────┼──────────────────────────────────────┘
-                           │ Native Messaging Protocol
+                           │ WebSocket (ws://localhost:9876)
                            ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │                 EXTENSION THUNDERBIRD                           │
@@ -75,6 +75,39 @@ Développer un serveur MCP (Model Context Protocol) permettant aux LLMs d'intera
 │           (Emails, Contacts, Calendriers, Tâches)               │
 └─────────────────────────────────────────────────────────────────┘
 ```
+
+### 2.1.1 Architecture Docker (Multi-Client)
+
+Pour le déploiement Docker, l'architecture supporte plusieurs clients MCP simultanés :
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│                       Docker Container                            │
+│  ┌────────────────────────────────────────────────────────────┐  │
+│  │           bridge-standalone.ts (port 9876)                  │  │
+│  │                WebSocket Bridge Server                      │  │
+│  │                                                             │  │
+│  │   /thunderbird (ou /)        │         /mcp                │  │
+│  │   └─ 1 connexion max         │         └─ multi-clients    │  │
+│  │   (Extension Thunderbird)    │         (Instances MCP)     │  │
+│  └────────────────────────────────────────────────────────────┘  │
+│              ▲                               ▲                    │
+│              │                         ┌─────┴─────┐              │
+│   Extension Thunderbird           docker exec   docker exec      │
+│   (via host network)              (MCP #1)      (MCP #2)         │
+└──────────────────────────────────────────────────────────────────┘
+
+Endpoints:
+  - ws://localhost:9876/          → Extension Thunderbird (ou /thunderbird)
+  - ws://localhost:9876/mcp       → Clients MCP (multiples)
+  - http://localhost:9876/health  → Status JSON
+```
+
+**Flux de communication Docker:**
+1. Le conteneur lance `bridge-standalone.ts` (serveur WebSocket uniquement)
+2. L'extension Thunderbird se connecte au chemin `/` ou `/thunderbird`
+3. Les clients MCP (`docker exec`) se connectent au chemin `/mcp`
+4. Le bridge relaie les requêtes MCP vers Thunderbird et retourne les réponses
 
 ### 2.2 Composants
 
@@ -514,6 +547,14 @@ server/
 - [x] Extension XPI packagée
 - [ ] Tests E2E complets (framework configuré)
 - [ ] Publication AMO (addons.thunderbird.net)
+
+### Phase 5 - Docker Multi-Client ✅
+- [x] Architecture multi-client WebSocket
+- [x] Routage par chemin (`/thunderbird`, `/mcp`)
+- [x] Bridge standalone pour Docker (`bridge-standalone.ts`)
+- [x] Client bridge pour mode connecté (`bridge-client.ts`)
+- [x] Health endpoint HTTP (`/health`)
+- [x] Support de multiples instances MCP simultanées
 
 ---
 

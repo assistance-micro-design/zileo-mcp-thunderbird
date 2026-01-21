@@ -11,6 +11,7 @@ server/
 ├── src/
 │   ├── index.ts                 # Entry point and CLI
 │   ├── server.ts                # MCP server initialization
+│   ├── bridge-standalone.ts     # Standalone bridge for Docker
 │   ├── tools/
 │   │   ├── index.ts            # Tool registry and exports
 │   │   ├── messages.ts         # Message tools handlers
@@ -23,9 +24,10 @@ server/
 │   ├── resources/
 │   │   ├── index.ts            # Resource registry
 │   │   └── handlers.ts         # Resource handler implementations
-│   ├── native-messaging/
-│   │   ├── client.ts           # Native Messaging client
-│   │   └── protocol.ts         # Message serialization
+│   ├── websocket/
+│   │   ├── bridge.ts           # WebSocket bridge (server + multi-client)
+│   │   ├── bridge-client.ts    # Client mode for connecting to existing bridge
+│   │   └── client-adapter.ts   # Adapter for Native Messaging compatibility
 │   ├── schemas/
 │   │   ├── messages.ts         # Message tool schemas
 │   │   ├── folders.ts          # Folder tool schemas
@@ -38,7 +40,7 @@ server/
 │       └── validation.ts       # Zod validation helpers
 ├── package.json
 ├── tsconfig.json
-└── native-host.json             # Native Messaging manifest
+└── native-host.json             # Native Messaging manifest (legacy)
 ```
 
 ## Component Architecture
@@ -407,6 +409,88 @@ export function registerResourceHandlers(
 | `thunderbird://calendar/today` | Today's events | JSON array |
 | `thunderbird://calendar/upcoming` | Next 7 days | JSON array |
 | `thunderbird://tasks/pending` | Pending tasks | JSON array |
+
+## WebSocket Bridge Architecture
+
+### Bridge Modes
+
+The server supports two modes for WebSocket communication:
+
+**Server Mode** (Standard deployment):
+```typescript
+// Direct mode - server creates its own WebSocket bridge
+const bridge = await initializeWebSocketBridgeServer(options);
+```
+
+**Client Mode** (Docker deployment):
+```typescript
+// Client mode - connects to existing bridge via /mcp path
+const client = await tryConnectToExistingBridge(port);
+if (client) {
+  // Use client mode
+  return client;  // WebSocketBridgeClient instance
+}
+```
+
+### Bridge Client (`bridge-client.ts`)
+
+**Purpose**: Connect to an existing WebSocket bridge as a client (used in Docker multi-client architecture)
+
+**Key Features**:
+- Connects to `/mcp` WebSocket path
+- Same interface as `WebSocketBridge` (implements `BridgeInterface`)
+- Relays requests to Thunderbird through the bridge
+- Supports multiple simultaneous MCP clients
+
+**Implementation**:
+```typescript
+export class WebSocketBridgeClient extends EventEmitter implements BridgeInterface {
+  private ws: WebSocket | null = null;
+  private pendingRequests: Map<string, PendingRequest> = new Map();
+
+  async connect(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      // Connect to /mcp path for MCP clients
+      const url = `ws://127.0.0.1:${this.options.port}/mcp`;
+      this.ws = new WebSocket(url);
+      // ... connection handling
+    });
+  }
+
+  async sendRequest(action: string, params: Record<string, unknown>): Promise<unknown> {
+    // Same interface as WebSocketBridge
+    // Requests are relayed through the bridge to Thunderbird
+  }
+}
+```
+
+### Bridge Standalone (`bridge-standalone.ts`)
+
+**Purpose**: Run only the WebSocket bridge server for Docker container
+
+**Usage**:
+```bash
+# Started by Docker container
+node dist/bridge-standalone.js
+```
+
+**Features**:
+- Creates WebSocket server on port 9876
+- Handles `/thunderbird` path (single extension)
+- Handles `/mcp` path (multiple MCP clients)
+- Provides `/health` HTTP endpoint
+- No MCP server logic - just the bridge
+
+### Mode Detection Flow
+
+```mermaid
+graph TD
+    Start[MCP Server Start] --> Check{Bridge exists<br/>on port?}
+    Check -->|Yes| ClientMode[Connect as client<br/>to /mcp path]
+    Check -->|No| ServerMode[Create bridge server]
+    ClientMode --> Ready[Ready for requests]
+    ServerMode --> Ready
+```
 
 ## Native Messaging Client
 

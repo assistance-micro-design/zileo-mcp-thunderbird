@@ -1,13 +1,22 @@
 # Thunderbird MCP Server - Docker Compose Configuration
 #
+# Architecture:
+#   The container runs a standalone WebSocket bridge server on port 9876.
+#   This bridge acts as a relay between Thunderbird extension and MCP clients.
+#
 # Usage:
-#   docker-compose up -d           # Start in background
-#   docker-compose logs -f         # View logs
-#   docker-compose down            # Stop and remove
+#   docker-compose up -d                              # Start bridge in background
+#   docker-compose logs -f                            # View logs
+#   docker-compose down                               # Stop and remove
+#
+# Running MCP commands:
+#   docker exec -i thunderbird-mcp-server node dist/index.js
+#
+#   The MCP server will automatically connect to the running bridge in client mode.
+#   Multiple MCP instances can share the same bridge.
 #
 # For MCP client integration (Claude Desktop, etc.):
-#   Use the stdio transport by running the container interactively
-#   or configure your MCP client to use the Docker command
+#   Configure command: docker exec -i thunderbird-mcp-server node dist/index.js
 
 version: '3.8'
 
@@ -51,13 +60,16 @@ services:
     networks:
       - mcp-network
 
-    # Health check
+    # Health check - verify WebSocket bridge is listening
     healthcheck:
-      test: ["CMD", "node", "-e", "console.log('healthy')"]
+      test: ["CMD", "node", "-e", "const net = require('net'); const s = new net.Socket(); s.setTimeout(5000); s.connect(9876, '127.0.0.1', () => { s.destroy(); process.exit(0); }); s.on('error', () => process.exit(1)); s.on('timeout', () => { s.destroy(); process.exit(1); });"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 10s
+
+    # Keep container running with stdin open for 'docker exec' commands
+    stdin_open: true
 
   # Optional: Development mode with hot reload
   thunderbird-mcp-dev:

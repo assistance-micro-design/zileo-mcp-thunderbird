@@ -101,21 +101,41 @@ npm run build
 
 ### Option 2: Docker Setup
 
+The Docker deployment uses a multi-client architecture where the container runs a standalone WebSocket bridge, and MCP instances connect to it via `docker exec`.
+
 1. Clone and build:
 ```bash
 git clone https://github.com/assistance-micro-design/thunderbird-mcp.git
 cd thunderbird-mcp
-docker-compose build
+docker compose build
 ```
 
-2. Start the server:
+2. Start the bridge server:
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 
 3. Install the Thunderbird extension (same as above)
 
-See [Docker Setup Guide](./docs/docker-setup.md) for detailed Docker configuration.
+4. Verify the bridge is running:
+```bash
+curl http://localhost:9876/health
+# Returns: {"status":"ok","thunderbird":true,"mcpClients":0}
+```
+
+**Architecture:**
+```
+┌─────────────────────────────────────────────────────┐
+│              Docker Container                        │
+│  ┌───────────────────────────────────────────────┐  │
+│  │     bridge-standalone (port 9876)             │  │
+│  │  /thunderbird → Extension (1 client)          │  │
+│  │  /mcp → MCP instances (multi-client)          │  │
+│  └───────────────────────────────────────────────┘  │
+│              ▲                    ▲                  │
+│   Thunderbird Extension    docker exec (MCP)        │
+└─────────────────────────────────────────────────────┘
+```
 
 ## Configuration
 
@@ -140,7 +160,7 @@ Add to your MCP client configuration (e.g., Claude Desktop `~/.config/Claude/cla
 
 ### MCP Server Configuration (Docker)
 
-For Docker deployment, configure your MCP client:
+For Docker deployment, the container runs a standalone WebSocket bridge. MCP instances connect via `docker exec`:
 
 ```json
 {
@@ -149,7 +169,7 @@ For Docker deployment, configure your MCP client:
       "command": "docker",
       "args": [
         "exec", "-i", "thunderbird-mcp-server",
-        "node", "/app/server/dist/index.js"
+        "node", "dist/index.js"
       ],
       "env": {
         "LOG_LEVEL": "info"
@@ -159,23 +179,9 @@ For Docker deployment, configure your MCP client:
 }
 ```
 
-Or run Docker directly (without docker-compose):
+The MCP server automatically detects the running bridge and connects as a client. Multiple MCP instances can share the same bridge simultaneously.
 
-```json
-{
-  "mcpServers": {
-    "thunderbird": {
-      "command": "docker",
-      "args": [
-        "run", "-i", "--rm",
-        "--network", "host",
-        "-e", "THUNDERBIRD_PORT=9876",
-        "thunderbird-mcp:latest"
-      ]
-    }
-  }
-}
-```
+**Important:** The container must be running (`docker compose up -d`) before using `docker exec`.
 
 ### Environment Variables
 
@@ -320,7 +326,10 @@ thunderbird-mcp/
 │   │   │   ├── calendar.ts   # 9 calendar tools
 │   │   │   └── tasks.ts      # 6 task tools
 │   │   ├── resources/        # MCP resource handlers
-│   │   ├── websocket/        # WebSocket bridge
+│   │   ├── websocket/        # WebSocket bridge (server + client modes)
+│   │   │   ├── bridge.ts     # Multi-client WebSocket server
+│   │   │   └── bridge-client.ts  # Client for connecting to existing bridge
+│   │   ├── bridge-standalone.ts  # Standalone bridge for Docker
 │   │   ├── types/            # TypeScript definitions
 │   │   └── utils/            # Logger, errors
 │   └── package.json
@@ -410,4 +419,4 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 ---
 
-**Status**: Production Ready | **Version**: 1.1.0 | **Tools**: 47 | **Last Updated**: 2025-12-05
+**Status**: Production Ready | **Version**: 1.2.0 | **Tools**: 47 | **Last Updated**: 2026-01-21

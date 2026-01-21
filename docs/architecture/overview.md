@@ -461,6 +461,80 @@ sequenceDiagram
 - No firewall configuration needed (localhost only)
 - No external network access required
 
+## Docker Architecture (Multi-Client)
+
+Starting with version 1.2.0, the architecture supports Docker deployment with multiple MCP clients sharing a single bridge.
+
+### Docker Deployment Model
+
+```mermaid
+graph TB
+    subgraph "Docker Container"
+        Bridge[bridge-standalone.ts<br/>Port 9876]
+
+        subgraph "WebSocket Paths"
+            PathTB[/thunderbird<br/>Single Client]
+            PathMCP[/mcp<br/>Multi-Client]
+        end
+
+        subgraph "HTTP"
+            Health[/health<br/>Status JSON]
+        end
+
+        Bridge --> PathTB
+        Bridge --> PathMCP
+        Bridge --> Health
+    end
+
+    subgraph "Host System"
+        TB[Thunderbird Extension]
+        MCP1[MCP Client #1<br/>docker exec]
+        MCP2[MCP Client #2<br/>docker exec]
+        MCP3[MCP Client #3<br/>docker exec]
+    end
+
+    TB -->|ws://localhost:9876/| PathTB
+    MCP1 -->|ws://127.0.0.1:9876/mcp| PathMCP
+    MCP2 -->|ws://127.0.0.1:9876/mcp| PathMCP
+    MCP3 -->|ws://127.0.0.1:9876/mcp| PathMCP
+```
+
+### Key Components
+
+| Component | File | Purpose |
+|-----------|------|---------|
+| Bridge Server | `bridge-standalone.ts` | Standalone WebSocket bridge for Docker |
+| Bridge Client | `bridge-client.ts` | Client mode for MCP instances |
+| Path Router | `bridge.ts` | HTTP upgrade routing by path |
+
+### Connection Flow
+
+1. **Container starts**: `bridge-standalone.ts` creates WebSocket server on port 9876
+2. **Extension connects**: Thunderbird extension connects to `/` or `/thunderbird`
+3. **MCP client starts**: `docker exec` runs MCP server which detects existing bridge
+4. **Client mode**: MCP server connects to `/mcp` path as client
+5. **Request relay**: Bridge relays requests from MCP to Thunderbird and responses back
+
+### Client Mode Detection
+
+```typescript
+// In initializeWebSocketBridge()
+const client = await tryConnectToExistingBridge(port);
+if (client) {
+  // Bridge exists, connect as client
+  return client;  // WebSocketBridgeClient
+}
+// No bridge, create server
+return new WebSocketBridge(options);
+```
+
+### Benefits
+
+- **Multiple MCP clients**: Unlimited clients can connect via `/mcp`
+- **Single Thunderbird**: One extension connection (by design)
+- **Shared state**: All clients share the same Thunderbird connection
+- **Docker-friendly**: No port conflicts, clean separation
+
 ## Future Architecture Considerations
 
 ### Potential Enhancements

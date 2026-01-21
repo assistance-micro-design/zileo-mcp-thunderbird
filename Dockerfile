@@ -65,10 +65,11 @@ ENV THUNDERBIRD_PORT=9876
 # Expose WebSocket port for Thunderbird extension connection
 EXPOSE 9876
 
-# Health check
+# Health check - verify WebSocket port is listening
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD node -e "console.log('healthy')" || exit 1
+    CMD node -e "const net = require('net'); const s = new net.Socket(); s.setTimeout(5000); s.connect(9876, '127.0.0.1', () => { s.destroy(); process.exit(0); }); s.on('error', () => process.exit(1)); s.on('timeout', () => { s.destroy(); process.exit(1); });" || exit 1
 
-# Run the MCP server
+# Default: Run the standalone bridge server (for Docker deployment)
+# The MCP server should be run via 'docker exec' when needed
 WORKDIR /app/server
-CMD ["node", "dist/index.js"]
+CMD ["node", "dist/bridge-standalone.js"]

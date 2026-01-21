@@ -20,11 +20,14 @@ export const FoldersAPI = {
         continue;
       }
 
-      // Get folders from account (they're in the account object from list())
-      const folders = this._flattenFolders(account.folders, includeSubFolders);
-
+      // Get folders using folders.query with accountId filter
+      const subFolders = await messenger.folders.query({
+        accountId: account.id,
+        isRoot: false
+      });
+      
       // Add account info to each folder for clarity
-      const foldersWithAccount = folders.map(folder => ({
+      const foldersWithAccount = subFolders.map(folder => ({
         ...folder,
         accountId: account.id,
         accountName: account.name
@@ -95,8 +98,8 @@ export const FoldersAPI = {
    * @returns {Promise<void>}
    */
   async markAsRead(folderId) {
-    const folder = await messenger.folders.get(folderId);
-    const messageList = await messenger.messages.list(folder);
+    // messages.list() takes a folderId string directly, not a MailFolder object
+    const messageList = await messenger.messages.list(folderId);
 
     const updatePromises = messageList.messages.map(message =>
       messenger.messages.update(message.id, { read: true })

@@ -37,22 +37,15 @@ export const ContactsAPI = {
    * @param {number} limit - Maximum results
    * @returns {Promise<Array>} Array of matching contacts
    */
-  async searchContacts(query, addressBookId, limit = 50) {
-    const allContacts = [];
-
+  async searchContacts(searchQuery, addressBookId, limit = 50) {
+    // MV3: use query() instead of quickSearch()
+    const queryInfo = { searchString: searchQuery };
     if (addressBookId) {
-      const contacts = await messenger.contacts.quickSearch(addressBookId, query);
-      allContacts.push(...contacts);
-    } else {
-      const addressBooks = await messenger.addressBooks.list();
-
-      for (const addressBook of addressBooks) {
-        const contacts = await messenger.contacts.quickSearch(addressBook.id, query);
-        allContacts.push(...contacts);
-      }
+      queryInfo.parentId = addressBookId;
     }
 
-    return allContacts.slice(0, limit);
+    const contacts = await messenger.addressBooks.contacts.query(queryInfo);
+    return contacts.slice(0, limit);
   },
 
   /**
@@ -63,7 +56,7 @@ export const ContactsAPI = {
    * @returns {Promise<Object>} Contacts with pagination info
    */
   async listContacts(addressBookId, limit = 50, offset = 0) {
-    const contacts = await messenger.contacts.list(addressBookId);
+    const contacts = await messenger.addressBooks.contacts.list(addressBookId);
     const paginatedContacts = contacts.slice(offset, offset + limit);
 
     return {
@@ -81,7 +74,7 @@ export const ContactsAPI = {
    * @returns {Promise<Object>} Contact details
    */
   async getContact(contactId) {
-    return await messenger.contacts.get(contactId);
+    return await messenger.addressBooks.contacts.get(contactId);
   },
 
   /**
@@ -92,10 +85,10 @@ export const ContactsAPI = {
    */
   async createContact(addressBookId, properties) {
     if (properties.vCard) {
-      return await messenger.contacts.create(addressBookId, properties.vCard);
+      return await messenger.addressBooks.contacts.create(addressBookId, properties.vCard);
     } else {
       const vCard = this._propertiesToVCard(properties);
-      return await messenger.contacts.create(addressBookId, vCard);
+      return await messenger.addressBooks.contacts.create(addressBookId, vCard);
     }
   },
 
@@ -107,14 +100,14 @@ export const ContactsAPI = {
    */
   async updateContact(contactId, properties) {
     if (properties.vCard) {
-      await messenger.contacts.update(contactId, properties.vCard);
+      await messenger.addressBooks.contacts.update(contactId, properties.vCard);
     } else {
-      const currentContact = await messenger.contacts.get(contactId);
+      const currentContact = await messenger.addressBooks.contacts.get(contactId);
       const vCard = this._propertiesToVCard({
         ...currentContact.properties,
         ...properties
       });
-      await messenger.contacts.update(contactId, vCard);
+      await messenger.addressBooks.contacts.update(contactId, vCard);
     }
   },
 
@@ -124,7 +117,7 @@ export const ContactsAPI = {
    * @returns {Promise<void>}
    */
   async deleteContact(contactId) {
-    await messenger.contacts.delete(contactId);
+    await messenger.addressBooks.contacts.delete(contactId);
   },
 
   /**

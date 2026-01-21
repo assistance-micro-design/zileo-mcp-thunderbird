@@ -30,10 +30,10 @@ export const MessagesAPI = {
     if (to) query.recipients = to;
     if (body) query.body = body;
     if (tags.length > 0) query.tags = { tags, mode: 'any' };
-    if (unread !== undefined) query.unread = unread;
+    if (unread !== undefined) query.read = !unread;
     if (dateFrom) query.fromDate = new Date(dateFrom);
     if (dateTo) query.toDate = new Date(dateTo);
-    if (folderId) query.folder = await messenger.folders.get(folderId);
+    if (folderId) query.folderId = folderId;
 
     const messageList = await messenger.messages.query(query);
     return messageList.messages.slice(0, limit);
@@ -47,8 +47,8 @@ export const MessagesAPI = {
    * @returns {Promise<Object>} Message list with pagination info
    */
   async list(folderId, limit = 50, offset = 0) {
-    const folder = await messenger.folders.get(folderId);
-    const messageList = await messenger.messages.list(folder);
+    // messages.list() takes a folderId string directly, not a MailFolder object
+    const messageList = await messenger.messages.list(folderId);
 
     const messages = messageList.messages || [];
     const paginatedMessages = messages.slice(offset, offset + limit);
@@ -69,7 +69,7 @@ export const MessagesAPI = {
    * @returns {Promise<Array>} Array of unread messages
    */
   async listUnread(accountId, limit = 100) {
-    const query = { unread: true };
+    const query = { read: false };
 
     if (accountId) {
       const account = await messenger.accounts.get(accountId);
@@ -79,7 +79,7 @@ export const MessagesAPI = {
       for (const folder of folders) {
         const messageList = await messenger.messages.query({
           ...query,
-          folder: folder
+          folderId: folder.id
         });
         allMessages.push(...messageList.messages);
       }
@@ -103,7 +103,8 @@ export const MessagesAPI = {
     if (format === 'full') {
       return await this.getFull(messageId);
     } else if (format === 'raw') {
-      return await messenger.messages.getRaw(messageId);
+      // Request BinaryString format for JSON serialization (File format can't be serialized)
+      return await messenger.messages.getRaw(messageId, { data_format: 'BinaryString' });
     }
 
     return message;

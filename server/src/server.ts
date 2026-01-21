@@ -13,7 +13,7 @@ import {
   ReadResourceRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
 
-import { initializeWebSocketBridge, stopWebSocketBridge } from './websocket/bridge.js';
+import { initializeWebSocketBridge, stopWebSocketBridge, isBridgeClientMode } from './websocket/bridge.js';
 import { allTools, getToolHandler, toolExists } from './tools/index.js';
 import { resources, resourceTemplates, getResourceHandler } from './resources/index.js';
 import logger from './utils/logger.js';
@@ -149,7 +149,9 @@ export class ThunderbirdMcpServer {
 
     try {
       // Initialize WebSocket bridge for Thunderbird communication
-      // This is optional - if it fails, MCP server still works but tools will fail
+      // This now supports two modes:
+      // 1. Client mode: connects to existing bridge (e.g., when Docker container runs standalone bridge)
+      // 2. Server mode: creates new bridge server if no existing bridge found
       const wsPort = parseInt(process.env.THUNDERBIRD_PORT || '9876', 10);
       logger.info(`Initializing WebSocket bridge on port ${wsPort}`);
       try {
@@ -158,7 +160,8 @@ export class ThunderbirdMcpServer {
           timeout: 30000,
           maxPendingRequests: 100,
         });
-        logger.info('WebSocket bridge initialized successfully');
+        const mode = isBridgeClientMode() ? 'client' : 'server';
+        logger.info(`WebSocket bridge initialized successfully in ${mode} mode`);
       } catch (wsError) {
         logger.warn(`WebSocket bridge failed to start: ${wsError instanceof Error ? wsError.message : 'Unknown error'}`);
         logger.warn('MCP server will continue but Thunderbird tools will not work until WebSocket is available');

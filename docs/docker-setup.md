@@ -2,10 +2,36 @@
 
 This guide explains how to run the Thunderbird MCP Server using Docker.
 
+## Architecture Overview
+
+Starting with version 1.2.0, the Docker deployment uses a **multi-client architecture**:
+
+```
+┌─────────────────────────────────────────────────────┐
+│              Docker Container                        │
+│  ┌───────────────────────────────────────────────┐  │
+│  │     bridge-standalone (port 9876)             │  │
+│  │                                               │  │
+│  │  /thunderbird → Extension (1 client)          │  │
+│  │  /mcp → MCP instances (multi-client)          │  │
+│  │  /health → HTTP status endpoint               │  │
+│  └───────────────────────────────────────────────┘  │
+│              ▲                    ▲                  │
+│   Thunderbird Extension    docker exec (MCP)        │
+└─────────────────────────────────────────────────────┘
+```
+
+**Key Components:**
+- **bridge-standalone.ts**: Runs only the WebSocket bridge server (no MCP server)
+- **MCP instances**: Connect via `docker exec` as clients to the bridge
+- **Thunderbird extension**: Connects to the bridge to handle requests
+
+This architecture allows **multiple MCP clients** to share a single bridge simultaneously.
+
 ## Prerequisites
 
 - Docker 20.10 or higher
-- Docker Compose v2.0 or higher
+- Docker Compose v2.0 or higher (use `docker compose` not `docker-compose`)
 - Thunderbird with the MCP extension installed
 
 ## Quick Start
@@ -14,26 +40,35 @@ This guide explains how to run the Thunderbird MCP Server using Docker.
 
 ```bash
 # Build the Docker image
-docker-compose build
+docker compose build
 
-# Start the server in background
-docker-compose up -d
+# Start the bridge server in background
+docker compose up -d
+
+# Verify the bridge is running
+curl http://localhost:9876/health
+# Returns: {"status":"ok","thunderbird":false,"mcpClients":0}
 
 # View logs
-docker-compose logs -f thunderbird-mcp
+docker compose logs -f thunderbird-mcp
 
 # Stop the server
-docker-compose down
+docker compose down
 ```
 
-### Development Mode
+### Test MCP Connection
 
-For development with hot-reload:
+Once the container is running, test an MCP connection:
 
 ```bash
-# Start development container
-docker-compose --profile dev up thunderbird-mcp-dev
+# Send an MCP initialize request
+echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"1.0.0"}}}' | \
+  docker exec -i thunderbird-mcp-server node dist/index.js
 ```
+
+Expected output includes:
+- `Connected to existing bridge in client mode`
+- JSON-RPC response with server info
 
 ## Configuration
 
@@ -41,7 +76,7 @@ docker-compose --profile dev up thunderbird-mcp-dev
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `THUNDERBIRD_PORT` | WebSocket port for Thunderbird extension | `9876` |
+| `THUNDERBIRD_PORT` | WebSocket port for bridge | `9876` |
 | `LOG_LEVEL` | Logging level (debug, info, warn, error) | `info` |
 | `NODE_ENV` | Node environment | `production` |
 
@@ -56,19 +91,9 @@ LOG_LEVEL=info
 
 ## MCP Client Configuration
 
-### Claude Desktop (Docker stdio)
+### Claude Desktop Configuration
 
-For Claude Desktop with Docker, you have two options:
-
-#### Option 1: Run container in background (Recommended)
-
-Run the container with WebSocket bridge:
-
-```bash
-docker-compose up -d
-```
-
-Then configure Claude Desktop (`~/.config/Claude/claude_desktop_config.json`):
+Configure Claude Desktop (`~/.config/Claude/claude_desktop_config.json`):
 
 ```json
 {
@@ -77,7 +102,7 @@ Then configure Claude Desktop (`~/.config/Claude/claude_desktop_config.json`):
       "command": "docker",
       "args": [
         "exec", "-i", "thunderbird-mcp-server",
-        "node", "/app/server/dist/index.js"
+        "node", "dist/index.js"
       ],
       "env": {
         "LOG_LEVEL": "info"
@@ -87,36 +112,53 @@ Then configure Claude Desktop (`~/.config/Claude/claude_desktop_config.json`):
 }
 ```
 
-#### Option 2: Direct Docker run (stdio)
+**Important:** The container must be running (`docker compose up -d`) before Claude Desktop starts.
 
-Configure Claude Desktop to run Docker directly:
+### How It Works
 
-```json
+1. Claude Desktop spawns `docker exec -i thunderbird-mcp-server node dist/index.js`
+2. The MCP server inside the container detects the running bridge
+3. It connects to `ws://127.0.0.1:9876/mcp` as a client
+4. Requests are relayed through the bridge to Thunderbird
+5. Multiple Claude instances can connect simultaneously
+
+## Endpoints
+
+| Endpoint | Protocol | Purpose |
+|----------|----------|---------|
+| `ws://localhost:9876/` | WebSocket | Thunderbird extension (single) |
+| `ws://localhost:9876/thunderbird` | WebSocket | Thunderbird extension (alias) |
+| `ws://localhost:9876/mcp` | WebSocket | MCP clients (multiple) |
+| `http://localhost:9876/health` | HTTP | Health check endpoint |
+
+### Health Check
+
+```bash
+# Check bridge status
+curl http://localhost:9876/health
+
+# Example response
 {
-  "mcpServers": {
-    "thunderbird": {
-      "command": "docker",
-      "args": [
-        "run", "-i", "--rm",
-        "--network", "host",
-        "-e", "THUNDERBIRD_PORT=9876",
-        "-e", "LOG_LEVEL=info",
-        "thunderbird-mcp:latest"
-      ]
-    }
-  }
+  "status": "ok",
+  "thunderbird": true,    # Extension connected
+  "mcpClients": 2         # Number of MCP clients
 }
 ```
 
-### Other MCP Clients
-
-For other MCP clients that support stdio transport, use similar Docker command patterns.
-
 ## Network Configuration
 
-### Host Network Mode
+### Default Bridge Network
 
-If you need the container to access host services:
+The container uses a bridge network. The Thunderbird extension connects from the host:
+
+```yaml
+ports:
+  - "9876:9876"  # Expose WebSocket port
+```
+
+### Host Network Mode (Alternative)
+
+If you need the container to share the host network:
 
 ```yaml
 services:
@@ -129,8 +171,10 @@ services:
 To use a different port:
 
 ```bash
-THUNDERBIRD_PORT=9999 docker-compose up -d
+THUNDERBIRD_PORT=9999 docker compose up -d
 ```
+
+Update extension configuration if using a custom port.
 
 ## Volume Mounts
 
@@ -142,29 +186,17 @@ Logs are stored in a Docker volume:
 # View log volume
 docker volume inspect thunderbird-mcp_thunderbird-mcp-logs
 
-# Access logs
-docker-compose exec thunderbird-mcp cat /app/logs/combined.log
+# Access logs inside container
+docker compose exec thunderbird-mcp cat /app/logs/combined.log
 ```
 
 ### Development Mounts
 
-In development mode, source files are mounted for hot-reload:
+In development mode (`--profile dev`), source files are mounted:
 
 ```yaml
 volumes:
   - ./server/src:/app/server/src:ro
-```
-
-## Health Checks
-
-The container includes a health check:
-
-```bash
-# Check container health
-docker inspect --format='{{.State.Health.Status}}' thunderbird-mcp-server
-
-# View health check history
-docker inspect --format='{{json .State.Health}}' thunderbird-mcp-server | jq
 ```
 
 ## Troubleshooting
@@ -173,36 +205,49 @@ docker inspect --format='{{json .State.Health}}' thunderbird-mcp-server | jq
 
 ```bash
 # Check logs
-docker-compose logs thunderbird-mcp
+docker compose logs thunderbird-mcp
 
-# Check if port is in use
+# Common issues:
+# - Port 9876 already in use
+# - Build failed
+```
+
+### Port already in use
+
+```bash
+# Check what's using port 9876
 lsof -i :9876
+
+# Or use a different port
+THUNDERBIRD_PORT=9999 docker compose up -d
 ```
 
 ### WebSocket connection issues
 
-Ensure Thunderbird extension can reach the Docker container:
-
 ```bash
-# Test WebSocket connection from host
-websocat ws://localhost:9876
+# Test WebSocket connection
+websocat ws://localhost:9876/health 2>/dev/null || echo "Not a WebSocket endpoint"
 
-# Or with curl
-curl -i -N -H "Connection: Upgrade" \
-  -H "Upgrade: websocket" \
-  -H "Sec-WebSocket-Version: 13" \
-  -H "Sec-WebSocket-Key: $(openssl rand -base64 16)" \
-  http://localhost:9876
+# Test HTTP health endpoint
+curl -v http://localhost:9876/health
+
+# Check bridge logs
+docker compose logs --tail=50 thunderbird-mcp
 ```
 
-### Permission issues
+### MCP client can't connect
 
-If you encounter permission errors:
+1. Verify container is running: `docker ps | grep thunderbird`
+2. Check health endpoint: `curl http://localhost:9876/health`
+3. Verify extension is connected (`"thunderbird": true`)
+4. Check MCP client logs for connection errors
 
-```bash
-# Fix log directory permissions
-docker-compose exec thunderbird-mcp chmod -R 755 /app/logs
-```
+### Thunderbird extension not connecting
+
+1. Verify extension is installed and enabled in Thunderbird
+2. Check extension console: Tools → Developer Tools → Error Console
+3. Verify port 9876 is accessible from host
+4. Check for firewall blocking localhost connections
 
 ## Building for Production
 
@@ -212,8 +257,8 @@ docker-compose exec thunderbird-mcp chmod -R 755 /app/logs
 # Build production image
 docker build -t thunderbird-mcp:latest .
 
-# Build with specific tag
-docker build -t thunderbird-mcp:v1.0.0 .
+# Build with specific version tag
+docker build -t thunderbird-mcp:1.2.0 .
 ```
 
 ### Push to registry
@@ -228,50 +273,72 @@ docker push your-registry/thunderbird-mcp:latest
 
 ## Resource Limits
 
-Default resource limits (can be adjusted in docker-compose.yml):
+Default limits in docker-compose.yml:
 
 - CPU: 0.5 cores (limit), 0.1 cores (reservation)
 - Memory: 256MB (limit), 64MB (reservation)
 
+Adjust in `docker-compose.yml` if needed:
+
+```yaml
+deploy:
+  resources:
+    limits:
+      cpus: '1.0'
+      memory: 512M
+```
+
 ## Security Considerations
 
-1. **Non-root user**: Container runs as non-root user `mcp`
-2. **Read-only filesystem**: Consider using `read_only: true` in production
-3. **Network isolation**: Uses dedicated bridge network
-4. **No privileged mode**: Container doesn't require privileged access
-
-## Integration with Thunderbird Extension
-
-The Thunderbird extension connects to the MCP server via WebSocket on port 9876. Ensure:
-
-1. Port 9876 is accessible from the host (where Thunderbird runs)
-2. No firewall blocking the connection
-3. Extension is properly configured
+1. **Non-root user**: Container runs as non-root user `mcp` (UID 1001)
+2. **Network isolation**: Uses dedicated bridge network by default
+3. **No privileged mode**: Container doesn't require privileged access
+4. **Localhost binding**: WebSocket only accepts localhost connections
+5. **Single Thunderbird client**: Only one extension can connect
 
 ## Commands Reference
 
 ```bash
 # Build
-docker-compose build
+docker compose build
 
-# Start
-docker-compose up -d
+# Start (background)
+docker compose up -d
+
+# Start (foreground with logs)
+docker compose up
 
 # Stop
-docker-compose down
+docker compose down
 
-# Logs
-docker-compose logs -f
+# View logs
+docker compose logs -f
 
 # Shell access
-docker-compose exec thunderbird-mcp sh
+docker compose exec thunderbird-mcp sh
+
+# Run MCP command
+docker exec -i thunderbird-mcp-server node dist/index.js
 
 # Restart
-docker-compose restart
+docker compose restart
 
 # Rebuild and start
-docker-compose up -d --build
+docker compose up -d --build
 
 # Remove volumes
-docker-compose down -v
+docker compose down -v
+
+# Check health
+curl http://localhost:9876/health
 ```
+
+## Migration from v1.1.x
+
+If upgrading from version 1.1.x:
+
+1. **Rebuild the image**: `docker compose build`
+2. **Update MCP client config**: Use `docker exec` instead of `docker run`
+3. **Restart container**: `docker compose down && docker compose up -d`
+
+The new architecture automatically handles multiple MCP connections.
