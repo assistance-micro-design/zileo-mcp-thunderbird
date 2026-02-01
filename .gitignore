@@ -12,3 +12,7 @@ coverage/
 .claude/
 .claude_old/
 .claude_exemple/
+
+# Local MCP/Serena configuration
+.mcp.json
+.serena/
