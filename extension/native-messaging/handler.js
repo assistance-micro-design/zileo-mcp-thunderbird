@@ -402,7 +402,10 @@ async function handleComposeAPI(action, params) {
       return await ComposeAPI.beginReply(params.messageId, params.replyType);
 
     case "beginForward":
-      return await ComposeAPI.beginForward(params.messageId, params.forwardType);
+      return await ComposeAPI.beginForward(
+        params.messageId,
+        params.forwardType,
+      );
 
     case "getDetails":
       return await ComposeAPI.getDetails(params.tabId);
