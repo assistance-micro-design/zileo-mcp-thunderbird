@@ -4,7 +4,8 @@ Model Context Protocol (MCP) server for Thunderbird email client integration. Th
 
 ## Features
 
-- **Email Management**: Search, read, move, copy, delete, and archive emails (9 tools)
+- **Email Management**: Search, read, move, copy, delete, and archive emails (10 tools)
+- **Email Composition**: Create, reply, forward, save drafts/templates, and send (8 tools)
 - **Folder Operations**: Create, rename, move, delete folders and mark as read (7 tools)
 - **Contact Access**: Full CRUD operations on contacts and address books (9 tools)
 - **Calendar Events**: Create, update, move, delete events with recurrence support (9 tools) \*
@@ -15,7 +16,7 @@ Model Context Protocol (MCP) server for Thunderbird email client integration. Th
 
 \* _Experimental features using webext-experiments calendar API_
 
-**Total: 47 MCP Tools**
+**Total: 56 MCP Tools**
 
 ## Architecture
 
