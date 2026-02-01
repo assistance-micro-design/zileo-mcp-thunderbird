@@ -73,6 +73,12 @@ const messagesArchiveSchema = z.object({
   messageIds: z.array(z.number().int()).min(1),
 });
 
+const messagesListRecentSchema = z.object({
+  accountId: z.string().optional(),
+  limit: z.number().int().positive().max(100).optional().default(20),
+  hoursAgo: z.number().int().positive().max(168).optional().default(24), // max 7 days
+});
+
 // =============================================================================
 // Tool Handlers
 // =============================================================================
@@ -384,6 +390,53 @@ export async function handleMessagesArchive(args: unknown): Promise<ToolCallResu
   }
 }
 
+
+/**
+ * List recent messages across ALL folders
+ * Calculates date range automatically based on hoursAgo parameter
+ */
+export async function handleMessagesListRecent(args: unknown): Promise<ToolCallResult> {
+  try {
+    const params = messagesListRecentSchema.parse(args);
+    const client = getNativeClient();
+
+    // Calculate date range
+    const now = new Date();
+    const dateFrom = new Date(now.getTime() - params.hoursAgo * 60 * 60 * 1000);
+
+    logger.info(`Listing recent messages from last ${params.hoursAgo} hours`);
+
+    // Use MESSAGES_SEARCH with date filter for global search
+    const searchParams = {
+      dateFrom: dateFrom.toISOString(),
+      dateTo: now.toISOString(),
+      accountId: params.accountId,
+      limit: params.limit,
+    };
+
+    const response = await client.sendRequest(MessageActions.MESSAGES_SEARCH, searchParams);
+
+    if (!response.success) {
+      const error = nativeErrorToJsonRpc(response.error);
+      return {
+        content: [{ type: 'text', text: JSON.stringify(error) }],
+        isError: true,
+      };
+    }
+
+    return {
+      content: [{ type: 'text', text: JSON.stringify(response.data, null, 2) }],
+    };
+  } catch (error) {
+    logger.error('Error in handleMessagesListRecent:', error);
+    const jsonRpcError = nativeErrorToJsonRpc(error);
+    return {
+      content: [{ type: 'text', text: JSON.stringify(jsonRpcError) }],
+      isError: true,
+    };
+  }
+}
+
 // =============================================================================
 // Tool Definitions
 // =============================================================================
@@ -391,7 +444,7 @@ export async function handleMessagesArchive(args: unknown): Promise<ToolCallResu
 export const messageTools: McpTool[] = [
   {
     name: 'thunderbird_messages_search',
-    description: 'Search for messages with advanced filters. IMPORTANT: Use thunderbird_messages_list_unread for unread messages, or use filters without folderId to search all folders.',
+    description: 'Search messages across ALL folders (global search by default). Omit folderId to search everywhere. For recent emails without specific criteria, prefer thunderbird_messages_list_recent.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -412,7 +465,7 @@ export const messageTools: McpTool[] = [
   },
   {
     name: 'thunderbird_messages_list',
-    description: 'List messages in a specific folder with pagination. IMPORTANT: First call thunderbird_folders_list to get valid folder IDs.',
+    description: 'List messages in a SPECIFIC folder with pagination. Requires folderId. For recent emails across ALL folders, use thunderbird_messages_list_recent instead.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -511,6 +564,18 @@ export const messageTools: McpTool[] = [
         messageIds: { type: 'array', items: { type: 'number' }, description: 'Array of message IDs to archive' },
       },
       required: ['messageIds'],
+    },
+  },
+  {
+    name: 'thunderbird_messages_list_recent',
+    description: 'List the most recent messages across ALL folders. Perfect for "show me my latest emails" without specifying a folder. Uses date-based search internally.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        accountId: { type: 'string', description: 'Optional: filter by specific account ID' },
+        limit: { type: 'number', description: 'Maximum results (default: 20, max: 100)', default: 20 },
+        hoursAgo: { type: 'number', description: 'How many hours back to search (default: 24, max: 168 = 7 days)', default: 24 },
+      },
     },
   },
 ];

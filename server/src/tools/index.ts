@@ -5,7 +5,7 @@
  */
 
 // Import tool definitions
-import { messageTools, handleMessagesSearch, handleMessagesList, handleMessagesListUnread, handleMessagesGet, handleMessagesMove, handleMessagesCopy, handleMessagesDelete, handleMessagesUpdate, handleMessagesArchive } from './messages.js';
+import { messageTools, handleMessagesSearch, handleMessagesList, handleMessagesListUnread, handleMessagesListRecent, handleMessagesGet, handleMessagesMove, handleMessagesCopy, handleMessagesDelete, handleMessagesUpdate, handleMessagesArchive } from './messages.js';
 import { folderTools, handleFoldersList, handleFoldersGet, handleFoldersCreate, handleFoldersRename, handleFoldersDelete, handleFoldersMove, handleFoldersMarkRead } from './folders.js';
 import { contactTools, handleContactsSearch, handleContactsList, handleContactsGet, handleContactsCreate, handleContactsUpdate, handleContactsDelete, handleAddressBooksList, handleAddressBooksCreate, handleAddressBooksDelete } from './contacts.js';
 import { tagTools, handleTagsList, handleTagsCreate, handleTagsUpdate, handleTagsDelete } from './tags.js';
@@ -34,6 +34,7 @@ export const toolHandlers: Record<string, ToolHandler> = {
   thunderbird_messages_delete: handleMessagesDelete,
   thunderbird_messages_update: handleMessagesUpdate,
   thunderbird_messages_archive: handleMessagesArchive,
+  thunderbird_messages_list_recent: handleMessagesListRecent,
 
   // Folder tools
   thunderbird_folders_list: handleFoldersList,
