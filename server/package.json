@@ -1,7 +1,8 @@
 {
   "name": "@thunderbird-mcp/server",
   "version": "1.2.0",
-  "description": "MCP Server component",
+  "description": "MCP Server component for Thunderbird MCP",
+  "license": "MIT",
   "type": "module",
   "main": "dist/index.js",
   "bin": {

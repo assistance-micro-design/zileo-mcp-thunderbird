@@ -2,6 +2,20 @@
 
 Model Context Protocol (MCP) server for Thunderbird email client integration. This project enables AI assistants to interact with Thunderbird through a standardized protocol.
 
+> ⚠️ **WARNING - USE AT YOUR OWN RISK**
+>
+> This project is **under active development**. The MCP protocol and this implementation may change without notice.
+>
+> **Important considerations:**
+>
+> - 🔴 **Irreversible Actions**: This tool can perform **destructive operations** on your emails, contacts, calendar events, and tasks (delete, move, modify). These actions **cannot be undone**.
+> - 🔴 **AI Autonomy**: When used with AI assistants, the AI may execute actions based on its interpretation of your requests. Always verify before confirming destructive operations.
+> - 🔴 **No Warranty**: This software is provided "AS IS" without warranty of any kind. See the [LICENSE](LICENSE) for details.
+> - 🟡 **Backup Recommended**: Consider backing up your Thunderbird profile before use.
+> - 🟡 **Test Environment**: Consider testing in a separate Thunderbird profile first.
+>
+> **By using this software, you accept full responsibility for any data loss or unintended modifications.**
+
 ## Features
 
 - **Email Management**: Search, read, move, copy, delete, and archive emails (10 tools)
@@ -101,7 +115,7 @@ npm run build
    - Open Thunderbird
    - Go to Tools > Add-ons and Themes
    - Click the gear icon > Install Add-on From File
-   - Select `dist/thunderbird-mcp-extension-1.1.0.xpi`
+   - Select `dist/thunderbird-mcp-extension-1.2.0.xpi`
 
 ### Option 2: Docker Setup
 
@@ -210,15 +224,16 @@ Or for development with auto-reload:
 npm run dev
 ```
 
-### Available MCP Tools (47 total)
+### Available MCP Tools (56 total)
 
-#### Messages (9 tools)
+#### Messages (10 tools)
 
 | Tool                               | Description                                                               |
 | ---------------------------------- | ------------------------------------------------------------------------- |
 | `thunderbird_messages_search`      | Advanced email search with filters (subject, from, to, body, tags, dates) |
 | `thunderbird_messages_list`        | List messages in a folder with pagination                                 |
 | `thunderbird_messages_list_unread` | List unread messages across accounts                                      |
+| `thunderbird_messages_list_recent` | List recent messages globally (all accounts, last N hours)                |
 | `thunderbird_messages_get`         | Get message details (headers, full, or raw format)                        |
 | `thunderbird_messages_move`        | Move messages to another folder                                           |
 | `thunderbird_messages_copy`        | Copy messages to another folder                                           |
@@ -268,6 +283,19 @@ npm run dev
 | `thunderbird_accounts_list`   | List all email accounts                    |
 | `thunderbird_accounts_get`    | Get account details                        |
 | `thunderbird_identities_list` | List account identities (sender addresses) |
+
+#### Compose (8 tools)
+
+| Tool                               | Description                                    |
+| ---------------------------------- | ---------------------------------------------- |
+| `thunderbird_compose_begin_new`    | Open a new compose window                      |
+| `thunderbird_compose_begin_reply`  | Reply to an existing message                   |
+| `thunderbird_compose_begin_forward`| Forward an existing message                    |
+| `thunderbird_compose_get_details`  | Get current compose window details             |
+| `thunderbird_compose_set_details`  | Update compose window content                  |
+| `thunderbird_compose_save_draft`   | Save compose as draft                          |
+| `thunderbird_compose_save_template`| Save compose as template                       |
+| `thunderbird_compose_send`         | Send the composed email                        |
 
 #### Calendar (9 tools) - _Experimental_
 
@@ -330,12 +358,13 @@ thunderbird-mcp/
 │   ├── src/
 │   │   ├── index.ts          # Entry point
 │   │   ├── server.ts         # MCP server configuration
-│   │   ├── tools/            # 47 MCP tool implementations
-│   │   │   ├── messages.ts   # 9 message tools
+│   │   ├── tools/            # 56 MCP tool implementations
+│   │   │   ├── messages.ts   # 10 message tools
 │   │   │   ├── folders.ts    # 7 folder tools
 │   │   │   ├── contacts.ts   # 9 contact tools
 │   │   │   ├── tags.ts       # 4 tag tools
 │   │   │   ├── accounts.ts   # 3 account tools
+│   │   │   ├── compose.ts    # 8 compose tools
 │   │   │   ├── calendar.ts   # 9 calendar tools
 │   │   │   └── tasks.ts      # 6 task tools
 │   │   ├── resources/        # MCP resource handlers
@@ -355,6 +384,7 @@ thunderbird-mcp/
 │   │   ├── contacts.js
 │   │   ├── accounts.js
 │   │   ├── tags.js
+│   │   ├── compose.js
 │   │   └── calendar.js
 │   ├── native-messaging/     # Request handler
 │   └── experiments/          # Calendar experimental API
@@ -433,4 +463,4 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 ---
 
-**Status**: Production Ready | **Version**: 1.2.0 | **Tools**: 47 | **Last Updated**: 2026-01-21
+**Status**: Beta (Active Development) | **Version**: 1.2.0 | **Tools**: 56 | **Last Updated**: 2026-02-01
