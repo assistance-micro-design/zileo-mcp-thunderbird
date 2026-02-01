@@ -29,5 +29,5 @@ export const AccountsAPI = {
   async listIdentities(accountId) {
     const account = await messenger.accounts.get(accountId);
     return account.identities || [];
-  }
+  },
 };

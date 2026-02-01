@@ -18,7 +18,7 @@
 # For MCP client integration (Claude Desktop, etc.):
 #   Configure command: docker exec -i thunderbird-mcp-server node dist/index.js
 
-version: '3.8'
+version: "3.8"
 
 services:
   thunderbird-mcp:
@@ -47,10 +47,10 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.5'
+          cpus: "0.5"
           memory: 256M
         reservations:
-          cpus: '0.1'
+          cpus: "0.1"
           memory: 64M
 
     # Restart policy
@@ -62,7 +62,13 @@ services:
 
     # Health check - verify WebSocket bridge is listening
     healthcheck:
-      test: ["CMD", "node", "-e", "const net = require('net'); const s = new net.Socket(); s.setTimeout(5000); s.connect(9876, '127.0.0.1', () => { s.destroy(); process.exit(0); }); s.on('error', () => process.exit(1)); s.on('timeout', () => { s.destroy(); process.exit(1); });"]
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "const net = require('net'); const s = new net.Socket(); s.setTimeout(5000); s.connect(9876, '127.0.0.1', () => { s.destroy(); process.exit(0); }); s.on('error', () => process.exit(1)); s.on('timeout', () => { s.destroy(); process.exit(1); });",
+        ]
       interval: 30s
       timeout: 10s
       retries: 3

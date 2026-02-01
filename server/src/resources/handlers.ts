@@ -4,10 +4,10 @@
  * @module resources/handlers
  */
 
-import { getNativeClient } from '../websocket/client-adapter.js';
-import { MessageActions } from '../types/native-messaging.js';
-import type { ResourceContentsItem } from '../types/mcp.js';
-import logger from '../utils/logger.js';
+import { getNativeClient } from "../websocket/client-adapter.js";
+import { MessageActions } from "../types/native-messaging.js";
+import type { ResourceContentsItem } from "../types/mcp.js";
+import logger from "../utils/logger.js";
 
 /**
  * Resource handler function type
@@ -18,19 +18,21 @@ export type ResourceHandler = (uri: string) => Promise<ResourceContentsItem>;
  * Handle thunderbird://accounts resource
  * Returns all configured accounts
  */
-export async function handleAccountsResource(uri: string): Promise<ResourceContentsItem> {
-  logger.info('Fetching accounts resource');
+export async function handleAccountsResource(
+  uri: string,
+): Promise<ResourceContentsItem> {
+  logger.info("Fetching accounts resource");
   const client = getNativeClient();
 
   const response = await client.sendRequest(MessageActions.ACCOUNTS_LIST, {});
 
   if (!response.success) {
-    throw new Error(response.error?.message || 'Failed to fetch accounts');
+    throw new Error(response.error?.message || "Failed to fetch accounts");
   }
 
   return {
     uri,
-    mimeType: 'application/json',
+    mimeType: "application/json",
     text: JSON.stringify(response.data, null, 2),
   };
 }
@@ -39,10 +41,12 @@ export async function handleAccountsResource(uri: string): Promise<ResourceConte
  * Handle thunderbird://folders/{accountId} resource
  * Returns folder tree for a specific account
  */
-export async function handleFoldersResource(uri: string): Promise<ResourceContentsItem> {
+export async function handleFoldersResource(
+  uri: string,
+): Promise<ResourceContentsItem> {
   const match = uri.match(/^thunderbird:\/\/folders\/(.+)$/);
   if (!match) {
-    throw new Error('Invalid folder resource URI');
+    throw new Error("Invalid folder resource URI");
   }
 
   const accountId = match[1];
@@ -55,12 +59,12 @@ export async function handleFoldersResource(uri: string): Promise<ResourceConten
   });
 
   if (!response.success) {
-    throw new Error(response.error?.message || 'Failed to fetch folders');
+    throw new Error(response.error?.message || "Failed to fetch folders");
   }
 
   return {
     uri,
-    mimeType: 'application/json',
+    mimeType: "application/json",
     text: JSON.stringify(response.data, null, 2),
   };
 }
@@ -69,8 +73,10 @@ export async function handleFoldersResource(uri: string): Promise<ResourceConten
  * Handle thunderbird://inbox/unread resource
  * Returns all unread messages across all accounts
  */
-export async function handleInboxUnreadResource(uri: string): Promise<ResourceContentsItem> {
-  logger.info('Fetching all unread messages');
+export async function handleInboxUnreadResource(
+  uri: string,
+): Promise<ResourceContentsItem> {
+  logger.info("Fetching all unread messages");
   const client = getNativeClient();
 
   const response = await client.sendRequest(MessageActions.MESSAGES_SEARCH, {
@@ -79,12 +85,14 @@ export async function handleInboxUnreadResource(uri: string): Promise<ResourceCo
   });
 
   if (!response.success) {
-    throw new Error(response.error?.message || 'Failed to fetch unread messages');
+    throw new Error(
+      response.error?.message || "Failed to fetch unread messages",
+    );
   }
 
   return {
     uri,
-    mimeType: 'application/json',
+    mimeType: "application/json",
     text: JSON.stringify(response.data, null, 2),
   };
 }
@@ -93,10 +101,12 @@ export async function handleInboxUnreadResource(uri: string): Promise<ResourceCo
  * Handle thunderbird://inbox/unread/{accountId} resource
  * Returns unread messages for a specific account
  */
-export async function handleInboxUnreadAccountResource(uri: string): Promise<ResourceContentsItem> {
+export async function handleInboxUnreadAccountResource(
+  uri: string,
+): Promise<ResourceContentsItem> {
   const match = uri.match(/^thunderbird:\/\/inbox\/unread\/(.+)$/);
   if (!match) {
-    throw new Error('Invalid inbox unread resource URI');
+    throw new Error("Invalid inbox unread resource URI");
   }
 
   const accountId = match[1];
@@ -110,12 +120,14 @@ export async function handleInboxUnreadAccountResource(uri: string): Promise<Res
   });
 
   if (!response.success) {
-    throw new Error(response.error?.message || 'Failed to fetch unread messages');
+    throw new Error(
+      response.error?.message || "Failed to fetch unread messages",
+    );
   }
 
   return {
     uri,
-    mimeType: 'application/json',
+    mimeType: "application/json",
     text: JSON.stringify(response.data, null, 2),
   };
 }
@@ -124,15 +136,22 @@ export async function handleInboxUnreadAccountResource(uri: string): Promise<Res
  * Handle thunderbird://contacts/recent resource
  * Returns recently used contacts
  */
-export async function handleContactsRecentResource(uri: string): Promise<ResourceContentsItem> {
-  logger.info('Fetching recent contacts');
+export async function handleContactsRecentResource(
+  uri: string,
+): Promise<ResourceContentsItem> {
+  logger.info("Fetching recent contacts");
   const client = getNativeClient();
 
   // Get all address books
-  const addressBooksResponse = await client.sendRequest(MessageActions.ADDRESSBOOKS_LIST, {});
+  const addressBooksResponse = await client.sendRequest(
+    MessageActions.ADDRESSBOOKS_LIST,
+    {},
+  );
 
   if (!addressBooksResponse.success) {
-    throw new Error(addressBooksResponse.error?.message || 'Failed to fetch address books');
+    throw new Error(
+      addressBooksResponse.error?.message || "Failed to fetch address books",
+    );
   }
 
   // For now, return contacts from all books (limited)
@@ -140,11 +159,15 @@ export async function handleContactsRecentResource(uri: string): Promise<Resourc
   const addressBooks = addressBooksResponse.data as Array<{ id: string }>;
   const allContacts: unknown[] = [];
 
-  for (const book of addressBooks.slice(0, 3)) { // Limit to first 3 books
-    const contactsResponse = await client.sendRequest(MessageActions.CONTACTS_LIST, {
-      addressBookId: book.id,
-      limit: 10,
-    });
+  for (const book of addressBooks.slice(0, 3)) {
+    // Limit to first 3 books
+    const contactsResponse = await client.sendRequest(
+      MessageActions.CONTACTS_LIST,
+      {
+        addressBookId: book.id,
+        limit: 10,
+      },
+    );
 
     if (contactsResponse.success && Array.isArray(contactsResponse.data)) {
       allContacts.push(...contactsResponse.data);
@@ -153,7 +176,7 @@ export async function handleContactsRecentResource(uri: string): Promise<Resourc
 
   return {
     uri,
-    mimeType: 'application/json',
+    mimeType: "application/json",
     text: JSON.stringify(allContacts.slice(0, 20), null, 2),
   };
 }
@@ -162,13 +185,26 @@ export async function handleContactsRecentResource(uri: string): Promise<Resourc
  * Handle thunderbird://calendar/today resource
  * Returns today's calendar events
  */
-export async function handleCalendarTodayResource(uri: string): Promise<ResourceContentsItem> {
-  logger.info('Fetching today\'s calendar events');
+export async function handleCalendarTodayResource(
+  uri: string,
+): Promise<ResourceContentsItem> {
+  logger.info("Fetching today's calendar events");
   const client = getNativeClient();
 
   const today = new Date();
-  const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-  const todayEnd = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
+  const todayStart = new Date(
+    today.getFullYear(),
+    today.getMonth(),
+    today.getDate(),
+  );
+  const todayEnd = new Date(
+    today.getFullYear(),
+    today.getMonth(),
+    today.getDate(),
+    23,
+    59,
+    59,
+  );
 
   const response = await client.sendRequest(MessageActions.EVENTS_SEARCH, {
     dateFrom: todayStart.toISOString(),
@@ -177,12 +213,14 @@ export async function handleCalendarTodayResource(uri: string): Promise<Resource
   });
 
   if (!response.success) {
-    throw new Error(response.error?.message || 'Failed to fetch today\'s events');
+    throw new Error(
+      response.error?.message || "Failed to fetch today's events",
+    );
   }
 
   return {
     uri,
-    mimeType: 'application/json',
+    mimeType: "application/json",
     text: JSON.stringify(response.data, null, 2),
   };
 }
@@ -191,8 +229,10 @@ export async function handleCalendarTodayResource(uri: string): Promise<Resource
  * Handle thunderbird://calendar/upcoming resource
  * Returns upcoming calendar events (next 7 days)
  */
-export async function handleCalendarUpcomingResource(uri: string): Promise<ResourceContentsItem> {
-  logger.info('Fetching upcoming calendar events');
+export async function handleCalendarUpcomingResource(
+  uri: string,
+): Promise<ResourceContentsItem> {
+  logger.info("Fetching upcoming calendar events");
   const client = getNativeClient();
 
   const today = new Date();
@@ -205,12 +245,14 @@ export async function handleCalendarUpcomingResource(uri: string): Promise<Resou
   });
 
   if (!response.success) {
-    throw new Error(response.error?.message || 'Failed to fetch upcoming events');
+    throw new Error(
+      response.error?.message || "Failed to fetch upcoming events",
+    );
   }
 
   return {
     uri,
-    mimeType: 'application/json',
+    mimeType: "application/json",
     text: JSON.stringify(response.data, null, 2),
   };
 }
@@ -219,8 +261,10 @@ export async function handleCalendarUpcomingResource(uri: string): Promise<Resou
  * Handle thunderbird://tasks/pending resource
  * Returns pending (incomplete) tasks
  */
-export async function handleTasksPendingResource(uri: string): Promise<ResourceContentsItem> {
-  logger.info('Fetching pending tasks');
+export async function handleTasksPendingResource(
+  uri: string,
+): Promise<ResourceContentsItem> {
+  logger.info("Fetching pending tasks");
   const client = getNativeClient();
 
   const response = await client.sendRequest(MessageActions.TASKS_LIST, {
@@ -229,12 +273,12 @@ export async function handleTasksPendingResource(uri: string): Promise<ResourceC
   });
 
   if (!response.success) {
-    throw new Error(response.error?.message || 'Failed to fetch pending tasks');
+    throw new Error(response.error?.message || "Failed to fetch pending tasks");
   }
 
   return {
     uri,
-    mimeType: 'application/json',
+    mimeType: "application/json",
     text: JSON.stringify(response.data, null, 2),
   };
 }
@@ -243,12 +287,12 @@ export async function handleTasksPendingResource(uri: string): Promise<ResourceC
  * Resource handler map
  */
 export const resourceHandlers: Record<string, ResourceHandler> = {
-  'thunderbird://accounts': handleAccountsResource,
-  'thunderbird://inbox/unread': handleInboxUnreadResource,
-  'thunderbird://contacts/recent': handleContactsRecentResource,
-  'thunderbird://calendar/today': handleCalendarTodayResource,
-  'thunderbird://calendar/upcoming': handleCalendarUpcomingResource,
-  'thunderbird://tasks/pending': handleTasksPendingResource,
+  "thunderbird://accounts": handleAccountsResource,
+  "thunderbird://inbox/unread": handleInboxUnreadResource,
+  "thunderbird://contacts/recent": handleContactsRecentResource,
+  "thunderbird://calendar/today": handleCalendarTodayResource,
+  "thunderbird://calendar/upcoming": handleCalendarUpcomingResource,
+  "thunderbird://tasks/pending": handleTasksPendingResource,
 };
 
 /**

@@ -5,9 +5,11 @@ Comprehensive architecture documentation for the Thunderbird MCP Server project.
 ## Documents
 
 ### [1. Overview](./overview.md)
+
 **High-level system architecture and component descriptions**
 
 Topics covered:
+
 - System architecture diagram (WebSocket-based)
 - Three-layer design: MCP Server, WebSocket Bridge, Extension
 - Component descriptions (MCP Client, Server, Bridge, Extension, Thunderbird)
@@ -21,9 +23,11 @@ Topics covered:
 Start here for: Understanding the overall system design and how components interact.
 
 ### [2. Extension Architecture](./extension.md)
+
 **Thunderbird extension structure and implementation**
 
 Topics covered:
+
 - Extension file structure
 - Component architecture (Background script, WebSocket client, API wrappers)
 - Service Worker lifecycle
@@ -37,9 +41,11 @@ Topics covered:
 Start here for: Understanding how the Thunderbird extension works and implementing new API wrappers.
 
 ### [3. Server Architecture](./server.md)
+
 **MCP server structure and implementation**
 
 Topics covered:
+
 - Server file structure
 - Entry point and initialization
 - WebSocket bridge initialization
@@ -53,9 +59,11 @@ Topics covered:
 Start here for: Understanding the MCP server implementation and adding new tools or resources.
 
 ### [4. Data Flow](./data-flow.md)
+
 **Request/response flows and sequence diagrams**
 
 Topics covered:
+
 - MCP lifecycle flow (initialization, connection)
 - Tool call flow (standard execution, timeouts)
 - Resource access flow
@@ -67,9 +75,11 @@ Topics covered:
 Start here for: Understanding how data flows through the system and debugging communication issues.
 
 ### [5. WebSocket Bridge](./websocket.md)
+
 **WebSocket protocol and connection management**
 
 Topics covered:
+
 - WebSocket bridge architecture
 - Protocol specification (JSON-based message format)
 - Request/response correlation with unique IDs
@@ -130,19 +140,20 @@ Start here for: Understanding WebSocket bridge implementation and connection man
 
 ## Key Technologies
 
-| Component | Technology | Purpose |
-|-----------|-----------|---------|
-| MCP Server | Node.js 20+ / TypeScript | Protocol implementation |
-| SDK | @modelcontextprotocol/sdk | MCP framework |
-| Validation | Zod | Schema validation |
-| WebSocket Server | ws library | Bidirectional communication |
-| Extension | Manifest V3 MailExtension | Thunderbird integration |
-| WebSocket Client | Browser WebSocket API | Real-time connection |
-| Logging | Winston | Structured logging |
+| Component        | Technology                | Purpose                     |
+| ---------------- | ------------------------- | --------------------------- |
+| MCP Server       | Node.js 20+ / TypeScript  | Protocol implementation     |
+| SDK              | @modelcontextprotocol/sdk | MCP framework               |
+| Validation       | Zod                       | Schema validation           |
+| WebSocket Server | ws library                | Bidirectional communication |
+| Extension        | Manifest V3 MailExtension | Thunderbird integration     |
+| WebSocket Client | Browser WebSocket API     | Real-time connection        |
+| Logging          | Winston                   | Structured logging          |
 
 ## Key Features
 
 ### WebSocket Architecture
+
 - Bidirectional real-time communication
 - Auto-reconnect with exponential backoff (10 attempts, 3s delay)
 - Request/response correlation via unique IDs
@@ -151,6 +162,7 @@ Start here for: Understanding WebSocket bridge implementation and connection man
 - Localhost-only binding for security
 
 ### Tool Coverage
+
 - **Messages** (9 tools): search, list, get, move, copy, delete, update, archive, list unread
 - **Folders** (7 tools): list, get, create, rename, delete, move, mark read
 - **Contacts** (9 tools): search, list, get, create, update, delete + 3 address book tools
@@ -160,6 +172,7 @@ Start here for: Understanding WebSocket bridge implementation and connection man
 - **Tasks** (6 tools): list, get, create, update, delete, complete
 
 ### Performance
+
 - Latency: 10-50ms per operation (2x faster than Native Messaging)
 - Timeout management: 30s default, configurable per request
 - Concurrent requests: Up to 100 pending requests
@@ -204,18 +217,21 @@ overview.md
 ## Additional Resources
 
 ### Specifications
+
 - [CAHIER_DES_CHARGES.md](../../CAHIER_DES_CHARGES.md) - Full project specification
 - [MCP Specification](https://modelcontextprotocol.io/specification/)
 - [JSON-RPC 2.0 Specification](https://www.jsonrpc.org/specification)
 - [WebSocket Protocol RFC 6455](https://tools.ietf.org/html/rfc6455)
 
 ### API Documentation
+
 - [Thunderbird WebExtension API](https://webextension-api.thunderbird.net/en/mv3/)
 - [WebSocket API (MDN)](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket)
 - [ws Library Documentation](https://github.com/websockets/ws)
 - [MCP TypeScript SDK](https://github.com/modelcontextprotocol/typescript-sdk)
 
 ### Project Structure
+
 ```
 Thunderbird-mcp/
 ├── docs/
@@ -245,10 +261,10 @@ When updating architecture documentation:
 
 ## Changelog
 
-| Date | Document | Changes |
-|------|----------|---------|
-| 2025-12-05 | All | Updated to reflect WebSocket architecture |
-| 2025-12-05 | websocket.md | Created WebSocket bridge documentation |
-| 2025-12-05 | overview.md | Updated system architecture diagrams and flows |
-| 2025-12-05 | data-flow.md | Updated to WebSocket protocol flows |
-| 2025-12-05 | README.md | Updated navigation and architecture overview |
+| Date       | Document     | Changes                                        |
+| ---------- | ------------ | ---------------------------------------------- |
+| 2025-12-05 | All          | Updated to reflect WebSocket architecture      |
+| 2025-12-05 | websocket.md | Created WebSocket bridge documentation         |
+| 2025-12-05 | overview.md  | Updated system architecture diagrams and flows |
+| 2025-12-05 | data-flow.md | Updated to WebSocket protocol flows            |
+| 2025-12-05 | README.md    | Updated navigation and architecture overview   |

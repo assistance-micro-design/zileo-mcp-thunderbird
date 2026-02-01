@@ -4,18 +4,21 @@
  * @module websocket/bridge
  */
 
-import { WebSocketServer, WebSocket } from 'ws';
-import { EventEmitter } from 'events';
-import { createServer, Server as HttpServer, IncomingMessage } from 'http';
-import logger from '../utils/logger.js';
-import { WebSocketBridgeClient, tryConnectToExistingBridge } from './bridge-client.js';
+import { WebSocketServer, WebSocket } from "ws";
+import { EventEmitter } from "events";
+import { createServer, Server as HttpServer, IncomingMessage } from "http";
+import logger from "../utils/logger.js";
+import {
+  WebSocketBridgeClient,
+  tryConnectToExistingBridge,
+} from "./bridge-client.js";
 
 /**
  * Message types for WebSocket communication
  */
 export interface WsMessage {
   id: string;
-  type: 'request' | 'response' | 'notification' | 'ping' | 'pong' | 'heartbeat';
+  type: "request" | "response" | "notification" | "ping" | "pong" | "heartbeat";
   action?: string;
   event?: string;
   params?: Record<string, unknown>;
@@ -80,13 +83,15 @@ export class WebSocketBridge extends EventEmitter {
         // Create HTTP server for path-based WebSocket routing
         this.httpServer = createServer((req, res) => {
           // Simple health check endpoint
-          if (req.url === '/health') {
-            res.writeHead(200, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({
-              status: 'ok',
-              thunderbird: this.thunderbirdClient !== null,
-              mcpClients: this.mcpClients.size,
-            }));
+          if (req.url === "/health") {
+            res.writeHead(200, { "Content-Type": "application/json" });
+            res.end(
+              JSON.stringify({
+                status: "ok",
+                thunderbird: this.thunderbirdClient !== null,
+                mcpClients: this.mcpClients.size,
+              }),
+            );
           } else {
             res.writeHead(404);
             res.end();
@@ -95,49 +100,66 @@ export class WebSocketBridge extends EventEmitter {
 
         // WebSocket server for Thunderbird extension (single client)
         this.wssThunderbird = new WebSocketServer({ noServer: true });
-        this.wssThunderbird.on('connection', (ws: WebSocket) => {
+        this.wssThunderbird.on("connection", (ws: WebSocket) => {
           this.handleThunderbirdConnection(ws);
         });
 
         // WebSocket server for MCP clients (multiple clients)
         this.wssMcp = new WebSocketServer({ noServer: true });
-        this.wssMcp.on('connection', (ws: WebSocket) => {
+        this.wssMcp.on("connection", (ws: WebSocket) => {
           this.handleMcpConnection(ws);
         });
 
         // Route WebSocket upgrades based on URL path
-        this.httpServer.on('upgrade', (request: IncomingMessage, socket, head) => {
-          const pathname = new URL(request.url || '/', `http://${request.headers.host}`).pathname;
+        this.httpServer.on(
+          "upgrade",
+          (request: IncomingMessage, socket, head) => {
+            const pathname = new URL(
+              request.url || "/",
+              `http://${request.headers.host}`,
+            ).pathname;
 
-          if (pathname === '/thunderbird' || pathname === '/') {
-            // Default path and /thunderbird go to Thunderbird handler
-            this.wssThunderbird!.handleUpgrade(request, socket, head, (ws) => {
-              this.wssThunderbird!.emit('connection', ws, request);
-            });
-          } else if (pathname === '/mcp') {
-            // /mcp path goes to MCP clients handler
-            this.wssMcp!.handleUpgrade(request, socket, head, (ws) => {
-              this.wssMcp!.emit('connection', ws, request);
-            });
-          } else {
-            logger.warn(`Unknown WebSocket path: ${pathname}`);
-            socket.destroy();
-          }
-        });
+            if (pathname === "/thunderbird" || pathname === "/") {
+              // Default path and /thunderbird go to Thunderbird handler
+              this.wssThunderbird!.handleUpgrade(
+                request,
+                socket,
+                head,
+                (ws) => {
+                  this.wssThunderbird!.emit("connection", ws, request);
+                },
+              );
+            } else if (pathname === "/mcp") {
+              // /mcp path goes to MCP clients handler
+              this.wssMcp!.handleUpgrade(request, socket, head, (ws) => {
+                this.wssMcp!.emit("connection", ws, request);
+              });
+            } else {
+              logger.warn(`Unknown WebSocket path: ${pathname}`);
+              socket.destroy();
+            }
+          },
+        );
 
-        this.httpServer.on('error', (error) => {
-          logger.error('HTTP server error:', error);
+        this.httpServer.on("error", (error) => {
+          logger.error("HTTP server error:", error);
           reject(error);
         });
 
         this.httpServer.listen(this.options.port, () => {
-          logger.info(`WebSocket bridge listening on port ${this.options.port}`);
-          logger.info(`  - Thunderbird extension: ws://localhost:${this.options.port}/thunderbird (or /)`);
-          logger.info(`  - MCP clients: ws://localhost:${this.options.port}/mcp`);
+          logger.info(
+            `WebSocket bridge listening on port ${this.options.port}`,
+          );
+          logger.info(
+            `  - Thunderbird extension: ws://localhost:${this.options.port}/thunderbird (or /)`,
+          );
+          logger.info(
+            `  - MCP clients: ws://localhost:${this.options.port}/mcp`,
+          );
           resolve();
         });
       } catch (error) {
-        logger.error('Failed to start WebSocket server:', error);
+        logger.error("Failed to start WebSocket server:", error);
         reject(error);
       }
     });
@@ -145,7 +167,7 @@ export class WebSocketBridge extends EventEmitter {
 
   /**
    * Handle Thunderbird extension connection (single client)
-   * 
+   *
    * Strategy: Always accept new connections and replace existing ones.
    * This handles the case where the Thunderbird extension's event page
    * was terminated and restarted, leaving a "zombie" connection on the server.
@@ -154,33 +176,33 @@ export class WebSocketBridge extends EventEmitter {
     // Always replace existing client - new connection wins
     // This is important for MV3 event pages that can restart
     if (this.thunderbirdClient) {
-      logger.info('Replacing existing Thunderbird connection with new one');
+      logger.info("Replacing existing Thunderbird connection with new one");
       this.cleanupThunderbirdClient();
     }
 
-    logger.info('Thunderbird extension connected');
+    logger.info("Thunderbird extension connected");
     this.thunderbirdClient = ws;
-    this.emit('connected');
+    this.emit("connected");
 
-    ws.on('message', (data: Buffer) => {
+    ws.on("message", (data: Buffer) => {
       try {
         const message = JSON.parse(data.toString()) as WsMessage;
         this.handleThunderbirdMessage(message);
       } catch (error) {
-        logger.error('Failed to parse Thunderbird message:', error);
+        logger.error("Failed to parse Thunderbird message:", error);
       }
     });
 
-    ws.on('close', () => {
-      logger.info('Thunderbird extension disconnected');
+    ws.on("close", () => {
+      logger.info("Thunderbird extension disconnected");
       this.thunderbirdClient = null;
-      this.rejectAllPending('Thunderbird disconnected');
-      this.emit('disconnected');
+      this.rejectAllPending("Thunderbird disconnected");
+      this.emit("disconnected");
     });
 
-    ws.on('error', (error) => {
-      logger.error('Thunderbird WebSocket error:', error);
-      this.emit('error', error);
+    ws.on("error", (error) => {
+      logger.error("Thunderbird WebSocket error:", error);
+      this.emit("error", error);
     });
   }
 
@@ -191,31 +213,33 @@ export class WebSocketBridge extends EventEmitter {
     logger.info(`MCP client connected (total: ${this.mcpClients.size + 1})`);
     this.mcpClients.add(ws);
 
-    ws.on('message', (data: Buffer) => {
+    ws.on("message", (data: Buffer) => {
       try {
         const message = JSON.parse(data.toString()) as WsMessage;
         this.handleMcpMessage(message, ws);
       } catch (error) {
-        logger.error('Failed to parse MCP client message:', error);
+        logger.error("Failed to parse MCP client message:", error);
       }
     });
 
-    ws.on('close', () => {
+    ws.on("close", () => {
       this.mcpClients.delete(ws);
-      logger.info(`MCP client disconnected (remaining: ${this.mcpClients.size})`);
+      logger.info(
+        `MCP client disconnected (remaining: ${this.mcpClients.size})`,
+      );
       // Reject pending requests from this client
-      this.rejectPendingForClient(ws, 'MCP client disconnected');
+      this.rejectPendingForClient(ws, "MCP client disconnected");
     });
 
-    ws.on('error', (error) => {
-      logger.error('MCP client WebSocket error:', error);
+    ws.on("error", (error) => {
+      logger.error("MCP client WebSocket error:", error);
     });
 
     // Send connection confirmation to MCP client
     const welcome: WsMessage = {
       id: `welcome_${Date.now()}`,
-      type: 'notification',
-      event: 'connected',
+      type: "notification",
+      event: "connected",
       data: { thunderbirdConnected: this.thunderbirdClient !== null },
       timestamp: new Date().toISOString(),
     };
@@ -229,22 +253,22 @@ export class WebSocketBridge extends EventEmitter {
     logger.debug(`Received from Thunderbird: ${message.type} (${message.id})`);
 
     switch (message.type) {
-      case 'response':
+      case "response":
         this.handleResponse(message);
         break;
-      case 'notification':
-        this.emit('notification', message);
+      case "notification":
+        this.emit("notification", message);
         // Broadcast notifications to all MCP clients
         this.broadcastToMcpClients(message);
         break;
-      case 'heartbeat':
+      case "heartbeat":
         this.sendPingToThunderbird();
         break;
-      case 'pong':
-        logger.debug('Pong received from Thunderbird');
+      case "pong":
+        logger.debug("Pong received from Thunderbird");
         break;
       default:
-        logger.warn('Unknown message type from Thunderbird:', message);
+        logger.warn("Unknown message type from Thunderbird:", message);
     }
   }
 
@@ -255,35 +279,41 @@ export class WebSocketBridge extends EventEmitter {
     logger.debug(`Received from MCP client: ${message.type} (${message.id})`);
 
     switch (message.type) {
-      case 'request':
+      case "request":
         // Relay request to Thunderbird
         this.relayRequestToThunderbird(message, mcpClient);
         break;
-      case 'ping':
+      case "ping":
         // Respond with pong
         const pong: WsMessage = {
           id: message.id,
-          type: 'pong',
+          type: "pong",
           timestamp: new Date().toISOString(),
         };
         mcpClient.send(JSON.stringify(pong));
         break;
       default:
-        logger.warn('Unexpected message type from MCP client:', message);
+        logger.warn("Unexpected message type from MCP client:", message);
     }
   }
 
   /**
    * Relay request from MCP client to Thunderbird
    */
-  private relayRequestToThunderbird(request: WsMessage, mcpClient: WebSocket): void {
-    if (!this.thunderbirdClient || this.thunderbirdClient.readyState !== WebSocket.OPEN) {
+  private relayRequestToThunderbird(
+    request: WsMessage,
+    mcpClient: WebSocket,
+  ): void {
+    if (
+      !this.thunderbirdClient ||
+      this.thunderbirdClient.readyState !== WebSocket.OPEN
+    ) {
       // Send error back to MCP client
       const errorResponse: WsMessage = {
         id: request.id,
-        type: 'response',
+        type: "response",
         success: false,
-        error: { code: -1, message: 'Not connected to Thunderbird extension' },
+        error: { code: -1, message: "Not connected to Thunderbird extension" },
         timestamp: new Date().toISOString(),
       };
       mcpClient.send(JSON.stringify(errorResponse));
@@ -293,9 +323,9 @@ export class WebSocketBridge extends EventEmitter {
     if (this.pendingRequests.size >= this.options.maxPendingRequests) {
       const errorResponse: WsMessage = {
         id: request.id,
-        type: 'response',
+        type: "response",
         success: false,
-        error: { code: -2, message: 'Too many pending requests' },
+        error: { code: -2, message: "Too many pending requests" },
         timestamp: new Date().toISOString(),
       };
       mcpClient.send(JSON.stringify(errorResponse));
@@ -307,7 +337,7 @@ export class WebSocketBridge extends EventEmitter {
       this.pendingRequests.delete(request.id);
       const timeoutResponse: WsMessage = {
         id: request.id,
-        type: 'response',
+        type: "response",
         success: false,
         error: { code: -3, message: `Request timeout: ${request.action}` },
         timestamp: new Date().toISOString(),
@@ -319,14 +349,16 @@ export class WebSocketBridge extends EventEmitter {
 
     this.pendingRequests.set(request.id, {
       resolve: () => {}, // Not used for relayed requests
-      reject: () => {},  // Not used for relayed requests
+      reject: () => {}, // Not used for relayed requests
       timeout: timeoutHandle,
-      action: request.action || 'unknown',
+      action: request.action || "unknown",
       mcpClient,
     });
 
     // Forward request to Thunderbird
-    logger.debug(`Relaying request to Thunderbird: ${request.action} (${request.id})`);
+    logger.debug(
+      `Relaying request to Thunderbird: ${request.action} (${request.id})`,
+    );
     this.thunderbirdClient.send(JSON.stringify(request));
   }
 
@@ -346,7 +378,9 @@ export class WebSocketBridge extends EventEmitter {
 
     // If this was a relayed request from an MCP client, send response back to that client
     if (pending.mcpClient && pending.mcpClient.readyState === WebSocket.OPEN) {
-      logger.debug(`Relaying response to MCP client: ${pending.action} (${response.id})`);
+      logger.debug(
+        `Relaying response to MCP client: ${pending.action} (${response.id})`,
+      );
       pending.mcpClient.send(JSON.stringify(response));
     } else if (!pending.mcpClient) {
       // Direct request (from this bridge instance)
@@ -355,7 +389,7 @@ export class WebSocketBridge extends EventEmitter {
         pending.resolve(response);
       } else {
         logger.warn(`Request failed: ${pending.action}`, response.error);
-        pending.reject(new Error(response.error?.message || 'Request failed'));
+        pending.reject(new Error(response.error?.message || "Request failed"));
       }
     }
   }
@@ -376,14 +410,17 @@ export class WebSocketBridge extends EventEmitter {
    * Send ping to Thunderbird extension
    */
   private sendPingToThunderbird(): void {
-    if (this.thunderbirdClient && this.thunderbirdClient.readyState === WebSocket.OPEN) {
+    if (
+      this.thunderbirdClient &&
+      this.thunderbirdClient.readyState === WebSocket.OPEN
+    ) {
       const ping: WsMessage = {
         id: `ping_${Date.now()}`,
-        type: 'ping',
+        type: "ping",
         timestamp: new Date().toISOString(),
       };
       this.thunderbirdClient.send(JSON.stringify(ping));
-      logger.debug('Sent ping to Thunderbird');
+      logger.debug("Sent ping to Thunderbird");
     }
   }
 
@@ -393,14 +430,17 @@ export class WebSocketBridge extends EventEmitter {
   async sendRequest(
     action: string,
     params: Record<string, unknown> = {},
-    timeout?: number
+    timeout?: number,
   ): Promise<WsMessage> {
-    if (!this.thunderbirdClient || this.thunderbirdClient.readyState !== WebSocket.OPEN) {
-      throw new Error('Not connected to Thunderbird extension');
+    if (
+      !this.thunderbirdClient ||
+      this.thunderbirdClient.readyState !== WebSocket.OPEN
+    ) {
+      throw new Error("Not connected to Thunderbird extension");
     }
 
     if (this.pendingRequests.size >= this.options.maxPendingRequests) {
-      throw new Error('Too many pending requests');
+      throw new Error("Too many pending requests");
     }
 
     const requestId = `req_${++this.requestCounter}_${Date.now()}`;
@@ -408,7 +448,7 @@ export class WebSocketBridge extends EventEmitter {
 
     const request: WsMessage = {
       id: requestId,
-      type: 'request',
+      type: "request",
       action,
       params,
       timestamp: new Date().toISOString(),
@@ -443,7 +483,10 @@ export class WebSocketBridge extends EventEmitter {
    * Check if connected to Thunderbird
    */
   isConnected(): boolean {
-    return this.thunderbirdClient !== null && this.thunderbirdClient.readyState === WebSocket.OPEN;
+    return (
+      this.thunderbirdClient !== null &&
+      this.thunderbirdClient.readyState === WebSocket.OPEN
+    );
   }
 
   /**
@@ -459,10 +502,13 @@ export class WebSocketBridge extends EventEmitter {
   private rejectAllPending(reason: string): void {
     for (const [id, pending] of this.pendingRequests.entries()) {
       clearTimeout(pending.timeout);
-      if (pending.mcpClient && pending.mcpClient.readyState === WebSocket.OPEN) {
+      if (
+        pending.mcpClient &&
+        pending.mcpClient.readyState === WebSocket.OPEN
+      ) {
         const errorResponse: WsMessage = {
           id,
-          type: 'response',
+          type: "response",
           success: false,
           error: { code: -4, message: reason },
           timestamp: new Date().toISOString(),
@@ -501,7 +547,7 @@ export class WebSocketBridge extends EventEmitter {
         // Ignore errors during cleanup
       }
       this.thunderbirdClient = null;
-      this.rejectAllPending('Thunderbird client replaced');
+      this.rejectAllPending("Thunderbird client replaced");
     }
   }
 
@@ -509,9 +555,9 @@ export class WebSocketBridge extends EventEmitter {
    * Stop the WebSocket server
    */
   async stop(): Promise<void> {
-    logger.info('Stopping WebSocket bridge');
+    logger.info("Stopping WebSocket bridge");
 
-    this.rejectAllPending('Server stopping');
+    this.rejectAllPending("Server stopping");
 
     // Close all MCP clients
     for (const client of this.mcpClients) {
@@ -559,7 +605,11 @@ export class WebSocketBridge extends EventEmitter {
  * Common interface for bridge operations (both server and client modes)
  */
 export interface BridgeInterface {
-  sendRequest(action: string, params?: Record<string, unknown>, timeout?: number): Promise<WsMessage>;
+  sendRequest(
+    action: string,
+    params?: Record<string, unknown>,
+    timeout?: number,
+  ): Promise<WsMessage>;
   isConnected(): boolean;
   on(event: string, listener: (...args: unknown[]) => void): this;
 }
@@ -573,7 +623,7 @@ let isClientMode: boolean = false;
  */
 export function getWebSocketBridge(): BridgeInterface {
   if (!bridgeInstance) {
-    throw new Error('WebSocket bridge not initialized');
+    throw new Error("WebSocket bridge not initialized");
   }
   return bridgeInstance;
 }
@@ -591,26 +641,29 @@ export function isBridgeClientMode(): boolean {
  * falls back to creating a new bridge server if none exists
  */
 export async function initializeWebSocketBridge(
-  options: WebSocketBridgeOptions
+  options: WebSocketBridgeOptions,
 ): Promise<BridgeInterface> {
   if (bridgeInstance) {
-    logger.warn('WebSocket bridge already initialized');
+    logger.warn("WebSocket bridge already initialized");
     return bridgeInstance;
   }
 
   // First, try to connect to an existing bridge (client mode)
   logger.info(`Checking for existing bridge on port ${options.port}...`);
-  const client = await tryConnectToExistingBridge(options.port, options.timeout || 30000);
+  const client = await tryConnectToExistingBridge(
+    options.port,
+    options.timeout || 30000,
+  );
 
   if (client) {
-    logger.info('Connected to existing bridge in client mode');
+    logger.info("Connected to existing bridge in client mode");
     bridgeInstance = client;
     isClientMode = true;
     return bridgeInstance;
   }
 
   // No existing bridge found, create server
-  logger.info('No existing bridge found, creating new bridge server...');
+  logger.info("No existing bridge found, creating new bridge server...");
   const server = new WebSocketBridge(options);
   await server.start();
   bridgeInstance = server;
@@ -623,14 +676,14 @@ export async function initializeWebSocketBridge(
  * Always creates a new server, never tries client mode
  */
 export async function initializeWebSocketBridgeServer(
-  options: WebSocketBridgeOptions
+  options: WebSocketBridgeOptions,
 ): Promise<WebSocketBridge> {
   if (bridgeInstance) {
     if (bridgeInstance instanceof WebSocketBridge) {
-      logger.warn('WebSocket bridge server already initialized');
+      logger.warn("WebSocket bridge server already initialized");
       return bridgeInstance;
     }
-    throw new Error('Bridge is already initialized in client mode');
+    throw new Error("Bridge is already initialized in client mode");
   }
 
   const server = new WebSocketBridge(options);
@@ -656,4 +709,7 @@ export async function stopWebSocketBridge(): Promise<void> {
 }
 
 // Re-export for convenience
-export { tryConnectToExistingBridge, WebSocketBridgeClient } from './bridge-client.js';
+export {
+  tryConnectToExistingBridge,
+  WebSocketBridgeClient,
+} from "./bridge-client.js";

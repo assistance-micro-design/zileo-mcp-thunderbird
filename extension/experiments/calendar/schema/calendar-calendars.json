@@ -67,7 +67,11 @@
             "optional": true,
             "properties": {
               "count": { "type": "integer", "minimum": -1, "optional": true },
-              "actions": { "type": "array", "items": { "type": "string" }, "optional": true }
+              "actions": {
+                "type": "array",
+                "items": { "type": "string" },
+                "optional": true
+              }
             }
           },
           "tasks": { "type": "boolean", "optional": true, "default": true },
@@ -82,7 +86,11 @@
             }
           },
           "requires_network": { "type": "boolean", "optional": true },
-          "minimum_refresh_interval": { "type": "integer", "minimum": -1, "optional": true },
+          "minimum_refresh_interval": {
+            "type": "integer",
+            "minimum": -1,
+            "optional": true
+          },
           "mutable": { "type": "boolean", "optional": true, "default": true }
         }
       }
@@ -98,10 +106,10 @@
             "name": "queryInfo",
             "properties": {
               "type": { "type": "string", "optional": true },
-              "url": { 
+              "url": {
                 "choices": [
-                  {"type": "string"},
-                  {"type": "array", "items": {"type": "string"}}
+                  { "type": "string" },
+                  { "type": "array", "items": { "type": "string" } }
                 ],
                 "optional": true
               },
@@ -118,10 +126,8 @@
         "name": "get",
         "async": true,
         "type": "function",
-        "parameters": [
-          { "type": "string", "name": "id" }
-         ]
-       },
+        "parameters": [{ "type": "string", "name": "id" }]
+      },
       {
         "name": "create",
         "async": true,
@@ -139,7 +145,10 @@
               "visible": { "type": "boolean", "optional": true },
               "showReminders": { "type": "boolean", "optional": true },
               "color": { "type": "string", "optional": true },
-              "capabilities": { "$ref": "CalendarCapabilities", "optional": true }
+              "capabilities": {
+                "$ref": "CalendarCapabilities",
+                "optional": true
+              }
             }
           }
         ]
@@ -159,7 +168,10 @@
               "readOnly": { "type": "boolean", "optional": true },
               "enabled": { "type": "boolean", "optional": true },
               "color": { "type": "string", "optional": true },
-              "capabilities": { "$ref": "CalendarCapabilities", "optional": true },
+              "capabilities": {
+                "$ref": "CalendarCapabilities",
+                "optional": true
+              },
               "lastError": { "type": "string", "optional": true }
             }
           }
@@ -169,17 +181,13 @@
         "name": "remove",
         "async": true,
         "type": "function",
-        "parameters": [
-          { "type": "string", "name": "id" }
-        ]
+        "parameters": [{ "type": "string", "name": "id" }]
       },
       {
         "name": "clear",
         "async": true,
         "type": "function",
-        "parameters": [
-          { "type": "string", "name": "id" }
-        ]
+        "parameters": [{ "type": "string", "name": "id" }]
       },
       {
         "name": "synchronize",
@@ -201,9 +209,7 @@
       {
         "name": "onCreated",
         "type": "function",
-        "parameters": [
-          { "name": "calendar", "$ref": "Calendar" }
-        ]
+        "parameters": [{ "name": "calendar", "$ref": "Calendar" }]
       },
       {
         "name": "onUpdated",
@@ -216,9 +222,7 @@
       {
         "name": "onRemoved",
         "type": "function",
-        "parameters": [
-          { "name": "id", "type": "string" }
-        ]
+        "parameters": [{ "name": "id", "type": "string" }]
       }
     ]
   }

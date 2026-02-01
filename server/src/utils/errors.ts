@@ -4,7 +4,7 @@
  * @module utils/errors
  */
 
-import { JsonRpcErrorCode, McpErrorCode, JsonRpcError } from '../types/mcp.js';
+import { JsonRpcErrorCode, McpErrorCode, JsonRpcError } from "../types/mcp.js";
 
 /**
  * Create a JSON-RPC error object
@@ -12,7 +12,7 @@ import { JsonRpcErrorCode, McpErrorCode, JsonRpcError } from '../types/mcp.js';
 export function createJsonRpcError(
   code: JsonRpcErrorCode | McpErrorCode,
   message: string,
-  data?: unknown
+  data?: unknown,
 ): JsonRpcError {
   const error: JsonRpcError = { code, message };
   if (data !== undefined) {
@@ -27,19 +27,22 @@ export function createJsonRpcError(
 export function createInvalidParamsError(details: unknown): JsonRpcError {
   return createJsonRpcError(
     JsonRpcErrorCode.InvalidParams,
-    'Invalid params',
-    details
+    "Invalid params",
+    details,
   );
 }
 
 /**
  * Create an internal error (-32603)
  */
-export function createInternalError(message?: string, details?: unknown): JsonRpcError {
+export function createInternalError(
+  message?: string,
+  details?: unknown,
+): JsonRpcError {
   return createJsonRpcError(
     JsonRpcErrorCode.InternalError,
-    message || 'Internal error',
-    details
+    message || "Internal error",
+    details,
   );
 }
 
@@ -49,7 +52,7 @@ export function createInternalError(message?: string, details?: unknown): JsonRp
 export function createThunderbirdNotRunningError(): JsonRpcError {
   return createJsonRpcError(
     McpErrorCode.ThunderbirdNotRunning,
-    'Thunderbird is not running or extension is not connected'
+    "Thunderbird is not running or extension is not connected",
   );
 }
 
@@ -59,8 +62,8 @@ export function createThunderbirdNotRunningError(): JsonRpcError {
 export function createPermissionDeniedError(permission: string): JsonRpcError {
   return createJsonRpcError(
     McpErrorCode.PermissionDenied,
-    'Permission denied',
-    { permission }
+    "Permission denied",
+    { permission },
   );
 }
 
@@ -70,19 +73,22 @@ export function createPermissionDeniedError(permission: string): JsonRpcError {
 export function createResourceNotFoundError(resource: string): JsonRpcError {
   return createJsonRpcError(
     McpErrorCode.ResourceNotFound,
-    'Resource not found',
-    { resource }
+    "Resource not found",
+    { resource },
   );
 }
 
 /**
  * Create an operation timeout error (-32004)
  */
-export function createOperationTimeoutError(operation: string, timeout: number): JsonRpcError {
+export function createOperationTimeoutError(
+  operation: string,
+  timeout: number,
+): JsonRpcError {
   return createJsonRpcError(
     McpErrorCode.OperationTimeout,
-    'Operation timeout',
-    { operation, timeout }
+    "Operation timeout",
+    { operation, timeout },
   );
 }
 
@@ -90,33 +96,33 @@ export function createOperationTimeoutError(operation: string, timeout: number):
  * Convert a native error to JSON-RPC error
  */
 export function nativeErrorToJsonRpc(nativeError: unknown): JsonRpcError {
-  if (typeof nativeError === 'object' && nativeError !== null) {
+  if (typeof nativeError === "object" && nativeError !== null) {
     const err = nativeError as Record<string, unknown>;
 
     // Check if it's a native messaging error
-    if (err.code && typeof err.code === 'string') {
+    if (err.code && typeof err.code === "string") {
       const code = err.code as string;
-      const message = (err.message as string) || 'Unknown error';
+      const message = (err.message as string) || "Unknown error";
 
       // Map native error codes to JSON-RPC codes
       switch (code) {
-        case 'NOT_CONNECTED':
-        case 'CONNECTION_FAILED':
+        case "NOT_CONNECTED":
+        case "CONNECTION_FAILED":
           return createThunderbirdNotRunningError();
-        case 'PERMISSION_DENIED':
+        case "PERMISSION_DENIED":
           return createPermissionDeniedError(message);
-        case 'NOT_FOUND':
-        case 'ACCOUNT_NOT_FOUND':
-        case 'FOLDER_NOT_FOUND':
-        case 'MESSAGE_NOT_FOUND':
-        case 'CONTACT_NOT_FOUND':
-        case 'CALENDAR_NOT_FOUND':
-        case 'EVENT_NOT_FOUND':
-        case 'TASK_NOT_FOUND':
+        case "NOT_FOUND":
+        case "ACCOUNT_NOT_FOUND":
+        case "FOLDER_NOT_FOUND":
+        case "MESSAGE_NOT_FOUND":
+        case "CONTACT_NOT_FOUND":
+        case "CALENDAR_NOT_FOUND":
+        case "EVENT_NOT_FOUND":
+        case "TASK_NOT_FOUND":
           return createResourceNotFoundError(message);
-        case 'TIMEOUT':
+        case "TIMEOUT":
           return createOperationTimeoutError(message, 0);
-        case 'INVALID_PARAMS':
+        case "INVALID_PARAMS":
           return createInvalidParamsError(err.details);
         default:
           return createInternalError(message, err.details);
@@ -126,7 +132,7 @@ export function nativeErrorToJsonRpc(nativeError: unknown): JsonRpcError {
 
   // Default to internal error
   return createInternalError(
-    nativeError instanceof Error ? nativeError.message : 'Unknown error',
-    nativeError
+    nativeError instanceof Error ? nativeError.message : "Unknown error",
+    nativeError,
   );
 }

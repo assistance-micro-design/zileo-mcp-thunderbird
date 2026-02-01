@@ -4,16 +4,21 @@
  * @module native-messaging/client
  */
 
-import { EventEmitter } from 'events';
-import { readMessage, writeMessage, createNativeRequest, createTimeout } from './protocol.js';
+import { EventEmitter } from "events";
+import {
+  readMessage,
+  writeMessage,
+  createNativeRequest,
+  createTimeout,
+} from "./protocol.js";
 import {
   type NativeMessage,
   type NativeRequest,
   type NativeResponse,
   type MessageAction,
-  NotificationEvents
-} from '../types/native-messaging.js';
-import logger from '../utils/logger.js';
+  NotificationEvents,
+} from "../types/native-messaging.js";
+import logger from "../utils/logger.js";
 
 /**
  * Native messaging client options
@@ -50,7 +55,7 @@ export class NativeMessagingClient extends EventEmitter {
   constructor(
     stdin: NodeJS.ReadableStream = process.stdin,
     stdout: NodeJS.WritableStream = process.stdout,
-    options: NativeClientOptions = {}
+    options: NativeClientOptions = {},
   ) {
     super();
 
@@ -70,29 +75,29 @@ export class NativeMessagingClient extends EventEmitter {
    */
   async start(): Promise<void> {
     if (this.reading) {
-      logger.warn('Native messaging client already started');
+      logger.warn("Native messaging client already started");
       return;
     }
 
-    logger.info('Starting native messaging client');
+    logger.info("Starting native messaging client");
     this.reading = true;
     this.connected = true;
 
     // Start reading messages in background
     this.readLoop().catch((error) => {
-      logger.error('Read loop error:', error);
-      this.emit('error', error);
+      logger.error("Read loop error:", error);
+      this.emit("error", error);
       this.disconnect();
     });
 
-    this.emit('connected');
+    this.emit("connected");
   }
 
   /**
    * Stop the client
    */
   async stop(): Promise<void> {
-    logger.info('Stopping native messaging client');
+    logger.info("Stopping native messaging client");
     this.disconnect();
   }
 
@@ -102,15 +107,15 @@ export class NativeMessagingClient extends EventEmitter {
   async sendRequest(
     action: MessageAction,
     params: Record<string, unknown> = {},
-    timeout?: number
+    timeout?: number,
   ): Promise<NativeResponse> {
     if (!this.connected) {
-      throw new Error('Not connected to Thunderbird');
+      throw new Error("Not connected to Thunderbird");
     }
 
     // Check pending request limit
     if (this.pendingRequests.size >= this.options.maxPendingRequests) {
-      throw new Error('Too many pending requests');
+      throw new Error("Too many pending requests");
     }
 
     const request = createNativeRequest(action, params);
@@ -174,11 +179,11 @@ export class NativeMessagingClient extends EventEmitter {
     // Reject all pending requests
     for (const [id, pending] of this.pendingRequests.entries()) {
       clearTimeout(pending.timeout);
-      pending.reject(new Error('Disconnected'));
+      pending.reject(new Error("Disconnected"));
     }
     this.pendingRequests.clear();
 
-    this.emit('disconnected');
+    this.emit("disconnected");
   }
 
   /**
@@ -190,23 +195,23 @@ export class NativeMessagingClient extends EventEmitter {
         const message = await readMessage(this.stdin);
 
         if (message === null) {
-          logger.info('Native messaging connection closed');
+          logger.info("Native messaging connection closed");
           this.disconnect();
           break;
         }
 
         this.handleMessage(message);
       } catch (error) {
-        logger.error('Error reading message:', error);
+        logger.error("Error reading message:", error);
 
-        if (error instanceof Error && error.message.includes('EPIPE')) {
+        if (error instanceof Error && error.message.includes("EPIPE")) {
           // Broken pipe - connection closed
           this.disconnect();
           break;
         }
 
         // Continue reading on other errors
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
       }
     }
   }
@@ -218,17 +223,17 @@ export class NativeMessagingClient extends EventEmitter {
     logger.debug(`Received message: ${message.type} (${message.id})`);
 
     switch (message.type) {
-      case 'response':
+      case "response":
         this.handleResponse(message);
         break;
-      case 'notification':
+      case "notification":
         this.handleNotification(message);
         break;
-      case 'request':
-        logger.warn('Unexpected request from extension:', message);
+      case "request":
+        logger.warn("Unexpected request from extension:", message);
         break;
       default:
-        logger.warn('Unknown message type:', message);
+        logger.warn("Unknown message type:", message);
     }
   }
 
@@ -253,7 +258,7 @@ export class NativeMessagingClient extends EventEmitter {
       pending.resolve(response);
     } else {
       logger.warn(`Request failed: ${pending.action}`, response.error);
-      pending.reject(new Error(response.error?.message || 'Request failed'));
+      pending.reject(new Error(response.error?.message || "Request failed"));
     }
   }
 
@@ -261,34 +266,34 @@ export class NativeMessagingClient extends EventEmitter {
    * Handle notification message
    */
   private handleNotification(notification: NativeMessage): void {
-    if (notification.type !== 'notification') {
+    if (notification.type !== "notification") {
       return;
     }
 
     logger.debug(`Notification: ${notification.event}`);
-    this.emit('notification', notification);
+    this.emit("notification", notification);
 
     // Emit specific events
     switch (notification.event) {
       case NotificationEvents.NEW_MAIL_RECEIVED:
-        this.emit('newMail', notification.data);
+        this.emit("newMail", notification.data);
         break;
       case NotificationEvents.MESSAGE_CREATED:
       case NotificationEvents.MESSAGE_UPDATED:
       case NotificationEvents.MESSAGE_DELETED:
       case NotificationEvents.MESSAGE_MOVED:
-        this.emit('messageChange', notification.data);
+        this.emit("messageChange", notification.data);
         break;
       case NotificationEvents.FOLDER_CREATED:
       case NotificationEvents.FOLDER_RENAMED:
       case NotificationEvents.FOLDER_DELETED:
       case NotificationEvents.FOLDER_MOVED:
-        this.emit('folderChange', notification.data);
+        this.emit("folderChange", notification.data);
         break;
       case NotificationEvents.CONTACT_CREATED:
       case NotificationEvents.CONTACT_UPDATED:
       case NotificationEvents.CONTACT_DELETED:
-        this.emit('contactChange', notification.data);
+        this.emit("contactChange", notification.data);
         break;
     }
   }
@@ -310,8 +315,14 @@ export function getNativeClient(): NativeMessagingClient {
 /**
  * Initialize and start native messaging client
  */
-export async function initializeNativeClient(options?: NativeClientOptions): Promise<NativeMessagingClient> {
-  const client = new NativeMessagingClient(process.stdin, process.stdout, options);
+export async function initializeNativeClient(
+  options?: NativeClientOptions,
+): Promise<NativeMessagingClient> {
+  const client = new NativeMessagingClient(
+    process.stdin,
+    process.stdout,
+    options,
+  );
   await client.start();
   clientInstance = client;
   return client;

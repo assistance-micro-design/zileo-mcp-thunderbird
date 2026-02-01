@@ -115,6 +115,7 @@ graph TB
 **Purpose**: Parse command-line arguments and start the MCP server
 
 **Responsibilities**:
+
 - Parse CLI arguments (transport type, host, port)
 - Initialize logging configuration
 - Set up signal handlers (SIGINT, SIGTERM)
@@ -122,6 +123,7 @@ graph TB
 - Handle startup errors
 
 **Implementation Pattern**:
+
 ```typescript
 #!/usr/bin/env node
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
@@ -145,7 +147,7 @@ async function main() {
           resources: { listChanged: true },
           prompts: { listChanged: false },
         },
-      }
+      },
     );
 
     // Set up handlers
@@ -177,6 +179,7 @@ main();
 **Purpose**: Configure MCP server with tools, resources, and prompts
 
 **Responsibilities**:
+
 - Register all tool handlers
 - Register resource handlers
 - Initialize Native Messaging client
@@ -184,6 +187,7 @@ main();
 - Configure capabilities
 
 **Implementation Pattern**:
+
 ```typescript
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { NativeMessagingClient } from "./native-messaging/client.js";
@@ -229,7 +233,7 @@ import { handleToolError } from "../utils/errors.js";
 
 export function registerMessageTools(
   server: Server,
-  nmClient: NativeMessagingClient
+  nmClient: NativeMessagingClient,
 ) {
   // Search messages tool
   server.setRequestHandler("tools/call", async (request) => {
@@ -238,7 +242,7 @@ export function registerMessageTools(
         // Validate input
         const params = validateInput(
           ToolSchema.messagesSearch,
-          request.params.arguments
+          request.params.arguments,
         );
 
         // Call extension via Native Messaging
@@ -267,6 +271,7 @@ export function registerMessageTools(
 ### Messages Tools (`tools/messages.ts`)
 
 **Tools Implemented**:
+
 - `thunderbird_messages_search` - Advanced message search
 - `thunderbird_messages_list` - List messages in folder
 - `thunderbird_messages_list_unread` - List unread messages
@@ -278,6 +283,7 @@ export function registerMessageTools(
 - `thunderbird_messages_archive` - Archive messages
 
 **Common Operations**:
+
 1. Validate parameters with Zod schema
 2. Send request to extension via Native Messaging
 3. Handle timeout (30s for searches, 10s for CRUD)
@@ -287,6 +293,7 @@ export function registerMessageTools(
 ### Folders Tools (`tools/folders.ts`)
 
 **Tools Implemented**:
+
 - `thunderbird_folders_list` - List folder hierarchy
 - `thunderbird_folders_get` - Get folder details
 - `thunderbird_folders_create` - Create folder
@@ -298,6 +305,7 @@ export function registerMessageTools(
 ### Contacts Tools (`tools/contacts.ts`)
 
 **Tools Implemented**:
+
 - `thunderbird_contacts_search` - Search contacts
 - `thunderbird_contacts_list` - List contacts
 - `thunderbird_contacts_get` - Get contact
@@ -311,6 +319,7 @@ export function registerMessageTools(
 ### Calendar Tools (`tools/calendar.ts`)
 
 **Tools Implemented**:
+
 - `thunderbird_calendars_list` - List calendars
 - `thunderbird_calendars_get` - Get calendar details
 - `thunderbird_events_search` - Search events
@@ -324,6 +333,7 @@ export function registerMessageTools(
 ### Tags Tools (`tools/tags.ts`)
 
 **Tools Implemented**:
+
 - `thunderbird_tags_list` - List all tags
 - `thunderbird_tags_create` - Create tag
 - `thunderbird_tags_update` - Update tag
@@ -332,6 +342,7 @@ export function registerMessageTools(
 ### Accounts Tools (`tools/accounts.ts`)
 
 **Tools Implemented**:
+
 - `thunderbird_accounts_list` - List all accounts
 - `thunderbird_accounts_get` - Get account details
 - `thunderbird_identities_list` - List identities
@@ -348,7 +359,7 @@ import { NativeMessagingClient } from "../native-messaging/client.js";
 
 export function registerResourceHandlers(
   server: Server,
-  nmClient: NativeMessagingClient
+  nmClient: NativeMessagingClient,
 ) {
   // List available resources
   server.setRequestHandler("resources/list", async () => {
@@ -399,16 +410,16 @@ export function registerResourceHandlers(
 
 ### Resource URI Patterns
 
-| URI Pattern | Description | Data Format |
-|------------|-------------|-------------|
-| `thunderbird://accounts` | All accounts | JSON array |
-| `thunderbird://folders/{accountId}` | Folder tree | JSON tree |
-| `thunderbird://inbox/unread` | All unread messages | JSON array |
-| `thunderbird://inbox/unread/{accountId}` | Unread by account | JSON array |
-| `thunderbird://contacts/recent` | Recent contacts | JSON array |
-| `thunderbird://calendar/today` | Today's events | JSON array |
-| `thunderbird://calendar/upcoming` | Next 7 days | JSON array |
-| `thunderbird://tasks/pending` | Pending tasks | JSON array |
+| URI Pattern                              | Description         | Data Format |
+| ---------------------------------------- | ------------------- | ----------- |
+| `thunderbird://accounts`                 | All accounts        | JSON array  |
+| `thunderbird://folders/{accountId}`      | Folder tree         | JSON tree   |
+| `thunderbird://inbox/unread`             | All unread messages | JSON array  |
+| `thunderbird://inbox/unread/{accountId}` | Unread by account   | JSON array  |
+| `thunderbird://contacts/recent`          | Recent contacts     | JSON array  |
+| `thunderbird://calendar/today`           | Today's events      | JSON array  |
+| `thunderbird://calendar/upcoming`        | Next 7 days         | JSON array  |
+| `thunderbird://tasks/pending`            | Pending tasks       | JSON array  |
 
 ## WebSocket Bridge Architecture
 
@@ -417,18 +428,20 @@ export function registerResourceHandlers(
 The server supports two modes for WebSocket communication:
 
 **Server Mode** (Standard deployment):
+
 ```typescript
 // Direct mode - server creates its own WebSocket bridge
 const bridge = await initializeWebSocketBridgeServer(options);
 ```
 
 **Client Mode** (Docker deployment):
+
 ```typescript
 // Client mode - connects to existing bridge via /mcp path
 const client = await tryConnectToExistingBridge(port);
 if (client) {
   // Use client mode
-  return client;  // WebSocketBridgeClient instance
+  return client; // WebSocketBridgeClient instance
 }
 ```
 
@@ -437,14 +450,19 @@ if (client) {
 **Purpose**: Connect to an existing WebSocket bridge as a client (used in Docker multi-client architecture)
 
 **Key Features**:
+
 - Connects to `/mcp` WebSocket path
 - Same interface as `WebSocketBridge` (implements `BridgeInterface`)
 - Relays requests to Thunderbird through the bridge
 - Supports multiple simultaneous MCP clients
 
 **Implementation**:
+
 ```typescript
-export class WebSocketBridgeClient extends EventEmitter implements BridgeInterface {
+export class WebSocketBridgeClient
+  extends EventEmitter
+  implements BridgeInterface
+{
   private ws: WebSocket | null = null;
   private pendingRequests: Map<string, PendingRequest> = new Map();
 
@@ -457,7 +475,10 @@ export class WebSocketBridgeClient extends EventEmitter implements BridgeInterfa
     });
   }
 
-  async sendRequest(action: string, params: Record<string, unknown>): Promise<unknown> {
+  async sendRequest(
+    action: string,
+    params: Record<string, unknown>,
+  ): Promise<unknown> {
     // Same interface as WebSocketBridge
     // Requests are relayed through the bridge to Thunderbird
   }
@@ -469,12 +490,14 @@ export class WebSocketBridgeClient extends EventEmitter implements BridgeInterfa
 **Purpose**: Run only the WebSocket bridge server for Docker container
 
 **Usage**:
+
 ```bash
 # Started by Docker container
 node dist/bridge-standalone.js
 ```
 
 **Features**:
+
 - Creates WebSocket server on port 9876
 - Handles `/thunderbird` path (single extension)
 - Handles `/mcp` path (multiple MCP clients)
@@ -499,6 +522,7 @@ graph TD
 **Purpose**: Manage communication with Thunderbird extension via Native Messaging
 
 **Responsibilities**:
+
 - Spawn extension host process
 - Serialize/deserialize messages
 - Handle request/response correlation
@@ -506,6 +530,7 @@ graph TD
 - Reconnect on failure
 
 **Class Structure**:
+
 ```typescript
 import { spawn, ChildProcess } from "child_process";
 import { EventEmitter } from "events";
@@ -527,10 +552,7 @@ export class NativeMessagingClient extends EventEmitter {
     logger.info("Native Messaging client connected");
   }
 
-  async send(
-    request: NMRequest,
-    timeout: number = 10000
-  ): Promise<any> {
+  async send(request: NMRequest, timeout: number = 10000): Promise<any> {
     const id = generateId();
     const message = { id, ...request };
 
@@ -634,7 +656,7 @@ export function serializeMessage(message: any): Buffer {
 }
 
 export function deserializeMessage(
-  buffer: Buffer
+  buffer: Buffer,
 ): { data: any; consumed: number } | null {
   if (buffer.length < 4) return null;
 
@@ -661,6 +683,7 @@ export function deserializeMessage(
 ### Schema Structure
 
 **Common Schemas** (`schemas/common.ts`):
+
 ```typescript
 import { z } from "zod";
 
@@ -679,6 +702,7 @@ export const PaginationParams = z.object({
 ```
 
 **Message Schemas** (`schemas/messages.ts`):
+
 ```typescript
 import { z } from "zod";
 import { MessageId, FolderId, EmailAddress, DateTimeString } from "./common.js";
@@ -709,18 +733,12 @@ export const MessagesUpdateSchema = z.object({
 ```typescript
 import { z } from "zod";
 
-export function validateInput<T>(
-  schema: z.ZodSchema<T>,
-  input: unknown
-): T {
+export function validateInput<T>(schema: z.ZodSchema<T>, input: unknown): T {
   try {
     return schema.parse(input);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      throw new ValidationError(
-        "Invalid parameters",
-        error.errors
-      );
+      throw new ValidationError("Invalid parameters", error.errors);
     }
     throw error;
   }
@@ -736,7 +754,7 @@ export class ThunderbirdError extends Error {
   constructor(
     message: string,
     public code: number,
-    public data?: any
+    public data?: any,
   ) {
     super(message);
     this.name = "ThunderbirdError";
@@ -744,7 +762,10 @@ export class ThunderbirdError extends Error {
 }
 
 export class ValidationError extends ThunderbirdError {
-  constructor(message: string, public errors: any[]) {
+  constructor(
+    message: string,
+    public errors: any[],
+  ) {
     super(message, -32602, { errors });
     this.name = "ValidationError";
   }
@@ -793,10 +814,7 @@ export function handleToolError(error: any): ThunderbirdError {
   }
 
   // Generic internal error
-  return new ThunderbirdError(
-    error.message || "Internal error",
-    -32603
-  );
+  return new ThunderbirdError(error.message || "Internal error", -32603);
 }
 ```
 
@@ -812,7 +830,7 @@ export const logger = winston.createLogger({
   format: winston.format.combine(
     winston.format.timestamp(),
     winston.format.errors({ stack: true }),
-    winston.format.json()
+    winston.format.json(),
   ),
   transports: [
     new winston.transports.File({
@@ -831,9 +849,9 @@ if (process.env.NODE_ENV !== "production") {
     new winston.transports.Console({
       format: winston.format.combine(
         winston.format.colorize(),
-        winston.format.simple()
+        winston.format.simple(),
       ),
-    })
+    }),
   );
 }
 ```
@@ -841,12 +859,14 @@ if (process.env.NODE_ENV !== "production") {
 ### Logging Strategy
 
 **Log Levels**:
+
 - `error`: Errors that require attention
 - `warn`: Unexpected but recoverable situations
 - `info`: Important lifecycle events
 - `debug`: Detailed debugging information
 
 **Logged Events**:
+
 - Server startup/shutdown
 - Tool calls with parameters (sanitized)
 - Native Messaging requests/responses
@@ -856,34 +876,40 @@ if (process.env.NODE_ENV !== "production") {
 ## Performance Optimization
 
 ### Caching
+
 - No caching of message content (privacy)
 - Cache folder structures (5 minute TTL)
 - Cache account list (startup only)
 
 ### Connection Pooling
+
 - Single Native Messaging connection
 - Reuse connection for all requests
 - Reconnect on failure
 
 ### Request Batching
+
 - Support batch tool calls in future
 - Reduce round-trips for bulk operations
 
 ## Testing
 
 ### Unit Tests
+
 - Schema validation
 - Error handling
 - Message serialization
 - Tool handler logic
 
 ### Integration Tests
+
 - Native Messaging communication
 - Full request/response cycle
 - Timeout handling
 - Error propagation
 
 ### Mocking
+
 ```typescript
 class MockNativeMessagingClient {
   async send(request: any): Promise<any> {

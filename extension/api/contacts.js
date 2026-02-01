@@ -64,7 +64,7 @@ export const ContactsAPI = {
       total: contacts.length,
       limit,
       offset,
-      hasMore: offset + limit < contacts.length
+      hasMore: offset + limit < contacts.length,
     };
   },
 
@@ -85,7 +85,10 @@ export const ContactsAPI = {
    */
   async createContact(addressBookId, properties) {
     if (properties.vCard) {
-      return await messenger.addressBooks.contacts.create(addressBookId, properties.vCard);
+      return await messenger.addressBooks.contacts.create(
+        addressBookId,
+        properties.vCard,
+      );
     } else {
       const vCard = this._propertiesToVCard(properties);
       return await messenger.addressBooks.contacts.create(addressBookId, vCard);
@@ -102,10 +105,11 @@ export const ContactsAPI = {
     if (properties.vCard) {
       await messenger.addressBooks.contacts.update(contactId, properties.vCard);
     } else {
-      const currentContact = await messenger.addressBooks.contacts.get(contactId);
+      const currentContact =
+        await messenger.addressBooks.contacts.get(contactId);
       const vCard = this._propertiesToVCard({
         ...currentContact.properties,
-        ...properties
+        ...properties,
       });
       await messenger.addressBooks.contacts.update(contactId, vCard);
     }
@@ -125,15 +129,15 @@ export const ContactsAPI = {
    * @private
    */
   _propertiesToVCard(properties) {
-    const lines = ['BEGIN:VCARD', 'VERSION:4.0'];
+    const lines = ["BEGIN:VCARD", "VERSION:4.0"];
 
     if (properties.DisplayName) {
       lines.push(`FN:${properties.DisplayName}`);
     }
 
     if (properties.FirstName || properties.LastName) {
-      const lastName = properties.LastName || '';
-      const firstName = properties.FirstName || '';
+      const lastName = properties.LastName || "";
+      const firstName = properties.FirstName || "";
       lines.push(`N:${lastName};${firstName};;;`);
     }
 
@@ -170,25 +174,30 @@ export const ContactsAPI = {
     }
 
     if (properties.Notes) {
-      lines.push(`NOTE:${properties.Notes.replace(/\n/g, '\\n')}`);
+      lines.push(`NOTE:${properties.Notes.replace(/\n/g, "\\n")}`);
     }
 
     // Address
-    if (properties.WorkAddress || properties.WorkCity || properties.WorkZipCode || properties.WorkCountry) {
+    if (
+      properties.WorkAddress ||
+      properties.WorkCity ||
+      properties.WorkZipCode ||
+      properties.WorkCountry
+    ) {
       const address = [
-        '',
-        '',
-        properties.WorkAddress || '',
-        properties.WorkCity || '',
-        properties.WorkState || '',
-        properties.WorkZipCode || '',
-        properties.WorkCountry || ''
-      ].join(';');
+        "",
+        "",
+        properties.WorkAddress || "",
+        properties.WorkCity || "",
+        properties.WorkState || "",
+        properties.WorkZipCode || "",
+        properties.WorkCountry || "",
+      ].join(";");
       lines.push(`ADR;TYPE=work:${address}`);
     }
 
-    lines.push('END:VCARD');
+    lines.push("END:VCARD");
 
-    return lines.join('\n');
-  }
+    return lines.join("\n");
+  },
 };

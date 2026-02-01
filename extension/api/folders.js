@@ -23,14 +23,14 @@ export const FoldersAPI = {
       // Get folders using folders.query with accountId filter
       const subFolders = await messenger.folders.query({
         accountId: account.id,
-        isRoot: false
+        isRoot: false,
       });
-      
+
       // Add account info to each folder for clarity
-      const foldersWithAccount = subFolders.map(folder => ({
+      const foldersWithAccount = subFolders.map((folder) => ({
         ...folder,
         accountId: account.id,
-        accountName: account.name
+        accountName: account.name,
       }));
 
       allFolders.push(...foldersWithAccount);
@@ -101,8 +101,8 @@ export const FoldersAPI = {
     // messages.list() takes a folderId string directly, not a MailFolder object
     const messageList = await messenger.messages.list(folderId);
 
-    const updatePromises = messageList.messages.map(message =>
-      messenger.messages.update(message.id, { read: true })
+    const updatePromises = messageList.messages.map((message) =>
+      messenger.messages.update(message.id, { read: true }),
     );
 
     await Promise.all(updatePromises);
@@ -133,5 +133,5 @@ export const FoldersAPI = {
     }
 
     return result;
-  }
+  },
 };

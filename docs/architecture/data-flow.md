@@ -38,6 +38,7 @@ sequenceDiagram
 ```
 
 **Steps**:
+
 1. **Client Initialize**: Client sends `initialize` with protocol version and client info
 2. **Server Validation**: Server validates protocol compatibility
 3. **WebSocket Bridge Start**: Server starts WebSocket server on port 9876
@@ -48,6 +49,7 @@ sequenceDiagram
 8. **Ready State**: System ready to handle tool and resource requests
 
 **Capabilities Exchanged**:
+
 ```json
 {
   "capabilities": {
@@ -63,7 +65,15 @@ sequenceDiagram
     "version": "1.0.0"
   },
   "tools": 47,
-  "domains": ["messages", "folders", "contacts", "tags", "accounts", "calendar", "tasks"]
+  "domains": [
+    "messages",
+    "folders",
+    "contacts",
+    "tags",
+    "accounts",
+    "calendar",
+    "tasks"
+  ]
 }
 ```
 
@@ -161,6 +171,7 @@ sequenceDiagram
    - Returns to client
 
 **Error Handling**:
+
 - Validation errors: Return immediately with code -32602
 - Permission errors: Return code -32002
 - Not found errors: Return code -32003
@@ -203,6 +214,7 @@ sequenceDiagram
 ```
 
 **Timeout Values**:
+
 - Message search: 30 seconds
 - CRUD operations: 10 seconds
 - Resource reads: 15 seconds
@@ -250,18 +262,19 @@ sequenceDiagram
 
 **Resource URI Examples**:
 
-| URI | Data Returned |
-|-----|---------------|
-| `thunderbird://accounts` | All configured accounts |
-| `thunderbird://folders/{accountId}` | Folder tree for account |
-| `thunderbird://inbox/unread` | All unread messages |
+| URI                                      | Data Returned               |
+| ---------------------------------------- | --------------------------- |
+| `thunderbird://accounts`                 | All configured accounts     |
+| `thunderbird://folders/{accountId}`      | Folder tree for account     |
+| `thunderbird://inbox/unread`             | All unread messages         |
 | `thunderbird://inbox/unread/{accountId}` | Unread for specific account |
-| `thunderbird://contacts/recent` | Recently used contacts |
-| `thunderbird://calendar/today` | Today's calendar events |
-| `thunderbird://calendar/upcoming` | Next 7 days events |
-| `thunderbird://tasks/pending` | Incomplete tasks |
+| `thunderbird://contacts/recent`          | Recently used contacts      |
+| `thunderbird://calendar/today`           | Today's calendar events     |
+| `thunderbird://calendar/upcoming`        | Next 7 days events          |
+| `thunderbird://tasks/pending`            | Incomplete tasks            |
 
 **Resource Content Format**:
+
 ```json
 {
   "contents": [
@@ -315,17 +328,17 @@ sequenceDiagram
 
 **Error Code Mapping**:
 
-| Error Type | JSON-RPC Code | Description |
-|-----------|---------------|-------------|
-| Parse Error | -32700 | Invalid JSON |
-| Invalid Request | -32600 | Malformed request |
-| Method Not Found | -32601 | Unknown tool/method |
-| Invalid Params | -32602 | Schema validation failed |
-| Internal Error | -32603 | Unexpected error |
-| Extension Not Connected | -32000 | WebSocket not connected |
-| Permission Denied | -32002 | Insufficient permissions |
-| Resource Not Found | -32003 | Entity doesn't exist |
-| Operation Timeout | -32004 | Request exceeded timeout |
+| Error Type              | JSON-RPC Code | Description              |
+| ----------------------- | ------------- | ------------------------ |
+| Parse Error             | -32700        | Invalid JSON             |
+| Invalid Request         | -32600        | Malformed request        |
+| Method Not Found        | -32601        | Unknown tool/method      |
+| Invalid Params          | -32602        | Schema validation failed |
+| Internal Error          | -32603        | Unexpected error         |
+| Extension Not Connected | -32000        | WebSocket not connected  |
+| Permission Denied       | -32002        | Insufficient permissions |
+| Resource Not Found      | -32003        | Entity doesn't exist     |
+| Operation Timeout       | -32004        | Request exceeded timeout |
 
 ### Validation Error Flow
 
@@ -438,6 +451,7 @@ sequenceDiagram
 ```
 
 **Request ID Format**:
+
 - Server-generated: `req_{counter}_{timestamp}`
 - Extension-generated: `ext_{timestamp}_{random}`
 - Unique per request
@@ -474,6 +488,7 @@ sequenceDiagram
 ```
 
 **Batch Operation Benefits**:
+
 - Single WebSocket round-trip for multiple items
 - Atomic semantics (all or partial success)
 - Detailed error reporting per item
@@ -514,6 +529,7 @@ gantt
 ```
 
 **Typical Latencies**:
+
 - Schema validation: 1-5ms
 - Request ID generation: 1-2ms
 - JSON serialization: 1-2ms
@@ -523,6 +539,7 @@ gantt
 - Total: 10-50ms typical
 
 **Comparison to Native Messaging**:
+
 - Native Messaging: 20-50ms overhead
 - WebSocket: 10-20ms overhead
 - Improvement: ~2x faster
@@ -530,12 +547,14 @@ gantt
 ### Throughput Considerations
 
 **Bottlenecks**:
+
 1. **Single WebSocket Connection**: Full-duplex, but single thread
 2. **Extension Processing**: Sequential request handling
 3. **Thunderbird API**: Database lock contention
 4. **Pending Request Limit**: Max 100 concurrent requests
 
 **Optimization Strategies**:
+
 - Use pagination for large result sets
 - Batch operations where possible
 - Request correlation enables concurrent requests
@@ -545,12 +564,12 @@ gantt
 
 ### Request Types Comparison
 
-| Flow Type | Latency | Connection | Real-time | Use Case |
-|-----------|---------|------------|-----------|----------|
-| Tool Call | 10-50ms | WebSocket | No | Action execution |
-| Resource Read | 15-40ms | WebSocket | No | Context retrieval |
-| Notification | <5ms | WebSocket | Yes | Status updates |
-| Batch Operation | 50-200ms | WebSocket | No | Bulk actions |
+| Flow Type       | Latency  | Connection | Real-time | Use Case          |
+| --------------- | -------- | ---------- | --------- | ----------------- |
+| Tool Call       | 10-50ms  | WebSocket  | No        | Action execution  |
+| Resource Read   | 15-40ms  | WebSocket  | No        | Context retrieval |
+| Notification    | <5ms     | WebSocket  | Yes       | Status updates    |
+| Batch Operation | 50-200ms | WebSocket  | No        | Bulk actions      |
 
 ### Key Takeaways
 

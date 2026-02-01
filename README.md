@@ -7,13 +7,13 @@ Model Context Protocol (MCP) server for Thunderbird email client integration. Th
 - **Email Management**: Search, read, move, copy, delete, and archive emails (9 tools)
 - **Folder Operations**: Create, rename, move, delete folders and mark as read (7 tools)
 - **Contact Access**: Full CRUD operations on contacts and address books (9 tools)
-- **Calendar Events**: Create, update, move, delete events with recurrence support (9 tools) *
-- **Task Management**: Create, update, complete, and delete tasks (6 tools) *
+- **Calendar Events**: Create, update, move, delete events with recurrence support (9 tools) \*
+- **Task Management**: Create, update, complete, and delete tasks (6 tools) \*
 - **Tag Management**: Create, update, delete email tags with colors (4 tools)
 - **Account Management**: List accounts and identities (3 tools)
 - **Resource Access**: 6 static + 2 parameterized MCP resources
 
-\* *Experimental features using webext-experiments calendar API*
+\* _Experimental features using webext-experiments calendar API_
 
 **Total: 47 MCP Tools**
 
@@ -78,17 +78,20 @@ This is a monorepo containing two main components:
 ### Option 1: Standard Setup
 
 1. Clone the repository:
+
 ```bash
 git clone https://github.com/assistance-micro-design/thunderbird-mcp.git
 cd thunderbird-mcp
 ```
 
 2. Install dependencies:
+
 ```bash
 npm install
 ```
 
 3. Build the project:
+
 ```bash
 npm run build
 ```
@@ -104,6 +107,7 @@ npm run build
 The Docker deployment uses a multi-client architecture where the container runs a standalone WebSocket bridge, and MCP instances connect to it via `docker exec`.
 
 1. Clone and build:
+
 ```bash
 git clone https://github.com/assistance-micro-design/thunderbird-mcp.git
 cd thunderbird-mcp
@@ -111,6 +115,7 @@ docker compose build
 ```
 
 2. Start the bridge server:
+
 ```bash
 docker compose up -d
 ```
@@ -118,12 +123,14 @@ docker compose up -d
 3. Install the Thunderbird extension (same as above)
 
 4. Verify the bridge is running:
+
 ```bash
 curl http://localhost:9876/health
 # Returns: {"status":"ok","thunderbird":true,"mcpClients":0}
 ```
 
 **Architecture:**
+
 ```
 ┌─────────────────────────────────────────────────────┐
 │              Docker Container                        │
@@ -167,10 +174,7 @@ For Docker deployment, the container runs a standalone WebSocket bridge. MCP ins
   "mcpServers": {
     "thunderbird": {
       "command": "docker",
-      "args": [
-        "exec", "-i", "thunderbird-mcp-server",
-        "node", "dist/index.js"
-      ],
+      "args": ["exec", "-i", "thunderbird-mcp-server", "node", "dist/index.js"],
       "env": {
         "LOG_LEVEL": "info"
       }
@@ -185,10 +189,10 @@ The MCP server automatically detects the running bridge and connects as a client
 
 ### Environment Variables
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `THUNDERBIRD_PORT` | WebSocket port for Thunderbird connection | 9876 |
-| `LOG_LEVEL` | Logging level (debug, info, warn, error) | info |
+| Variable           | Description                               | Default |
+| ------------------ | ----------------------------------------- | ------- |
+| `THUNDERBIRD_PORT` | WebSocket port for Thunderbird connection | 9876    |
+| `LOG_LEVEL`        | Logging level (debug, info, warn, error)  | info    |
 
 ## Usage
 
@@ -200,6 +204,7 @@ npm start
 ```
 
 Or for development with auto-reload:
+
 ```bash
 npm run dev
 ```
@@ -207,92 +212,99 @@ npm run dev
 ### Available MCP Tools (47 total)
 
 #### Messages (9 tools)
-| Tool | Description |
-|------|-------------|
-| `thunderbird_messages_search` | Advanced email search with filters (subject, from, to, body, tags, dates) |
-| `thunderbird_messages_list` | List messages in a folder with pagination |
-| `thunderbird_messages_list_unread` | List unread messages across accounts |
-| `thunderbird_messages_get` | Get message details (headers, full, or raw format) |
-| `thunderbird_messages_move` | Move messages to another folder |
-| `thunderbird_messages_copy` | Copy messages to another folder |
-| `thunderbird_messages_delete` | Delete messages (trash or permanent) |
-| `thunderbird_messages_update` | Update message properties (read, flagged, tags) |
-| `thunderbird_messages_archive` | Archive messages |
+
+| Tool                               | Description                                                               |
+| ---------------------------------- | ------------------------------------------------------------------------- |
+| `thunderbird_messages_search`      | Advanced email search with filters (subject, from, to, body, tags, dates) |
+| `thunderbird_messages_list`        | List messages in a folder with pagination                                 |
+| `thunderbird_messages_list_unread` | List unread messages across accounts                                      |
+| `thunderbird_messages_get`         | Get message details (headers, full, or raw format)                        |
+| `thunderbird_messages_move`        | Move messages to another folder                                           |
+| `thunderbird_messages_copy`        | Copy messages to another folder                                           |
+| `thunderbird_messages_delete`      | Delete messages (trash or permanent)                                      |
+| `thunderbird_messages_update`      | Update message properties (read, flagged, tags)                           |
+| `thunderbird_messages_archive`     | Archive messages                                                          |
 
 #### Folders (7 tools)
-| Tool | Description |
-|------|-------------|
-| `thunderbird_folders_list` | List all folders (hierarchical structure) |
-| `thunderbird_folders_get` | Get folder details |
-| `thunderbird_folders_create` | Create a new subfolder |
-| `thunderbird_folders_rename` | Rename a folder |
-| `thunderbird_folders_delete` | Delete a folder |
-| `thunderbird_folders_move` | Move a folder |
-| `thunderbird_folders_mark_read` | Mark all messages in folder as read |
+
+| Tool                            | Description                               |
+| ------------------------------- | ----------------------------------------- |
+| `thunderbird_folders_list`      | List all folders (hierarchical structure) |
+| `thunderbird_folders_get`       | Get folder details                        |
+| `thunderbird_folders_create`    | Create a new subfolder                    |
+| `thunderbird_folders_rename`    | Rename a folder                           |
+| `thunderbird_folders_delete`    | Delete a folder                           |
+| `thunderbird_folders_move`      | Move a folder                             |
+| `thunderbird_folders_mark_read` | Mark all messages in folder as read       |
 
 #### Contacts (9 tools)
-| Tool | Description |
-|------|-------------|
-| `thunderbird_contacts_search` | Search contacts by query |
-| `thunderbird_contacts_list` | List contacts with pagination |
-| `thunderbird_contacts_get` | Get contact details |
-| `thunderbird_contacts_create` | Create a new contact (properties or vCard) |
-| `thunderbird_contacts_update` | Update contact properties |
-| `thunderbird_contacts_delete` | Delete a contact |
-| `thunderbird_addressbooks_list` | List all address books |
-| `thunderbird_addressbooks_create` | Create a new address book |
-| `thunderbird_addressbooks_delete` | Delete an address book |
+
+| Tool                              | Description                                |
+| --------------------------------- | ------------------------------------------ |
+| `thunderbird_contacts_search`     | Search contacts by query                   |
+| `thunderbird_contacts_list`       | List contacts with pagination              |
+| `thunderbird_contacts_get`        | Get contact details                        |
+| `thunderbird_contacts_create`     | Create a new contact (properties or vCard) |
+| `thunderbird_contacts_update`     | Update contact properties                  |
+| `thunderbird_contacts_delete`     | Delete a contact                           |
+| `thunderbird_addressbooks_list`   | List all address books                     |
+| `thunderbird_addressbooks_create` | Create a new address book                  |
+| `thunderbird_addressbooks_delete` | Delete an address book                     |
 
 #### Tags (4 tools)
-| Tool | Description |
-|------|-------------|
-| `thunderbird_tags_list` | List all message tags |
+
+| Tool                      | Description                 |
+| ------------------------- | --------------------------- |
+| `thunderbird_tags_list`   | List all message tags       |
 | `thunderbird_tags_create` | Create a new tag with color |
-| `thunderbird_tags_update` | Update tag name or color |
-| `thunderbird_tags_delete` | Delete a tag |
+| `thunderbird_tags_update` | Update tag name or color    |
+| `thunderbird_tags_delete` | Delete a tag                |
 
 #### Accounts (3 tools)
-| Tool | Description |
-|------|-------------|
-| `thunderbird_accounts_list` | List all email accounts |
-| `thunderbird_accounts_get` | Get account details |
+
+| Tool                          | Description                                |
+| ----------------------------- | ------------------------------------------ |
+| `thunderbird_accounts_list`   | List all email accounts                    |
+| `thunderbird_accounts_get`    | Get account details                        |
 | `thunderbird_identities_list` | List account identities (sender addresses) |
 
-#### Calendar (9 tools) - *Experimental*
-| Tool | Description |
-|------|-------------|
-| `thunderbird_calendars_list` | List all calendars |
-| `thunderbird_calendars_get` | Get calendar details |
-| `thunderbird_events_search` | Search events by date range and query |
-| `thunderbird_events_list` | List events in a calendar |
-| `thunderbird_events_get` | Get event details |
-| `thunderbird_events_create` | Create event with attendees and recurrence |
-| `thunderbird_events_update` | Update event properties |
-| `thunderbird_events_move` | Reschedule an event |
-| `thunderbird_events_delete` | Delete an event |
+#### Calendar (9 tools) - _Experimental_
 
-#### Tasks (6 tools) - *Experimental*
-| Tool | Description |
-|------|-------------|
-| `thunderbird_tasks_list` | List tasks with filters |
-| `thunderbird_tasks_get` | Get task details |
-| `thunderbird_tasks_create` | Create a task with due date and priority |
-| `thunderbird_tasks_update` | Update task properties |
-| `thunderbird_tasks_delete` | Delete a task |
-| `thunderbird_tasks_complete` | Mark task as completed |
+| Tool                         | Description                                |
+| ---------------------------- | ------------------------------------------ |
+| `thunderbird_calendars_list` | List all calendars                         |
+| `thunderbird_calendars_get`  | Get calendar details                       |
+| `thunderbird_events_search`  | Search events by date range and query      |
+| `thunderbird_events_list`    | List events in a calendar                  |
+| `thunderbird_events_get`     | Get event details                          |
+| `thunderbird_events_create`  | Create event with attendees and recurrence |
+| `thunderbird_events_update`  | Update event properties                    |
+| `thunderbird_events_move`    | Reschedule an event                        |
+| `thunderbird_events_delete`  | Delete an event                            |
+
+#### Tasks (6 tools) - _Experimental_
+
+| Tool                         | Description                              |
+| ---------------------------- | ---------------------------------------- |
+| `thunderbird_tasks_list`     | List tasks with filters                  |
+| `thunderbird_tasks_get`      | Get task details                         |
+| `thunderbird_tasks_create`   | Create a task with due date and priority |
+| `thunderbird_tasks_update`   | Update task properties                   |
+| `thunderbird_tasks_delete`   | Delete a task                            |
+| `thunderbird_tasks_complete` | Mark task as completed                   |
 
 ### MCP Resources
 
-| URI | Description |
-|-----|-------------|
-| `thunderbird://accounts` | List of configured email accounts |
-| `thunderbird://inbox/unread` | Unread messages (all accounts) |
+| URI                                      | Description                        |
+| ---------------------------------------- | ---------------------------------- |
+| `thunderbird://accounts`                 | List of configured email accounts  |
+| `thunderbird://inbox/unread`             | Unread messages (all accounts)     |
 | `thunderbird://inbox/unread/{accountId}` | Unread messages (specific account) |
-| `thunderbird://folders/{accountId}` | Folder tree for an account |
-| `thunderbird://contacts/recent` | Recently used contacts |
-| `thunderbird://calendar/today` | Today's calendar events |
-| `thunderbird://calendar/upcoming` | Events for next 7 days |
-| `thunderbird://tasks/pending` | Incomplete tasks |
+| `thunderbird://folders/{accountId}`      | Folder tree for an account         |
+| `thunderbird://contacts/recent`          | Recently used contacts             |
+| `thunderbird://calendar/today`           | Today's calendar events            |
+| `thunderbird://calendar/upcoming`        | Events for next 7 days             |
+| `thunderbird://tasks/pending`            | Incomplete tasks                   |
 
 ### Example Usage with Claude
 
@@ -398,6 +410,7 @@ If the MCP server cannot connect to Thunderbird:
 ### Calendar Not Working
 
 The calendar API uses experimental Thunderbird APIs:
+
 1. Ensure you have Thunderbird 128.0 or higher
 2. Check that Lightning calendar is enabled
 3. Calendar features require experimental API permissions

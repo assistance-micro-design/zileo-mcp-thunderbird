@@ -11,22 +11,31 @@ export const CalendarAPI = {
    * @returns {Promise<Array>} Array of calendars
    */
   async listCalendars() {
-    console.log('[CalendarAPI] listCalendars called');
-    console.log('[CalendarAPI] browser.calendar exists:', !!browser.calendar);
+    console.log("[CalendarAPI] listCalendars called");
+    console.log("[CalendarAPI] browser.calendar exists:", !!browser.calendar);
     if (browser.calendar) {
-      console.log('[CalendarAPI] browser.calendar.calendars exists:', !!browser.calendar.calendars);
-      console.log('[CalendarAPI] browser.calendar.calendars.query exists:', typeof browser.calendar.calendars.query);
+      console.log(
+        "[CalendarAPI] browser.calendar.calendars exists:",
+        !!browser.calendar.calendars,
+      );
+      console.log(
+        "[CalendarAPI] browser.calendar.calendars.query exists:",
+        typeof browser.calendar.calendars.query,
+      );
     }
     try {
-      console.log('[CalendarAPI] Calling query...');
+      console.log("[CalendarAPI] Calling query...");
       const result = await browser.calendar.calendars.query({});
-      console.log('[CalendarAPI] Result:', result);
+      console.log("[CalendarAPI] Result:", result);
       return result;
     } catch (error) {
-      console.error('[CalendarAPI] Error name:', error.name);
-      console.error('[CalendarAPI] Error message:', error.message);
-      console.error('[CalendarAPI] Error stack:', error.stack);
-      console.error('[CalendarAPI] Full error:', JSON.stringify(error, Object.getOwnPropertyNames(error)));
+      console.error("[CalendarAPI] Error name:", error.name);
+      console.error("[CalendarAPI] Error message:", error.message);
+      console.error("[CalendarAPI] Error stack:", error.stack);
+      console.error(
+        "[CalendarAPI] Full error:",
+        JSON.stringify(error, Object.getOwnPropertyNames(error)),
+      );
       throw error;
     }
   },
@@ -48,17 +57,11 @@ export const CalendarAPI = {
    * @returns {Promise<Array>} Array of events
    */
   async searchEvents(params) {
-    const {
-      calendarId,
-      dateFrom,
-      dateTo,
-      query,
-      limit = 100
-    } = params;
+    const { calendarId, dateFrom, dateTo, query, limit = 100 } = params;
 
     const queryOptions = {
-      type: 'event',
-      returnFormat: 'jcal'
+      type: "event",
+      returnFormat: "jcal",
     };
 
     if (calendarId) {
@@ -71,7 +74,10 @@ export const CalendarAPI = {
       queryOptions.rangeEnd = this._toICalDate(dateTo);
     }
 
-    console.log('[CalendarAPI] searchEvents queryOptions:', JSON.stringify(queryOptions));
+    console.log(
+      "[CalendarAPI] searchEvents queryOptions:",
+      JSON.stringify(queryOptions),
+    );
 
     const items = await browser.calendar.items.query(queryOptions);
 
@@ -79,7 +85,7 @@ export const CalendarAPI = {
     let results = items;
     if (query) {
       const lowerQuery = query.toLowerCase();
-      results = items.filter(item => {
+      results = items.filter((item) => {
         const title = this._extractTitle(item);
         const description = this._extractDescription(item);
         const location = this._extractLocation(item);
@@ -91,7 +97,9 @@ export const CalendarAPI = {
       });
     }
 
-    return results.slice(0, limit).map(item => this._formatCalendarItem(item));
+    return results
+      .slice(0, limit)
+      .map((item) => this._formatCalendarItem(item));
   },
 
   /**
@@ -105,16 +113,19 @@ export const CalendarAPI = {
   async listEvents(calendarId, dateFrom, dateTo, limit = 100) {
     const queryOptions = {
       calendarId,
-      type: 'event',
+      type: "event",
       rangeStart: this._toICalDate(dateFrom),
       rangeEnd: this._toICalDate(dateTo),
-      returnFormat: 'jcal'
+      returnFormat: "jcal",
     };
-    console.log('[CalendarAPI] listEvents queryOptions:', JSON.stringify(queryOptions));
+    console.log(
+      "[CalendarAPI] listEvents queryOptions:",
+      JSON.stringify(queryOptions),
+    );
 
     const items = await browser.calendar.items.query(queryOptions);
 
-    return items.slice(0, limit).map(item => this._formatCalendarItem(item));
+    return items.slice(0, limit).map((item) => this._formatCalendarItem(item));
   },
 
   /**
@@ -125,7 +136,7 @@ export const CalendarAPI = {
    */
   async getEvent(calendarId, eventId) {
     const item = await browser.calendar.items.get(calendarId, eventId, {
-      returnFormat: 'jcal'
+      returnFormat: "jcal",
     });
     return this._formatCalendarItem(item);
   },
@@ -137,7 +148,8 @@ export const CalendarAPI = {
    * @returns {Promise<Object>} Created event
    */
   async createEvent(calendarId, eventData) {
-    const { title, start, end, description, location, attendees, recurrence } = eventData;
+    const { title, start, end, description, location, attendees, recurrence } =
+      eventData;
 
     // Build iCal VEVENT
     const icalEvent = this._buildICalEvent({
@@ -147,14 +159,14 @@ export const CalendarAPI = {
       description,
       location,
       attendees,
-      recurrence
+      recurrence,
     });
 
     const result = await browser.calendar.items.create(calendarId, {
-      type: 'event',
-      format: 'ical',
+      type: "event",
+      format: "ical",
       item: icalEvent,
-      returnFormat: 'jcal'
+      returnFormat: "jcal",
     });
 
     return this._formatCalendarItem(result);
@@ -170,7 +182,7 @@ export const CalendarAPI = {
   async updateEvent(calendarId, eventId, updateData) {
     // Get existing event first
     const existing = await browser.calendar.items.get(calendarId, eventId, {
-      returnFormat: 'jcal'
+      returnFormat: "jcal",
     });
 
     // Merge with updates and create new iCal
@@ -178,9 +190,9 @@ export const CalendarAPI = {
     const icalEvent = this._buildICalEvent(merged);
 
     const result = await browser.calendar.items.update(calendarId, eventId, {
-      format: 'ical',
+      format: "ical",
       item: icalEvent,
-      returnFormat: 'jcal'
+      returnFormat: "jcal",
     });
 
     return this._formatCalendarItem(result);
@@ -197,7 +209,7 @@ export const CalendarAPI = {
   async moveEvent(calendarId, eventId, newStart, newEnd) {
     return await this.updateEvent(calendarId, eventId, {
       start: newStart,
-      end: newEnd
+      end: newEnd,
     });
   },
 
@@ -219,17 +231,11 @@ export const CalendarAPI = {
    * @returns {Promise<Array>} Array of tasks
    */
   async listTasks(params = {}) {
-    const {
-      calendarId,
-      completed,
-      dueBefore,
-      dueAfter,
-      limit = 100
-    } = params;
+    const { calendarId, completed, dueBefore, dueAfter, limit = 100 } = params;
 
     const queryOptions = {
-      type: 'task',
-      returnFormat: 'jcal'
+      type: "task",
+      returnFormat: "jcal",
     };
 
     if (calendarId) {
@@ -246,13 +252,13 @@ export const CalendarAPI = {
 
     // Filter by completion status if specified
     if (completed !== undefined) {
-      items = items.filter(item => {
+      items = items.filter((item) => {
         const isCompleted = this._isTaskCompleted(item);
         return completed ? isCompleted : !isCompleted;
       });
     }
 
-    return items.slice(0, limit).map(item => this._formatTask(item));
+    return items.slice(0, limit).map((item) => this._formatTask(item));
   },
 
   /**
@@ -263,7 +269,7 @@ export const CalendarAPI = {
    */
   async getTask(calendarId, taskId) {
     const item = await browser.calendar.items.get(calendarId, taskId, {
-      returnFormat: 'jcal'
+      returnFormat: "jcal",
     });
     return this._formatTask(item);
   },
@@ -281,14 +287,14 @@ export const CalendarAPI = {
       title,
       description,
       dueDate,
-      priority
+      priority,
     });
 
     const result = await browser.calendar.items.create(calendarId, {
-      type: 'task',
-      format: 'ical',
+      type: "task",
+      format: "ical",
       item: icalTask,
-      returnFormat: 'jcal'
+      returnFormat: "jcal",
     });
 
     return this._formatTask(result);
@@ -303,16 +309,16 @@ export const CalendarAPI = {
    */
   async updateTask(calendarId, taskId, updateData) {
     const existing = await browser.calendar.items.get(calendarId, taskId, {
-      returnFormat: 'jcal'
+      returnFormat: "jcal",
     });
 
     const merged = { ...this._formatTask(existing), ...updateData };
     const icalTask = this._buildICalTask(merged);
 
     const result = await browser.calendar.items.update(calendarId, taskId, {
-      format: 'ical',
+      format: "ical",
       item: icalTask,
-      returnFormat: 'jcal'
+      returnFormat: "jcal",
     });
 
     return this._formatTask(result);
@@ -326,7 +332,7 @@ export const CalendarAPI = {
    */
   async completeTask(calendarId, taskId) {
     return await this.updateTask(calendarId, taskId, {
-      completed: true
+      completed: true,
     });
   },
 
@@ -349,7 +355,7 @@ export const CalendarAPI = {
   _formatCalendarItem(item) {
     if (!item) return null;
 
-    console.log('[CalendarAPI] Raw item:', JSON.stringify(item));
+    console.log("[CalendarAPI] Raw item:", JSON.stringify(item));
 
     // jCal format: item.item is the jCal array
     // Structure: ["vcalendar", [props], [["vevent", [props], []]]]
@@ -358,29 +364,31 @@ export const CalendarAPI = {
     let props = [];
 
     if (jcal && Array.isArray(jcal)) {
-      if (jcal[0] === 'vcalendar' && Array.isArray(jcal[2])) {
+      if (jcal[0] === "vcalendar" && Array.isArray(jcal[2])) {
         // Find vevent or vtodo in subcomponents
-        const subcomp = jcal[2].find(c => c[0] === 'vevent' || c[0] === 'vtodo');
+        const subcomp = jcal[2].find(
+          (c) => c[0] === "vevent" || c[0] === "vtodo",
+        );
         if (subcomp) {
           props = subcomp[1] || [];
         }
-      } else if (jcal[0] === 'vevent' || jcal[0] === 'vtodo') {
+      } else if (jcal[0] === "vevent" || jcal[0] === "vtodo") {
         props = jcal[1] || [];
       }
     }
 
-    console.log('[CalendarAPI] Extracted props:', JSON.stringify(props));
+    console.log("[CalendarAPI] Extracted props:", JSON.stringify(props));
 
     return {
       id: item.id,
       calendarId: item.calendarId,
       type: item.type,
-      title: this._getProp(props, 'summary'),
-      start: this._getProp(props, 'dtstart'),
-      end: this._getProp(props, 'dtend'),
-      description: this._getProp(props, 'description'),
-      location: this._getProp(props, 'location'),
-      attendees: this._getAttendees(props)
+      title: this._getProp(props, "summary"),
+      start: this._getProp(props, "dtstart"),
+      end: this._getProp(props, "dtend"),
+      description: this._getProp(props, "description"),
+      location: this._getProp(props, "location"),
+      attendees: this._getAttendees(props),
     };
   },
 
@@ -391,7 +399,7 @@ export const CalendarAPI = {
    */
   _getProp(props, name) {
     if (!Array.isArray(props)) return null;
-    const prop = props.find(p => Array.isArray(p) && p[0] === name);
+    const prop = props.find((p) => Array.isArray(p) && p[0] === name);
     return prop ? prop[3] : null;
   },
 
@@ -402,10 +410,10 @@ export const CalendarAPI = {
   _getAttendees(props) {
     if (!Array.isArray(props)) return [];
     return props
-      .filter(p => Array.isArray(p) && p[0] === 'attendee')
-      .map(p => {
-        const val = p[3] || '';
-        return val.replace('mailto:', '');
+      .filter((p) => Array.isArray(p) && p[0] === "attendee")
+      .map((p) => {
+        const val = p[3] || "";
+        return val.replace("mailto:", "");
       });
   },
 
@@ -419,12 +427,12 @@ export const CalendarAPI = {
     return {
       id: item.id,
       calendarId: item.calendarId,
-      type: 'task',
+      type: "task",
       title: this._extractTitle(item),
       description: this._extractDescription(item),
       dueDate: this._extractDueDate(item),
       completed: this._isTaskCompleted(item),
-      priority: this._extractPriority(item)
+      priority: this._extractPriority(item),
     };
   },
 
@@ -436,11 +444,11 @@ export const CalendarAPI = {
     try {
       if (item.item && Array.isArray(item.item)) {
         const props = item.item[1];
-        const summary = props.find(p => p[0] === 'summary');
-        return summary ? summary[3] : '';
+        const summary = props.find((p) => p[0] === "summary");
+        return summary ? summary[3] : "";
       }
     } catch (e) {}
-    return '';
+    return "";
   },
 
   /**
@@ -451,11 +459,11 @@ export const CalendarAPI = {
     try {
       if (item.item && Array.isArray(item.item)) {
         const props = item.item[1];
-        const desc = props.find(p => p[0] === 'description');
-        return desc ? desc[3] : '';
+        const desc = props.find((p) => p[0] === "description");
+        return desc ? desc[3] : "";
       }
     } catch (e) {}
-    return '';
+    return "";
   },
 
   /**
@@ -466,11 +474,11 @@ export const CalendarAPI = {
     try {
       if (item.item && Array.isArray(item.item)) {
         const props = item.item[1];
-        const loc = props.find(p => p[0] === 'location');
-        return loc ? loc[3] : '';
+        const loc = props.find((p) => p[0] === "location");
+        return loc ? loc[3] : "";
       }
     } catch (e) {}
-    return '';
+    return "";
   },
 
   /**
@@ -481,7 +489,7 @@ export const CalendarAPI = {
     try {
       if (item.item && Array.isArray(item.item)) {
         const props = item.item[1];
-        const due = props.find(p => p[0] === 'due');
+        const due = props.find((p) => p[0] === "due");
         return due ? due[3] : null;
       }
     } catch (e) {}
@@ -496,7 +504,7 @@ export const CalendarAPI = {
     try {
       if (item.item && Array.isArray(item.item)) {
         const props = item.item[1];
-        const priority = props.find(p => p[0] === 'priority');
+        const priority = props.find((p) => p[0] === "priority");
         return priority ? parseInt(priority[3]) : 0;
       }
     } catch (e) {}
@@ -511,8 +519,8 @@ export const CalendarAPI = {
     try {
       if (item.item && Array.isArray(item.item)) {
         const props = item.item[1];
-        const status = props.find(p => p[0] === 'status');
-        return status ? status[3] === 'COMPLETED' : false;
+        const status = props.find((p) => p[0] === "status");
+        return status ? status[3] === "COMPLETED" : false;
       }
     } catch (e) {}
     return false;
@@ -522,9 +530,18 @@ export const CalendarAPI = {
    * Build iCal VEVENT string
    * @private
    */
-  _buildICalEvent({ title, start, end, description, location, attendees, recurrence }) {
+  _buildICalEvent({
+    title,
+    start,
+    end,
+    description,
+    location,
+    attendees,
+    recurrence,
+  }) {
     const uid = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}@thunderbird-mcp`;
-    const dtstamp = new Date().toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+    const dtstamp =
+      new Date().toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
     const dtstart = this._formatICalDate(start);
     const dtend = this._formatICalDate(end);
 
@@ -536,7 +553,7 @@ UID:${uid}
 DTSTAMP:${dtstamp}
 DTSTART:${dtstart}
 DTEND:${dtend}
-SUMMARY:${this._escapeICalText(title || '')}`;
+SUMMARY:${this._escapeICalText(title || "")}`;
 
     if (description) {
       ical += `\nDESCRIPTION:${this._escapeICalText(description)}`;
@@ -565,7 +582,8 @@ END:VCALENDAR`;
    */
   _buildICalTask({ title, description, dueDate, priority, completed }) {
     const uid = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}@thunderbird-mcp`;
-    const dtstamp = new Date().toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+    const dtstamp =
+      new Date().toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
 
     let ical = `BEGIN:VCALENDAR
 VERSION:2.0
@@ -573,7 +591,7 @@ PRODID:-//Thunderbird MCP//EN
 BEGIN:VTODO
 UID:${uid}
 DTSTAMP:${dtstamp}
-SUMMARY:${this._escapeICalText(title || '')}`;
+SUMMARY:${this._escapeICalText(title || "")}`;
 
     if (description) {
       ical += `\nDESCRIPTION:${this._escapeICalText(description)}`;
@@ -602,7 +620,7 @@ END:VCALENDAR`;
   _toICalDate(dateStr) {
     if (!dateStr) return null;
     const date = new Date(dateStr);
-    return date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+    return date.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
   },
 
   /**
@@ -619,10 +637,10 @@ END:VCALENDAR`;
    */
   _escapeICalText(text) {
     return text
-      .replace(/\\/g, '\\\\')
-      .replace(/;/g, '\\;')
-      .replace(/,/g, '\\,')
-      .replace(/\n/g, '\\n');
+      .replace(/\\/g, "\\\\")
+      .replace(/;/g, "\\;")
+      .replace(/,/g, "\\,")
+      .replace(/\n/g, "\\n");
   },
 
   /**
@@ -630,7 +648,7 @@ END:VCALENDAR`;
    * @private
    */
   _buildRRule(recurrence) {
-    if (!recurrence || !recurrence.frequency) return '';
+    if (!recurrence || !recurrence.frequency) return "";
 
     const freq = recurrence.frequency.toUpperCase();
     let rrule = `RRULE:FREQ=${freq}`;
@@ -646,5 +664,5 @@ END:VCALENDAR`;
     }
 
     return rrule;
-  }
+  },
 };

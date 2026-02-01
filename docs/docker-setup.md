@@ -22,6 +22,7 @@ Starting with version 1.2.0, the Docker deployment uses a **multi-client archite
 ```
 
 **Key Components:**
+
 - **bridge-standalone.ts**: Runs only the WebSocket bridge server (no MCP server)
 - **MCP instances**: Connect via `docker exec` as clients to the bridge
 - **Thunderbird extension**: Connects to the bridge to handle requests
@@ -67,6 +68,7 @@ echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":
 ```
 
 Expected output includes:
+
 - `Connected to existing bridge in client mode`
 - JSON-RPC response with server info
 
@@ -74,11 +76,11 @@ Expected output includes:
 
 ### Environment Variables
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `THUNDERBIRD_PORT` | WebSocket port for bridge | `9876` |
-| `LOG_LEVEL` | Logging level (debug, info, warn, error) | `info` |
-| `NODE_ENV` | Node environment | `production` |
+| Variable           | Description                              | Default      |
+| ------------------ | ---------------------------------------- | ------------ |
+| `THUNDERBIRD_PORT` | WebSocket port for bridge                | `9876`       |
+| `LOG_LEVEL`        | Logging level (debug, info, warn, error) | `info`       |
+| `NODE_ENV`         | Node environment                         | `production` |
 
 ### Using .env File
 
@@ -100,10 +102,7 @@ Configure Claude Desktop (`~/.config/Claude/claude_desktop_config.json`):
   "mcpServers": {
     "thunderbird": {
       "command": "docker",
-      "args": [
-        "exec", "-i", "thunderbird-mcp-server",
-        "node", "dist/index.js"
-      ],
+      "args": ["exec", "-i", "thunderbird-mcp-server", "node", "dist/index.js"],
       "env": {
         "LOG_LEVEL": "info"
       }
@@ -124,12 +123,12 @@ Configure Claude Desktop (`~/.config/Claude/claude_desktop_config.json`):
 
 ## Endpoints
 
-| Endpoint | Protocol | Purpose |
-|----------|----------|---------|
-| `ws://localhost:9876/` | WebSocket | Thunderbird extension (single) |
-| `ws://localhost:9876/thunderbird` | WebSocket | Thunderbird extension (alias) |
-| `ws://localhost:9876/mcp` | WebSocket | MCP clients (multiple) |
-| `http://localhost:9876/health` | HTTP | Health check endpoint |
+| Endpoint                          | Protocol  | Purpose                        |
+| --------------------------------- | --------- | ------------------------------ |
+| `ws://localhost:9876/`            | WebSocket | Thunderbird extension (single) |
+| `ws://localhost:9876/thunderbird` | WebSocket | Thunderbird extension (alias)  |
+| `ws://localhost:9876/mcp`         | WebSocket | MCP clients (multiple)         |
+| `http://localhost:9876/health`    | HTTP      | Health check endpoint          |
 
 ### Health Check
 
@@ -153,7 +152,7 @@ The container uses a bridge network. The Thunderbird extension connects from the
 
 ```yaml
 ports:
-  - "9876:9876"  # Expose WebSocket port
+  - "9876:9876" # Expose WebSocket port
 ```
 
 ### Host Network Mode (Alternative)
@@ -284,7 +283,7 @@ Adjust in `docker-compose.yml` if needed:
 deploy:
   resources:
     limits:
-      cpus: '1.0'
+      cpus: "1.0"
       memory: 512M
 ```
 

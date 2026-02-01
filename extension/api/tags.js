@@ -49,5 +49,5 @@ export const TagsAPI = {
    */
   async delete(key) {
     await messenger.messages.tags.delete(key);
-  }
+  },
 };

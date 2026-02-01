@@ -9,7 +9,7 @@
 // =============================================================================
 
 /** Calendar types */
-export type CalendarType = 'local' | 'caldav' | 'ics' | 'storage';
+export type CalendarType = "local" | "caldav" | "ics" | "storage";
 
 /** Calendar representation */
 export interface Calendar {
@@ -38,10 +38,10 @@ export interface Calendar {
 // =============================================================================
 
 /** Event status */
-export type EventStatus = 'tentative' | 'confirmed' | 'cancelled';
+export type EventStatus = "tentative" | "confirmed" | "cancelled";
 
 /** Event transparency (busy/free) */
-export type EventTransparency = 'opaque' | 'transparent';
+export type EventTransparency = "opaque" | "transparent";
 
 /** Calendar event */
 export interface CalendarEvent {
@@ -94,7 +94,7 @@ export interface CalendarEvent {
 /** Recurrence information */
 export interface RecurrenceInfo {
   /** Recurrence frequency */
-  frequency: 'daily' | 'weekly' | 'monthly' | 'yearly';
+  frequency: "daily" | "weekly" | "monthly" | "yearly";
   /** Interval between occurrences */
   interval?: number;
   /** End date (ISO 8601) */
@@ -110,7 +110,7 @@ export interface RecurrenceInfo {
   /** Week position (for monthly by weekday) */
   bySetPos?: number[];
   /** Week start day */
-  weekStart?: 'SU' | 'MO' | 'TU' | 'WE' | 'TH' | 'FR' | 'SA';
+  weekStart?: "SU" | "MO" | "TU" | "WE" | "TH" | "FR" | "SA";
   /** Exception dates (dates to skip) */
   exceptionDates?: string[];
 }
@@ -122,9 +122,9 @@ export interface Attendee {
   /** Attendee email */
   email: string;
   /** Attendee role */
-  role?: 'chair' | 'required' | 'optional' | 'non-participant';
+  role?: "chair" | "required" | "optional" | "non-participant";
   /** Participation status */
-  status?: 'needs-action' | 'accepted' | 'declined' | 'tentative' | 'delegated';
+  status?: "needs-action" | "accepted" | "declined" | "tentative" | "delegated";
   /** Whether this is the organizer */
   isOrganizer?: boolean;
   /** RSVP requested */
@@ -134,7 +134,7 @@ export interface Attendee {
 /** Event alarm/reminder */
 export interface Alarm {
   /** Alarm action */
-  action: 'display' | 'email' | 'audio';
+  action: "display" | "email" | "audio";
   /** Trigger (relative to event start, in minutes, negative = before) */
   trigger: number;
   /** Description for display/email alarms */
@@ -154,7 +154,11 @@ export interface Alarm {
 // =============================================================================
 
 /** Task status */
-export type TaskStatus = 'needs-action' | 'in-process' | 'completed' | 'cancelled';
+export type TaskStatus =
+  | "needs-action"
+  | "in-process"
+  | "completed"
+  | "cancelled";
 
 /** Task priority levels */
 export type TaskPriority = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
@@ -250,7 +254,7 @@ export interface TaskQuery {
 // =============================================================================
 
 /** Scope for modifying recurring events */
-export type RecurrenceScope = 'this' | 'all' | 'future';
+export type RecurrenceScope = "this" | "all" | "future";
 
 /** Event modifications */
 export interface EventModifications {
@@ -311,4 +315,3 @@ export interface TaskModifications {
   /** Updated URL */
   url?: string;
 }
-

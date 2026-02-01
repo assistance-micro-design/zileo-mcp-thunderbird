@@ -22,20 +22,20 @@ Performs a comprehensive search across email messages with support for multiple 
 
 #### Parameters
 
-| Name | Type | Required | Default | Description |
-|------|------|----------|---------|-------------|
-| `subject` | string | No | - | Search term to match in email subject |
-| `from` | string | No | - | Email address or name of sender to filter by |
-| `to` | string | No | - | Email address or name of recipient to filter by |
-| `body` | string | No | - | Search term to match in email body content |
-| `tags` | string[] | No | - | Array of tag keys to filter by (matches any tag) |
-| `unread` | boolean | No | - | Filter by read/unread status (true = unread only) |
-| `flagged` | boolean | No | - | Filter by flagged/starred status (true = flagged only) |
-| `dateFrom` | string | No | - | Start date for date range filter (ISO 8601 format) |
-| `dateTo` | string | No | - | End date for date range filter (ISO 8601 format) |
-| `folderId` | string | No | - | Specific folder ID to search within |
-| `accountId` | string | No | - | Specific account ID to search within |
-| `limit` | number | No | 50 | Maximum number of results to return (max: 1000) |
+| Name        | Type     | Required | Default | Description                                            |
+| ----------- | -------- | -------- | ------- | ------------------------------------------------------ |
+| `subject`   | string   | No       | -       | Search term to match in email subject                  |
+| `from`      | string   | No       | -       | Email address or name of sender to filter by           |
+| `to`        | string   | No       | -       | Email address or name of recipient to filter by        |
+| `body`      | string   | No       | -       | Search term to match in email body content             |
+| `tags`      | string[] | No       | -       | Array of tag keys to filter by (matches any tag)       |
+| `unread`    | boolean  | No       | -       | Filter by read/unread status (true = unread only)      |
+| `flagged`   | boolean  | No       | -       | Filter by flagged/starred status (true = flagged only) |
+| `dateFrom`  | string   | No       | -       | Start date for date range filter (ISO 8601 format)     |
+| `dateTo`    | string   | No       | -       | End date for date range filter (ISO 8601 format)       |
+| `folderId`  | string   | No       | -       | Specific folder ID to search within                    |
+| `accountId` | string   | No       | -       | Specific account ID to search within                   |
+| `limit`     | number   | No       | 50      | Maximum number of results to return (max: 1000)        |
 
 #### Response Format
 
@@ -100,11 +100,11 @@ Lists all messages in a specified folder with pagination support for efficient r
 
 #### Parameters
 
-| Name | Type | Required | Default | Description |
-|------|------|----------|---------|-------------|
-| `folderId` | string | Yes | - | ID of the folder to list messages from |
-| `limit` | number | No | 100 | Maximum number of messages per page (max: 1000) |
-| `offset` | number | No | 0 | Number of messages to skip for pagination (min: 0) |
+| Name       | Type   | Required | Default | Description                                        |
+| ---------- | ------ | -------- | ------- | -------------------------------------------------- |
+| `folderId` | string | Yes      | -       | ID of the folder to list messages from             |
+| `limit`    | number | No       | 100     | Maximum number of messages per page (max: 1000)    |
+| `offset`   | number | No       | 0       | Number of messages to skip for pagination (min: 0) |
 
 #### Response Format
 
@@ -154,10 +154,10 @@ Retrieves unread messages using a search query with `unread: true` filter. Can b
 
 #### Parameters
 
-| Name | Type | Required | Default | Description |
-|------|------|----------|---------|-------------|
-| `accountId` | string | No | - | Specific account ID to filter by (omit for all accounts) |
-| `limit` | number | No | 50 | Maximum number of results (max: 1000) |
+| Name        | Type   | Required | Default | Description                                              |
+| ----------- | ------ | -------- | ------- | -------------------------------------------------------- |
+| `accountId` | string | No       | -       | Specific account ID to filter by (omit for all accounts) |
+| `limit`     | number | No       | 50      | Maximum number of results (max: 1000)                    |
 
 #### Response Format
 
@@ -188,16 +188,17 @@ Retrieve complete details of a specific message.
 #### Description
 
 Fetches a single message with configurable detail level. Three formats are available:
+
 - `headers`: Message metadata only (fast, minimal data)
 - `full`: Headers + MIME parts with decoded content
 - `raw`: Complete RFC 822 message source
 
 #### Parameters
 
-| Name | Type | Required | Default | Description |
-|------|------|----------|---------|-------------|
-| `messageId` | number | Yes | - | Unique numeric identifier of the message |
-| `format` | string | No | `headers` | Level of detail: `headers`, `full`, or `raw` |
+| Name        | Type   | Required | Default   | Description                                  |
+| ----------- | ------ | -------- | --------- | -------------------------------------------- |
+| `messageId` | number | Yes      | -         | Unique numeric identifier of the message     |
+| `format`    | string | No       | `headers` | Level of detail: `headers`, `full`, or `raw` |
 
 #### Format Options
 
@@ -208,6 +209,7 @@ Fetches a single message with configurable detail level. Three formats are avail
 #### Response Format
 
 **Headers format:**
+
 ```json
 {
   "content": [{
@@ -229,6 +231,7 @@ Fetches a single message with configurable detail level. Three formats are avail
 ```
 
 **Full format:**
+
 ```json
 {
   "content": [{
@@ -250,12 +253,15 @@ Fetches a single message with configurable detail level. Three formats are avail
 ```
 
 **Raw format:**
+
 ```json
 {
-  "content": [{
-    "type": "text",
-    "text": "\"From: sender@example.com\\r\\nTo: recipient@example.com\\r\\nSubject: Test\\r\\n\\r\\nMessage body...\""
-  }]
+  "content": [
+    {
+      "type": "text",
+      "text": "\"From: sender@example.com\\r\\nTo: recipient@example.com\\r\\nSubject: Test\\r\\n\\r\\nMessage body...\""
+    }
+  ]
 }
 ```
 
@@ -287,10 +293,10 @@ Moves messages to the specified destination folder. Original messages are remove
 
 #### Parameters
 
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `messageIds` | number[] | Yes | Array of message IDs to move (minimum: 1 message) |
-| `destinationFolderId` | string | Yes | ID of the destination folder |
+| Name                  | Type     | Required | Description                                       |
+| --------------------- | -------- | -------- | ------------------------------------------------- |
+| `messageIds`          | number[] | Yes      | Array of message IDs to move (minimum: 1 message) |
+| `destinationFolderId` | string   | Yes      | ID of the destination folder                      |
 
 #### Response Format
 
@@ -335,10 +341,10 @@ Creates copies of messages in the destination folder while preserving originals 
 
 #### Parameters
 
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `messageIds` | number[] | Yes | Array of message IDs to copy (minimum: 1 message) |
-| `destinationFolderId` | string | Yes | ID of the destination folder |
+| Name                  | Type     | Required | Description                                       |
+| --------------------- | -------- | -------- | ------------------------------------------------- |
+| `messageIds`          | number[] | Yes      | Array of message IDs to copy (minimum: 1 message) |
+| `destinationFolderId` | string   | Yes      | ID of the destination folder                      |
 
 #### Response Format
 
@@ -383,10 +389,10 @@ Deletes messages, either moving them to the Trash folder (soft delete) or perman
 
 #### Parameters
 
-| Name | Type | Required | Default | Description |
-|------|------|----------|---------|-------------|
-| `messageIds` | number[] | Yes | - | Array of message IDs to delete (minimum: 1 message) |
-| `permanent` | boolean | No | false | If true, permanently delete; if false, move to Trash |
+| Name         | Type     | Required | Default | Description                                          |
+| ------------ | -------- | -------- | ------- | ---------------------------------------------------- |
+| `messageIds` | number[] | Yes      | -       | Array of message IDs to delete (minimum: 1 message)  |
+| `permanent`  | boolean  | No       | false   | If true, permanently delete; if false, move to Trash |
 
 #### Response Format
 
@@ -436,13 +442,13 @@ Modifies message metadata including read status, starred/flagged status, junk st
 
 #### Parameters
 
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `messageId` | number | Yes | ID of the message to update |
-| `read` | boolean | No | Set read/unread status |
-| `flagged` | boolean | No | Set starred/flagged status |
-| `junk` | boolean | No | Mark as junk/spam or not junk |
-| `tags` | string[] | No | Array of tag keys to apply (replaces existing tags) |
+| Name        | Type     | Required | Description                                         |
+| ----------- | -------- | -------- | --------------------------------------------------- |
+| `messageId` | number   | Yes      | ID of the message to update                         |
+| `read`      | boolean  | No       | Set read/unread status                              |
+| `flagged`   | boolean  | No       | Set starred/flagged status                          |
+| `junk`      | boolean  | No       | Mark as junk/spam or not junk                       |
+| `tags`      | string[] | No       | Array of tag keys to apply (replaces existing tags) |
 
 #### Response Format
 
@@ -494,9 +500,9 @@ Moves messages to the appropriate archive folder based on Thunderbird's archive 
 
 #### Parameters
 
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `messageIds` | number[] | Yes | Array of message IDs to archive (minimum: 1 message) |
+| Name         | Type     | Required | Description                                          |
+| ------------ | -------- | -------- | ---------------------------------------------------- |
+| `messageIds` | number[] | Yes      | Array of message IDs to archive (minimum: 1 message) |
 
 #### Response Format
 
@@ -540,17 +546,17 @@ Moves messages to the appropriate archive folder based on Thunderbird's archive 
 
 All message operations may return these JSON-RPC error codes:
 
-| Code | Message | Description |
-|------|---------|-------------|
-| -32000 | Thunderbird not running | Thunderbird application is not active |
-| -32001 | Extension not installed | Thunderbird MCP extension not found |
-| -32002 | Permission denied | Required permission not granted in extension |
-| -32003 | Resource not found | Message, folder, or account not found |
-| -32004 | Operation timeout | Operation exceeded timeout limit |
-| -32600 | Invalid request | Malformed JSON-RPC request |
-| -32601 | Method not found | Tool name not recognized |
-| -32602 | Invalid params | Invalid or missing parameters (Zod validation failed) |
-| -32603 | Internal error | Unexpected internal error |
+| Code   | Message                 | Description                                           |
+| ------ | ----------------------- | ----------------------------------------------------- |
+| -32000 | Thunderbird not running | Thunderbird application is not active                 |
+| -32001 | Extension not installed | Thunderbird MCP extension not found                   |
+| -32002 | Permission denied       | Required permission not granted in extension          |
+| -32003 | Resource not found      | Message, folder, or account not found                 |
+| -32004 | Operation timeout       | Operation exceeded timeout limit                      |
+| -32600 | Invalid request         | Malformed JSON-RPC request                            |
+| -32601 | Method not found        | Tool name not recognized                              |
+| -32602 | Invalid params          | Invalid or missing parameters (Zod validation failed) |
+| -32603 | Internal error          | Unexpected internal error                             |
 
 ---
 
@@ -558,17 +564,17 @@ All message operations may return these JSON-RPC error codes:
 
 Different operations require different permission combinations:
 
-| Tool | messagesRead | messagesMove | messagesUpdate |
-|------|--------------|--------------|----------------|
-| `thunderbird_messages_search` | Required | - | - |
-| `thunderbird_messages_list` | Required | - | - |
-| `thunderbird_messages_list_unread` | Required | - | - |
-| `thunderbird_messages_get` | Required | - | - |
-| `thunderbird_messages_move` | Required | Required | - |
-| `thunderbird_messages_copy` | Required | Required | - |
-| `thunderbird_messages_delete` | Required | Required | - |
-| `thunderbird_messages_update` | Required | - | Required |
-| `thunderbird_messages_archive` | Required | Required | - |
+| Tool                               | messagesRead | messagesMove | messagesUpdate |
+| ---------------------------------- | ------------ | ------------ | -------------- |
+| `thunderbird_messages_search`      | Required     | -            | -              |
+| `thunderbird_messages_list`        | Required     | -            | -              |
+| `thunderbird_messages_list_unread` | Required     | -            | -              |
+| `thunderbird_messages_get`         | Required     | -            | -              |
+| `thunderbird_messages_move`        | Required     | Required     | -              |
+| `thunderbird_messages_copy`        | Required     | Required     | -              |
+| `thunderbird_messages_delete`      | Required     | Required     | -              |
+| `thunderbird_messages_update`      | Required     | -            | Required       |
+| `thunderbird_messages_archive`     | Required     | Required     | -              |
 
 All permissions must be granted in the Thunderbird extension's `manifest.json`.
 
@@ -625,6 +631,7 @@ The Messages API implements the following timeout constraints:
 Exceeding these limits will return error code `-32004` (Operation timeout).
 
 **Recommendations:**
+
 - Keep search queries focused with specific filters
 - Limit batch operations to 100 messages for reliability
 - Implement retry logic with exponential backoff for timeouts
@@ -661,17 +668,17 @@ Exceeding these limits will return error code `-32004` (Operation timeout).
 
 All parameters are validated using Zod schemas before execution:
 
-| Validation | Rule | Error Code |
-|------------|------|------------|
-| `messageId` | Positive integer | -32602 |
-| `messageIds` | Non-empty array of integers | -32602 |
-| `limit` | 1-1000 | -32602 |
-| `offset` | >= 0 | -32602 |
-| `format` | enum ["headers", "full", "raw"] | -32602 |
-| `folderId` | Non-empty string | -32602 |
-| `accountId` | Non-empty string | -32602 |
-| `tags` | Array of strings | -32602 |
-| `dateFrom`/`dateTo` | ISO 8601 string | -32602 |
+| Validation          | Rule                            | Error Code |
+| ------------------- | ------------------------------- | ---------- |
+| `messageId`         | Positive integer                | -32602     |
+| `messageIds`        | Non-empty array of integers     | -32602     |
+| `limit`             | 1-1000                          | -32602     |
+| `offset`            | >= 0                            | -32602     |
+| `format`            | enum ["headers", "full", "raw"] | -32602     |
+| `folderId`          | Non-empty string                | -32602     |
+| `accountId`         | Non-empty string                | -32602     |
+| `tags`              | Array of strings                | -32602     |
+| `dateFrom`/`dateTo` | ISO 8601 string                 | -32602     |
 
 Failed validation returns a JSON-RPC error with detailed parameter information.
 

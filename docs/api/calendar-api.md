@@ -75,9 +75,9 @@ Retrieves complete metadata for a calendar.
 
 #### Parameters
 
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `calendarId` | string | Yes | Unique identifier of the calendar |
+| Name         | Type   | Required | Description                       |
+| ------------ | ------ | -------- | --------------------------------- |
+| `calendarId` | string | Yes      | Unique identifier of the calendar |
 
 #### Response Format
 
@@ -122,13 +122,13 @@ Performs event search with support for text query, date ranges, and calendar fil
 
 #### Parameters
 
-| Name | Type | Required | Default | Description |
-|------|------|----------|---------|-------------|
-| `query` | string | No | - | Search term to match in event title, description, or location |
-| `calendarId` | string | No | - | Specific calendar to search within (omit for all calendars) |
-| `dateFrom` | string | Yes | - | Start of date range (ISO 8601 format) |
-| `dateTo` | string | Yes | - | End of date range (ISO 8601 format) |
-| `limit` | number | No | 100 | Maximum number of results (1-500) |
+| Name         | Type   | Required | Default | Description                                                   |
+| ------------ | ------ | -------- | ------- | ------------------------------------------------------------- |
+| `query`      | string | No       | -       | Search term to match in event title, description, or location |
+| `calendarId` | string | No       | -       | Specific calendar to search within (omit for all calendars)   |
+| `dateFrom`   | string | Yes      | -       | Start of date range (ISO 8601 format)                         |
+| `dateTo`     | string | Yes      | -       | End of date range (ISO 8601 format)                           |
+| `limit`      | number | No       | 100     | Maximum number of results (1-500)                             |
 
 #### Response Format
 
@@ -179,12 +179,12 @@ Retrieves all events in a calendar for a specified time period.
 
 #### Parameters
 
-| Name | Type | Required | Default | Description |
-|------|------|----------|---------|-------------|
-| `calendarId` | string | Yes | - | ID of the calendar to list events from |
-| `dateFrom` | string | Yes | - | Start of date range (ISO 8601 format) |
-| `dateTo` | string | Yes | - | End of date range (ISO 8601 format) |
-| `limit` | number | No | 100 | Maximum number of events (1-500) |
+| Name         | Type   | Required | Default | Description                            |
+| ------------ | ------ | -------- | ------- | -------------------------------------- |
+| `calendarId` | string | Yes      | -       | ID of the calendar to list events from |
+| `dateFrom`   | string | Yes      | -       | Start of date range (ISO 8601 format)  |
+| `dateTo`     | string | Yes      | -       | End of date range (ISO 8601 format)    |
+| `limit`      | number | No       | 100     | Maximum number of events (1-500)       |
 
 #### Response Format
 
@@ -220,10 +220,10 @@ Retrieves complete event details including all properties and attendees.
 
 #### Parameters
 
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `eventId` | string | Yes | Unique identifier of the event |
-| `calendarId` | string | Yes | ID of the calendar containing the event |
+| Name         | Type   | Required | Description                             |
+| ------------ | ------ | -------- | --------------------------------------- |
+| `eventId`    | string | Yes      | Unique identifier of the event          |
+| `calendarId` | string | Yes      | ID of the calendar containing the event |
 
 #### Response Format
 
@@ -270,25 +270,25 @@ Creates a new event with support for attendees and recurrence patterns.
 
 #### Parameters
 
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `calendarId` | string | Yes | ID of the calendar to create event in |
-| `title` | string | Yes | Event title/summary (1-500 characters) |
-| `start` | string | Yes | Start date/time (ISO 8601 format) |
-| `end` | string | Yes | End date/time (ISO 8601 format) |
-| `location` | string | No | Event location (max 500 characters) |
-| `description` | string | No | Detailed event description |
-| `attendees` | string[] | No | Array of attendee email addresses |
-| `recurrence` | object | No | Recurrence rule definition |
+| Name          | Type     | Required | Description                            |
+| ------------- | -------- | -------- | -------------------------------------- |
+| `calendarId`  | string   | Yes      | ID of the calendar to create event in  |
+| `title`       | string   | Yes      | Event title/summary (1-500 characters) |
+| `start`       | string   | Yes      | Start date/time (ISO 8601 format)      |
+| `end`         | string   | Yes      | End date/time (ISO 8601 format)        |
+| `location`    | string   | No       | Event location (max 500 characters)    |
+| `description` | string   | No       | Detailed event description             |
+| `attendees`   | string[] | No       | Array of attendee email addresses      |
+| `recurrence`  | object   | No       | Recurrence rule definition             |
 
 #### Recurrence Object
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `frequency` | string | Yes | One of: `daily`, `weekly`, `monthly`, `yearly` |
-| `interval` | number | No | Interval between occurrences (e.g., 2 for every other week) |
-| `until` | string | No | End date for recurrence (ISO 8601) |
-| `count` | number | No | Number of occurrences |
+| Field       | Type   | Required | Description                                                 |
+| ----------- | ------ | -------- | ----------------------------------------------------------- |
+| `frequency` | string | Yes      | One of: `daily`, `weekly`, `monthly`, `yearly`              |
+| `interval`  | number | No       | Interval between occurrences (e.g., 2 for every other week) |
+| `until`     | string | No       | End date for recurrence (ISO 8601)                          |
+| `count`     | number | No       | Number of occurrences                                       |
 
 **Note**: Use either `until` or `count`, not both.
 
@@ -345,10 +345,7 @@ Creates a new event with support for attendees and recurrence patterns.
       "end": "2025-03-17T09:30:00Z",
       "location": "Zoom Meeting Room",
       "description": "Weekly standup meeting",
-      "attendees": [
-        "marie.martin@example.com",
-        "pierre.durand@example.com"
-      ],
+      "attendees": ["marie.martin@example.com", "pierre.durand@example.com"],
       "recurrence": {
         "frequency": "weekly",
         "interval": 1,
@@ -371,17 +368,17 @@ Modifies event properties with support for updating single instances or entire r
 
 #### Parameters
 
-| Name | Type | Required | Default | Description |
-|------|------|----------|---------|-------------|
-| `eventId` | string | Yes | - | ID of the event to update |
-| `calendarId` | string | Yes | - | ID of the calendar containing the event |
-| `title` | string | No | - | New title (1-500 characters) |
-| `start` | string | No | - | New start date/time (ISO 8601) |
-| `end` | string | No | - | New end date/time (ISO 8601) |
-| `location` | string | No | - | New location (max 500 characters) |
-| `description` | string | No | - | New description |
-| `attendees` | string[] | No | - | New attendee list (email addresses) |
-| `scope` | string | No | `this` | For recurring events: `this`, `all`, or `future` |
+| Name          | Type     | Required | Default | Description                                      |
+| ------------- | -------- | -------- | ------- | ------------------------------------------------ |
+| `eventId`     | string   | Yes      | -       | ID of the event to update                        |
+| `calendarId`  | string   | Yes      | -       | ID of the calendar containing the event          |
+| `title`       | string   | No       | -       | New title (1-500 characters)                     |
+| `start`       | string   | No       | -       | New start date/time (ISO 8601)                   |
+| `end`         | string   | No       | -       | New end date/time (ISO 8601)                     |
+| `location`    | string   | No       | -       | New location (max 500 characters)                |
+| `description` | string   | No       | -       | New description                                  |
+| `attendees`   | string[] | No       | -       | New attendee list (email addresses)              |
+| `scope`       | string   | No       | `this`  | For recurring events: `this`, `all`, or `future` |
 
 #### Modification Scope
 
@@ -439,12 +436,12 @@ Reschedules an event by updating its start and end times.
 
 #### Parameters
 
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `eventId` | string | Yes | ID of the event to move |
-| `calendarId` | string | Yes | ID of the calendar containing the event |
-| `newStart` | string | Yes | New start date/time (ISO 8601 format) |
-| `newEnd` | string | Yes | New end date/time (ISO 8601 format) |
+| Name         | Type   | Required | Description                             |
+| ------------ | ------ | -------- | --------------------------------------- |
+| `eventId`    | string | Yes      | ID of the event to move                 |
+| `calendarId` | string | Yes      | ID of the calendar containing the event |
+| `newStart`   | string | Yes      | New start date/time (ISO 8601 format)   |
+| `newEnd`     | string | Yes      | New end date/time (ISO 8601 format)     |
 
 #### Response Format
 
@@ -493,11 +490,11 @@ Removes an event from the calendar with support for deleting single or multiple 
 
 #### Parameters
 
-| Name | Type | Required | Default | Description |
-|------|------|----------|---------|-------------|
-| `eventId` | string | Yes | - | ID of the event to delete |
-| `calendarId` | string | Yes | - | ID of the calendar containing the event |
-| `scope` | string | No | `this` | For recurring events: `this`, `all`, or `future` |
+| Name         | Type   | Required | Default | Description                                      |
+| ------------ | ------ | -------- | ------- | ------------------------------------------------ |
+| `eventId`    | string | Yes      | -       | ID of the event to delete                        |
+| `calendarId` | string | Yes      | -       | ID of the calendar containing the event          |
+| `scope`      | string | No       | `this`  | For recurring events: `this`, `all`, or `future` |
 
 #### Response Format
 
@@ -539,13 +536,13 @@ Retrieves tasks with optional filters for completion status, due date range, and
 
 #### Parameters
 
-| Name | Type | Required | Default | Description |
-|------|------|----------|---------|-------------|
-| `calendarId` | string | No | - | Specific calendar to list tasks from (omit for all) |
-| `completed` | boolean | No | - | Filter by completion status (true/false) |
-| `dueBefore` | string | No | - | Include tasks due before this date (ISO 8601) |
-| `dueAfter` | string | No | - | Include tasks due after this date (ISO 8601) |
-| `limit` | number | No | 100 | Maximum number of results (1-500) |
+| Name         | Type    | Required | Default | Description                                         |
+| ------------ | ------- | -------- | ------- | --------------------------------------------------- |
+| `calendarId` | string  | No       | -       | Specific calendar to list tasks from (omit for all) |
+| `completed`  | boolean | No       | -       | Filter by completion status (true/false)            |
+| `dueBefore`  | string  | No       | -       | Include tasks due before this date (ISO 8601)       |
+| `dueAfter`   | string  | No       | -       | Include tasks due after this date (ISO 8601)        |
+| `limit`      | number  | No       | 100     | Maximum number of results (1-500)                   |
 
 #### Response Format
 
@@ -601,10 +598,10 @@ Retrieves complete task details including all properties and metadata.
 
 #### Parameters
 
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `taskId` | string | Yes | Unique identifier of the task |
-| `calendarId` | string | Yes | ID of the calendar containing the task |
+| Name         | Type   | Required | Description                            |
+| ------------ | ------ | -------- | -------------------------------------- |
+| `taskId`     | string | Yes      | Unique identifier of the task          |
+| `calendarId` | string | Yes      | ID of the calendar containing the task |
 
 #### Response Format
 
@@ -650,13 +647,13 @@ Creates a new task with optional due date, priority, and description.
 
 #### Parameters
 
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `calendarId` | string | Yes | ID of the calendar to create task in |
-| `title` | string | Yes | Task title/summary (1-500 characters) |
-| `dueDate` | string | No | Due date/time (ISO 8601 format) |
-| `priority` | number | No | Priority level (0, 1, 5, or 9) |
-| `description` | string | No | Detailed task description |
+| Name          | Type   | Required | Description                           |
+| ------------- | ------ | -------- | ------------------------------------- |
+| `calendarId`  | string | Yes      | ID of the calendar to create task in  |
+| `title`       | string | Yes      | Task title/summary (1-500 characters) |
+| `dueDate`     | string | No       | Due date/time (ISO 8601 format)       |
+| `priority`    | number | No       | Priority level (0, 1, 5, or 9)        |
+| `description` | string | No       | Detailed task description             |
 
 #### Response Format
 
@@ -705,15 +702,15 @@ Modifies task properties including completion status, priority, and other metada
 
 #### Parameters
 
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `taskId` | string | Yes | ID of the task to update |
-| `calendarId` | string | Yes | ID of the calendar containing the task |
-| `title` | string | No | New title (1-500 characters) |
-| `dueDate` | string | No | New due date (ISO 8601) |
-| `priority` | number | No | New priority (0-9) |
-| `description` | string | No | New description |
-| `completed` | boolean | No | Completion status |
+| Name          | Type    | Required | Description                            |
+| ------------- | ------- | -------- | -------------------------------------- |
+| `taskId`      | string  | Yes      | ID of the task to update               |
+| `calendarId`  | string  | Yes      | ID of the calendar containing the task |
+| `title`       | string  | No       | New title (1-500 characters)           |
+| `dueDate`     | string  | No       | New due date (ISO 8601)                |
+| `priority`    | number  | No       | New priority (0-9)                     |
+| `description` | string  | No       | New description                        |
+| `completed`   | boolean | No       | Completion status                      |
 
 #### Response Format
 
@@ -761,10 +758,10 @@ Permanently removes a task.
 
 #### Parameters
 
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `taskId` | string | Yes | ID of the task to delete |
-| `calendarId` | string | Yes | ID of the calendar containing the task |
+| Name         | Type   | Required | Description                            |
+| ------------ | ------ | -------- | -------------------------------------- |
+| `taskId`     | string | Yes      | ID of the task to delete               |
+| `calendarId` | string | Yes      | ID of the calendar containing the task |
 
 #### Response Format
 
@@ -803,10 +800,10 @@ Convenience method to mark a task as completed (sets `completed: true`).
 
 #### Parameters
 
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `taskId` | string | Yes | ID of the task to complete |
-| `calendarId` | string | Yes | ID of the calendar containing the task |
+| Name         | Type   | Required | Description                            |
+| ------------ | ------ | -------- | -------------------------------------- |
+| `taskId`     | string | Yes      | ID of the task to complete             |
+| `calendarId` | string | Yes      | ID of the calendar containing the task |
 
 #### Response Format
 
@@ -846,15 +843,15 @@ Convenience method to mark a task as completed (sets `completed: true`).
 
 All calendar operations may return these error codes:
 
-| Code | Message | Description |
-|------|---------|-------------|
-| -32000 | Thunderbird not running | Thunderbird application is not active |
-| -32001 | Extension not installed | Thunderbird MCP extension not found |
-| -32002 | Permission denied | Calendar permission not granted |
-| -32003 | Resource not found | Calendar, event, or task not found |
-| -32004 | Operation timeout | Operation exceeded timeout limit (10s) |
-| -32602 | Invalid params | Invalid date format, recurrence rule, or missing required fields |
-| -32603 | Internal error | Read-only calendar, conflicting event, invalid recurrence, etc. |
+| Code   | Message                 | Description                                                      |
+| ------ | ----------------------- | ---------------------------------------------------------------- |
+| -32000 | Thunderbird not running | Thunderbird application is not active                            |
+| -32001 | Extension not installed | Thunderbird MCP extension not found                              |
+| -32002 | Permission denied       | Calendar permission not granted                                  |
+| -32003 | Resource not found      | Calendar, event, or task not found                               |
+| -32004 | Operation timeout       | Operation exceeded timeout limit (10s)                           |
+| -32602 | Invalid params          | Invalid date format, recurrence rule, or missing required fields |
+| -32603 | Internal error          | Read-only calendar, conflicting event, invalid recurrence, etc.  |
 
 ---
 

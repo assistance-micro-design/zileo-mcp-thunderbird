@@ -6,8 +6,8 @@
  * @module index
  */
 
-import { createServer } from './server.js';
-import logger from './utils/logger.js';
+import { createServer } from "./server.js";
+import logger from "./utils/logger.js";
 
 /**
  * Main function
@@ -25,35 +25,35 @@ async function main(): Promise<void> {
         await server.stop();
         process.exit(0);
       } catch (error) {
-        logger.error('Error during shutdown', error);
+        logger.error("Error during shutdown", error);
         process.exit(1);
       }
     };
 
     // Register signal handlers
-    process.on('SIGINT', () => shutdown('SIGINT'));
-    process.on('SIGTERM', () => shutdown('SIGTERM'));
+    process.on("SIGINT", () => shutdown("SIGINT"));
+    process.on("SIGTERM", () => shutdown("SIGTERM"));
 
     // Handle uncaught errors
-    process.on('uncaughtException', (error) => {
-      logger.error('Uncaught exception', error);
+    process.on("uncaughtException", (error) => {
+      logger.error("Uncaught exception", error);
       process.exit(1);
     });
 
-    process.on('unhandledRejection', (reason, promise) => {
-      logger.error('Unhandled rejection at:', promise, 'reason:', reason);
+    process.on("unhandledRejection", (reason, promise) => {
+      logger.error("Unhandled rejection at:", promise, "reason:", reason);
       process.exit(1);
     });
 
-    logger.info('Thunderbird MCP Server is running');
+    logger.info("Thunderbird MCP Server is running");
   } catch (error) {
-    logger.error('Failed to start server', error);
+    logger.error("Failed to start server", error);
     process.exit(1);
   }
 }
 
 // Run main function
 main().catch((error) => {
-  console.error('Fatal error:', error);
+  console.error("Fatal error:", error);
   process.exit(1);
 });

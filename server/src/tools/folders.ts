@@ -4,12 +4,12 @@
  * @module tools/folders
  */
 
-import { z } from 'zod';
-import { getNativeClient } from '../websocket/client-adapter.js';
-import { MessageActions } from '../types/native-messaging.js';
-import type { McpTool, ToolCallResult } from '../types/mcp.js';
-import logger from '../utils/logger.js';
-import { nativeErrorToJsonRpc } from '../utils/errors.js';
+import { z } from "zod";
+import { getNativeClient } from "../websocket/client-adapter.js";
+import { MessageActions } from "../types/native-messaging.js";
+import type { McpTool, ToolCallResult } from "../types/mcp.js";
+import logger from "../utils/logger.js";
+import { nativeErrorToJsonRpc } from "../utils/errors.js";
 
 // =============================================================================
 // Schemas
@@ -54,31 +54,36 @@ const foldersMarkReadSchema = z.object({
 /**
  * List all folders
  */
-export async function handleFoldersList(args: unknown): Promise<ToolCallResult> {
+export async function handleFoldersList(
+  args: unknown,
+): Promise<ToolCallResult> {
   try {
     const params = foldersListSchema.parse(args);
     const client = getNativeClient();
 
-    logger.info(`Listing folders (accountId: ${params.accountId || 'all'})`);
+    logger.info(`Listing folders (accountId: ${params.accountId || "all"})`);
 
-    const response = await client.sendRequest(MessageActions.FOLDERS_LIST, params);
+    const response = await client.sendRequest(
+      MessageActions.FOLDERS_LIST,
+      params,
+    );
 
     if (!response.success) {
       const error = nativeErrorToJsonRpc(response.error);
       return {
-        content: [{ type: 'text', text: JSON.stringify(error) }],
+        content: [{ type: "text", text: JSON.stringify(error) }],
         isError: true,
       };
     }
 
     return {
-      content: [{ type: 'text', text: JSON.stringify(response.data, null, 2) }],
+      content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }],
     };
   } catch (error) {
-    logger.error('Error in handleFoldersList:', error);
+    logger.error("Error in handleFoldersList:", error);
     const jsonRpcError = nativeErrorToJsonRpc(error);
     return {
-      content: [{ type: 'text', text: JSON.stringify(jsonRpcError) }],
+      content: [{ type: "text", text: JSON.stringify(jsonRpcError) }],
       isError: true,
     };
   }
@@ -94,24 +99,27 @@ export async function handleFoldersGet(args: unknown): Promise<ToolCallResult> {
 
     logger.info(`Getting folder: ${params.folderId}`);
 
-    const response = await client.sendRequest(MessageActions.FOLDERS_GET, params);
+    const response = await client.sendRequest(
+      MessageActions.FOLDERS_GET,
+      params,
+    );
 
     if (!response.success) {
       const error = nativeErrorToJsonRpc(response.error);
       return {
-        content: [{ type: 'text', text: JSON.stringify(error) }],
+        content: [{ type: "text", text: JSON.stringify(error) }],
         isError: true,
       };
     }
 
     return {
-      content: [{ type: 'text', text: JSON.stringify(response.data, null, 2) }],
+      content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }],
     };
   } catch (error) {
-    logger.error('Error in handleFoldersGet:', error);
+    logger.error("Error in handleFoldersGet:", error);
     const jsonRpcError = nativeErrorToJsonRpc(error);
     return {
-      content: [{ type: 'text', text: JSON.stringify(jsonRpcError) }],
+      content: [{ type: "text", text: JSON.stringify(jsonRpcError) }],
       isError: true,
     };
   }
@@ -120,31 +128,38 @@ export async function handleFoldersGet(args: unknown): Promise<ToolCallResult> {
 /**
  * Create a new folder
  */
-export async function handleFoldersCreate(args: unknown): Promise<ToolCallResult> {
+export async function handleFoldersCreate(
+  args: unknown,
+): Promise<ToolCallResult> {
   try {
     const params = foldersCreateSchema.parse(args);
     const client = getNativeClient();
 
-    logger.info(`Creating folder: ${params.name} under ${params.parentFolderId}`);
+    logger.info(
+      `Creating folder: ${params.name} under ${params.parentFolderId}`,
+    );
 
-    const response = await client.sendRequest(MessageActions.FOLDERS_CREATE, params);
+    const response = await client.sendRequest(
+      MessageActions.FOLDERS_CREATE,
+      params,
+    );
 
     if (!response.success) {
       const error = nativeErrorToJsonRpc(response.error);
       return {
-        content: [{ type: 'text', text: JSON.stringify(error) }],
+        content: [{ type: "text", text: JSON.stringify(error) }],
         isError: true,
       };
     }
 
     return {
-      content: [{ type: 'text', text: JSON.stringify(response.data, null, 2) }],
+      content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }],
     };
   } catch (error) {
-    logger.error('Error in handleFoldersCreate:', error);
+    logger.error("Error in handleFoldersCreate:", error);
     const jsonRpcError = nativeErrorToJsonRpc(error);
     return {
-      content: [{ type: 'text', text: JSON.stringify(jsonRpcError) }],
+      content: [{ type: "text", text: JSON.stringify(jsonRpcError) }],
       isError: true,
     };
   }
@@ -153,31 +168,36 @@ export async function handleFoldersCreate(args: unknown): Promise<ToolCallResult
 /**
  * Rename a folder
  */
-export async function handleFoldersRename(args: unknown): Promise<ToolCallResult> {
+export async function handleFoldersRename(
+  args: unknown,
+): Promise<ToolCallResult> {
   try {
     const params = foldersRenameSchema.parse(args);
     const client = getNativeClient();
 
     logger.info(`Renaming folder: ${params.folderId} to ${params.newName}`);
 
-    const response = await client.sendRequest(MessageActions.FOLDERS_RENAME, params);
+    const response = await client.sendRequest(
+      MessageActions.FOLDERS_RENAME,
+      params,
+    );
 
     if (!response.success) {
       const error = nativeErrorToJsonRpc(response.error);
       return {
-        content: [{ type: 'text', text: JSON.stringify(error) }],
+        content: [{ type: "text", text: JSON.stringify(error) }],
         isError: true,
       };
     }
 
     return {
-      content: [{ type: 'text', text: JSON.stringify(response.data, null, 2) }],
+      content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }],
     };
   } catch (error) {
-    logger.error('Error in handleFoldersRename:', error);
+    logger.error("Error in handleFoldersRename:", error);
     const jsonRpcError = nativeErrorToJsonRpc(error);
     return {
-      content: [{ type: 'text', text: JSON.stringify(jsonRpcError) }],
+      content: [{ type: "text", text: JSON.stringify(jsonRpcError) }],
       isError: true,
     };
   }
@@ -186,31 +206,36 @@ export async function handleFoldersRename(args: unknown): Promise<ToolCallResult
 /**
  * Delete a folder
  */
-export async function handleFoldersDelete(args: unknown): Promise<ToolCallResult> {
+export async function handleFoldersDelete(
+  args: unknown,
+): Promise<ToolCallResult> {
   try {
     const params = foldersDeleteSchema.parse(args);
     const client = getNativeClient();
 
     logger.info(`Deleting folder: ${params.folderId}`);
 
-    const response = await client.sendRequest(MessageActions.FOLDERS_DELETE, params);
+    const response = await client.sendRequest(
+      MessageActions.FOLDERS_DELETE,
+      params,
+    );
 
     if (!response.success) {
       const error = nativeErrorToJsonRpc(response.error);
       return {
-        content: [{ type: 'text', text: JSON.stringify(error) }],
+        content: [{ type: "text", text: JSON.stringify(error) }],
         isError: true,
       };
     }
 
     return {
-      content: [{ type: 'text', text: JSON.stringify(response.data, null, 2) }],
+      content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }],
     };
   } catch (error) {
-    logger.error('Error in handleFoldersDelete:', error);
+    logger.error("Error in handleFoldersDelete:", error);
     const jsonRpcError = nativeErrorToJsonRpc(error);
     return {
-      content: [{ type: 'text', text: JSON.stringify(jsonRpcError) }],
+      content: [{ type: "text", text: JSON.stringify(jsonRpcError) }],
       isError: true,
     };
   }
@@ -219,31 +244,38 @@ export async function handleFoldersDelete(args: unknown): Promise<ToolCallResult
 /**
  * Move a folder
  */
-export async function handleFoldersMove(args: unknown): Promise<ToolCallResult> {
+export async function handleFoldersMove(
+  args: unknown,
+): Promise<ToolCallResult> {
   try {
     const params = foldersMoveSchema.parse(args);
     const client = getNativeClient();
 
-    logger.info(`Moving folder: ${params.folderId} to ${params.destinationFolderId}`);
+    logger.info(
+      `Moving folder: ${params.folderId} to ${params.destinationFolderId}`,
+    );
 
-    const response = await client.sendRequest(MessageActions.FOLDERS_MOVE, params);
+    const response = await client.sendRequest(
+      MessageActions.FOLDERS_MOVE,
+      params,
+    );
 
     if (!response.success) {
       const error = nativeErrorToJsonRpc(response.error);
       return {
-        content: [{ type: 'text', text: JSON.stringify(error) }],
+        content: [{ type: "text", text: JSON.stringify(error) }],
         isError: true,
       };
     }
 
     return {
-      content: [{ type: 'text', text: JSON.stringify(response.data, null, 2) }],
+      content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }],
     };
   } catch (error) {
-    logger.error('Error in handleFoldersMove:', error);
+    logger.error("Error in handleFoldersMove:", error);
     const jsonRpcError = nativeErrorToJsonRpc(error);
     return {
-      content: [{ type: 'text', text: JSON.stringify(jsonRpcError) }],
+      content: [{ type: "text", text: JSON.stringify(jsonRpcError) }],
       isError: true,
     };
   }
@@ -252,31 +284,36 @@ export async function handleFoldersMove(args: unknown): Promise<ToolCallResult> 
 /**
  * Mark all messages in a folder as read
  */
-export async function handleFoldersMarkRead(args: unknown): Promise<ToolCallResult> {
+export async function handleFoldersMarkRead(
+  args: unknown,
+): Promise<ToolCallResult> {
   try {
     const params = foldersMarkReadSchema.parse(args);
     const client = getNativeClient();
 
     logger.info(`Marking all messages as read in folder: ${params.folderId}`);
 
-    const response = await client.sendRequest(MessageActions.FOLDERS_MARK_READ, params);
+    const response = await client.sendRequest(
+      MessageActions.FOLDERS_MARK_READ,
+      params,
+    );
 
     if (!response.success) {
       const error = nativeErrorToJsonRpc(response.error);
       return {
-        content: [{ type: 'text', text: JSON.stringify(error) }],
+        content: [{ type: "text", text: JSON.stringify(error) }],
         isError: true,
       };
     }
 
     return {
-      content: [{ type: 'text', text: JSON.stringify(response.data, null, 2) }],
+      content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }],
     };
   } catch (error) {
-    logger.error('Error in handleFoldersMarkRead:', error);
+    logger.error("Error in handleFoldersMarkRead:", error);
     const jsonRpcError = nativeErrorToJsonRpc(error);
     return {
-      content: [{ type: 'text', text: JSON.stringify(jsonRpcError) }],
+      content: [{ type: "text", text: JSON.stringify(jsonRpcError) }],
       isError: true,
     };
   }
@@ -288,83 +325,100 @@ export async function handleFoldersMarkRead(args: unknown): Promise<ToolCallResu
 
 export const folderTools: McpTool[] = [
   {
-    name: 'thunderbird_folders_list',
-    description: 'List all folders in an account or all accounts with hierarchical structure',
+    name: "thunderbird_folders_list",
+    description:
+      "List all folders in an account or all accounts with hierarchical structure",
     inputSchema: {
-      type: 'object',
+      type: "object",
       properties: {
-        accountId: { type: 'string', description: 'Optional: filter by specific account' },
-        includeSubFolders: { type: 'boolean', description: 'Include nested subfolders (default: true)', default: true },
+        accountId: {
+          type: "string",
+          description: "Optional: filter by specific account",
+        },
+        includeSubFolders: {
+          type: "boolean",
+          description: "Include nested subfolders (default: true)",
+          default: true,
+        },
       },
     },
   },
   {
-    name: 'thunderbird_folders_get',
-    description: 'Get detailed information about a specific folder',
+    name: "thunderbird_folders_get",
+    description: "Get detailed information about a specific folder",
     inputSchema: {
-      type: 'object',
+      type: "object",
       properties: {
-        folderId: { type: 'string', description: 'Folder ID' },
+        folderId: { type: "string", description: "Folder ID" },
       },
-      required: ['folderId'],
+      required: ["folderId"],
     },
   },
   {
-    name: 'thunderbird_folders_create',
-    description: 'Create a new subfolder under a parent folder',
+    name: "thunderbird_folders_create",
+    description: "Create a new subfolder under a parent folder",
     inputSchema: {
-      type: 'object',
+      type: "object",
       properties: {
-        parentFolderId: { type: 'string', description: 'Parent folder ID' },
-        name: { type: 'string', description: 'New folder name (1-255 characters)' },
+        parentFolderId: { type: "string", description: "Parent folder ID" },
+        name: {
+          type: "string",
+          description: "New folder name (1-255 characters)",
+        },
       },
-      required: ['parentFolderId', 'name'],
+      required: ["parentFolderId", "name"],
     },
   },
   {
-    name: 'thunderbird_folders_rename',
-    description: 'Rename an existing folder',
+    name: "thunderbird_folders_rename",
+    description: "Rename an existing folder",
     inputSchema: {
-      type: 'object',
+      type: "object",
       properties: {
-        folderId: { type: 'string', description: 'Folder ID to rename' },
-        newName: { type: 'string', description: 'New folder name (1-255 characters)' },
+        folderId: { type: "string", description: "Folder ID to rename" },
+        newName: {
+          type: "string",
+          description: "New folder name (1-255 characters)",
+        },
       },
-      required: ['folderId', 'newName'],
+      required: ["folderId", "newName"],
     },
   },
   {
-    name: 'thunderbird_folders_delete',
-    description: 'Delete a folder and all its contents (use with caution)',
+    name: "thunderbird_folders_delete",
+    description: "Delete a folder and all its contents (use with caution)",
     inputSchema: {
-      type: 'object',
+      type: "object",
       properties: {
-        folderId: { type: 'string', description: 'Folder ID to delete' },
+        folderId: { type: "string", description: "Folder ID to delete" },
       },
-      required: ['folderId'],
+      required: ["folderId"],
     },
   },
   {
-    name: 'thunderbird_folders_move',
-    description: 'Move a folder to become a subfolder of another folder',
+    name: "thunderbird_folders_move",
+    description: "Move a folder to become a subfolder of another folder",
     inputSchema: {
-      type: 'object',
+      type: "object",
       properties: {
-        folderId: { type: 'string', description: 'Folder ID to move' },
-        destinationFolderId: { type: 'string', description: 'New parent folder ID' },
+        folderId: { type: "string", description: "Folder ID to move" },
+        destinationFolderId: {
+          type: "string",
+          description: "New parent folder ID",
+        },
       },
-      required: ['folderId', 'destinationFolderId'],
+      required: ["folderId", "destinationFolderId"],
     },
   },
   {
-    name: 'thunderbird_folders_mark_read',
-    description: 'Mark all messages in a folder as read',
+    name: "thunderbird_folders_mark_read",
+    description: "Mark all messages in a folder as read",
     inputSchema: {
-      type: 'object',
+      type: "object",
       properties: {
-        folderId: { type: 'string', description: 'Folder ID' },
+        folderId: { type: "string", description: "Folder ID" },
       },
-      required: ['folderId'],
+      required: ["folderId"],
     },
   },
 ];

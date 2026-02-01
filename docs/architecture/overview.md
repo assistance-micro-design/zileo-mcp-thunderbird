@@ -81,9 +81,11 @@ graph TB
 ## Component Descriptions
 
 ### 1. MCP Client Layer
+
 **Purpose**: AI assistants and applications that consume Thunderbird functionality
 
 **Components**:
+
 - **Claude Desktop**: Anthropic's desktop application with MCP support
 - **GPT Assistants**: OpenAI assistants configured with MCP
 - **Custom Clients**: Any application implementing the MCP client specification
@@ -91,9 +93,11 @@ graph TB
 **Communication**: JSON-RPC 2.0 over stdio (standard input/output)
 
 ### 2. MCP Server
+
 **Purpose**: Protocol translation and orchestration layer
 
 **Key Responsibilities**:
+
 - Implement MCP server specification (JSON-RPC 2.0)
 - Expose 47 tools across 7 functional domains
 - Expose resources to MCP clients
@@ -103,6 +107,7 @@ graph TB
 - Handle errors and timeouts
 
 **Technology Stack**:
+
 - Runtime: Node.js 20+
 - Language: TypeScript
 - Framework: @modelcontextprotocol/sdk
@@ -110,6 +115,7 @@ graph TB
 - WebSocket: ws library for bidirectional communication
 
 **Tool Distribution**:
+
 - Messages: 9 tools (search, list, get, move, copy, delete, update, archive, list unread)
 - Folders: 7 tools (list, get, create, rename, delete, move, mark read)
 - Contacts: 9 tools (search, list, get, create, update, delete + 3 address book tools)
@@ -119,9 +125,11 @@ graph TB
 - Tasks: 6 tools (list, get, create, update, delete, complete)
 
 ### 3. WebSocket Bridge
+
 **Purpose**: Bidirectional communication layer between Node.js server and Thunderbird extension
 
 **Key Features**:
+
 - **Port**: Listens on localhost:9876
 - **Protocol**: JSON-based message format with request/response correlation
 - **Request Tracking**: Unique IDs for correlation (format: `req_{counter}_{timestamp}`)
@@ -130,25 +138,28 @@ graph TB
 - **Pending Requests**: Map-based tracking with automatic cleanup
 
 **Message Structure**:
+
 ```typescript
 interface WsMessage {
-  id: string;                    // Unique message ID
-  type: 'request' | 'response' | 'notification';
-  action?: string;               // Action name for requests
-  event?: string;                // Event name for notifications
-  params?: Record<string, unknown>;  // Request parameters
-  data?: unknown;                // Response data
-  success?: boolean;             // Response status
-  error?: {                      // Error details
+  id: string; // Unique message ID
+  type: "request" | "response" | "notification";
+  action?: string; // Action name for requests
+  event?: string; // Event name for notifications
+  params?: Record<string, unknown>; // Request parameters
+  data?: unknown; // Response data
+  success?: boolean; // Response status
+  error?: {
+    // Error details
     code: number;
     message: string;
     data?: unknown;
   };
-  timestamp: string;             // ISO 8601 timestamp
+  timestamp: string; // ISO 8601 timestamp
 }
 ```
 
 **Reliability Features**:
+
 - Promise-based request/response pattern
 - Timeout handling with automatic cleanup
 - Pending request queue management (max 100)
@@ -156,9 +167,11 @@ interface WsMessage {
 - Error propagation to callers
 
 ### 4. Thunderbird Extension
+
 **Purpose**: WebExtension that interfaces with Thunderbird APIs
 
 **Key Responsibilities**:
+
 - Maintain WebSocket connection to MCP server
 - Implement auto-reconnect with exponential backoff
 - Receive requests from MCP server via WebSocket
@@ -168,12 +181,14 @@ interface WsMessage {
 - Manage experimental Calendar API integration
 
 **Technology**:
+
 - Type: MailExtension (Manifest V3)
 - Language: JavaScript (ES6+ modules)
-- APIs: messenger.* namespace
+- APIs: messenger.\* namespace
 - WebSocket: Browser native WebSocket API
 
 **Connection Management**:
+
 - Auto-reconnect on connection loss
 - Maximum 10 reconnect attempts
 - 3-second delay between attempts
@@ -183,9 +198,11 @@ interface WsMessage {
 **Message ID Generation**: `ext_{timestamp}_{random}` for extension-initiated messages
 
 ### 5. Thunderbird Application
+
 **Purpose**: Email client with local data storage
 
 **Data Stores**:
+
 - Mail database (mbox or maildir)
 - Address books (SQLite)
 - Calendar storage (ICS files or database)
@@ -284,6 +301,7 @@ sequenceDiagram
 ## Data Flow Overview
 
 ### Tool Execution Flow
+
 1. **Client Request**: AI client sends `tools/call` request via JSON-RPC 2.0
 2. **Server Validation**: MCP server validates parameters against Zod schemas
 3. **WebSocket Send**: Server sends request to extension via WebSocket bridge
@@ -294,6 +312,7 @@ sequenceDiagram
 8. **Response Pipeline**: Results flow back through server to client
 
 ### Resource Access Flow
+
 1. **Client Request**: AI client sends `resources/read` request
 2. **Server Resolution**: Server identifies resource URI pattern
 3. **Data Retrieval**: Server requests data via WebSocket bridge
@@ -302,25 +321,27 @@ sequenceDiagram
 
 ## Technology Stack Summary
 
-| Layer | Technology | Purpose |
-|-------|-----------|---------|
-| **MCP Client** | Various (Claude, GPT, etc.) | AI assistants consuming MCP |
-| **MCP Server** | Node.js 20+ / TypeScript | Protocol implementation |
-| **SDK** | @modelcontextprotocol/sdk | MCP server framework |
-| **Validation** | Zod | Schema validation |
-| **Logging** | Winston | Structured logging |
-| **WebSocket Server** | ws library | Bidirectional communication |
-| **WebSocket Client** | Browser WebSocket API | Extension connection |
-| **Extension** | Manifest V3 MailExtension | Thunderbird API access |
-| **Extension Runtime** | JavaScript (ES6+ modules) | Extension logic |
-| **Data Storage** | SQLite, mbox, ICS | Thunderbird native storage |
+| Layer                 | Technology                  | Purpose                     |
+| --------------------- | --------------------------- | --------------------------- |
+| **MCP Client**        | Various (Claude, GPT, etc.) | AI assistants consuming MCP |
+| **MCP Server**        | Node.js 20+ / TypeScript    | Protocol implementation     |
+| **SDK**               | @modelcontextprotocol/sdk   | MCP server framework        |
+| **Validation**        | Zod                         | Schema validation           |
+| **Logging**           | Winston                     | Structured logging          |
+| **WebSocket Server**  | ws library                  | Bidirectional communication |
+| **WebSocket Client**  | Browser WebSocket API       | Extension connection        |
+| **Extension**         | Manifest V3 MailExtension   | Thunderbird API access      |
+| **Extension Runtime** | JavaScript (ES6+ modules)   | Extension logic             |
+| **Data Storage**      | SQLite, mbox, ICS           | Thunderbird native storage  |
 
 ## Key Architectural Decisions
 
 ### Why WebSocket Instead of Native Messaging?
+
 **Rationale**: WebSocket provides better reliability and simpler implementation
 
 **Trade-offs**:
+
 - ✅ Bidirectional communication
 - ✅ Connection state awareness
 - ✅ Auto-reconnect capability
@@ -331,9 +352,11 @@ sequenceDiagram
 - ⚠️ Single client limitation (enforced by bridge)
 
 ### Why Three-Layer Architecture?
+
 **Rationale**: Clear separation between protocol, transport, and API access
 
 **Benefits**:
+
 - Independent evolution of MCP server and extension
 - Better testability and modularity
 - MCP server can support multiple transports
@@ -341,18 +364,22 @@ sequenceDiagram
 - WebSocket bridge is reusable and isolated
 
 ### Why TypeScript for Server?
+
 **Rationale**: Type safety and better tooling for complex protocol implementation
 
 **Benefits**:
+
 - Compile-time type checking
 - Better IDE support and refactoring
 - Zod integration for runtime validation
 - Strong ecosystem for Node.js development
 
 ### Why Experimental Calendar API?
+
 **Rationale**: Official calendar APIs not yet available in stable Thunderbird WebExtensions
 
 **Status**: Using webext-experiments from mozilla/thunderbird
+
 - Experimental but functional
 - May require adjustments when official API releases
 - Documented as experimental in all interfaces
@@ -360,23 +387,27 @@ sequenceDiagram
 ## Security Model
 
 ### Permission-Based Access
+
 - Extension declares required permissions in manifest
 - User must approve permissions at installation
 - Granular permissions per API domain (messages, contacts, calendar)
 
 ### Network Security
+
 - WebSocket server binds to localhost only (127.0.0.1)
 - No remote connections accepted
 - Single client connection enforced
 - Host permissions limited to localhost:9876
 
 ### Data Minimization
+
 - Headers-only responses by default
 - Full message bodies only on explicit request
 - No password or OAuth token exposure
 - S/MIME keys never accessible
 
 ### Validation Layers
+
 1. **Client-side**: MCP SDK validates JSON-RPC structure
 2. **Server-side**: Zod schemas validate tool parameters
 3. **Bridge-side**: Message format validation
@@ -386,12 +417,14 @@ sequenceDiagram
 ## Scalability Considerations
 
 ### Performance Characteristics
+
 - **Latency**: ~10-50ms per operation (WebSocket overhead minimal)
 - **Throughput**: Limited by Thunderbird API performance
 - **Concurrency**: Single-threaded extension, pending request queue on server
 - **Large datasets**: Pagination required for queries returning >100 items
 
 ### Optimization Strategies
+
 - Batch operations where possible
 - Implement result pagination
 - Cache folder structures
@@ -402,6 +435,7 @@ sequenceDiagram
 ## Extensibility Points
 
 ### Adding New Tools
+
 1. Define Zod schema in `/server/src/schemas/`
 2. Implement handler in `/server/src/tools/`
 3. Add API wrapper in `/extension/api/` or `/extension/native-messaging/handler.js`
@@ -409,12 +443,14 @@ sequenceDiagram
 5. Add to appropriate tool category
 
 ### Adding New Resources
+
 1. Define URI pattern in resource handlers
 2. Implement data retrieval logic
 3. Format as MCP resource content
 4. Register resource provider in `/server/src/resources/index.ts`
 
 ### Custom Experimental APIs
+
 1. Create experiment in `/extension/experiments/`
 2. Define JSON schema for API
 3. Implement parent API script
@@ -423,12 +459,14 @@ sequenceDiagram
 ## Monitoring and Observability
 
 ### Logging Strategy
+
 - **Server**: Winston structured logging to file/console
 - **Extension**: console.log with [MCP] prefix
 - **WebSocket Bridge**: Request/response logging with IDs
 - **Message Tracing**: Full request lifecycle tracking
 
 ### Error Tracking
+
 - JSON-RPC error codes for all failure modes
 - Stack traces in development mode
 - Sanitized errors in production
@@ -436,6 +474,7 @@ sequenceDiagram
 - Timeout tracking and reporting
 
 ### Connection Monitoring
+
 - Connection state changes logged
 - Reconnect attempts tracked
 - Pending request count monitoring
@@ -444,6 +483,7 @@ sequenceDiagram
 ## Deployment Model
 
 ### Installation Steps
+
 1. Install Thunderbird extension (XPI or AMO)
 2. Install MCP server (npm global or binary)
 3. Start MCP server (WebSocket bridge auto-starts on port 9876)
@@ -451,12 +491,14 @@ sequenceDiagram
 5. Extension auto-connects on startup
 
 ### Configuration Files
+
 - **Extension**: `manifest.json` (bundled)
 - **Server**: Environment variables (THUNDERBIRD_PORT, LOG_LEVEL)
 - **WebSocket**: Port 9876 (configurable via env)
 - **MCP Client**: Client-specific configuration (e.g., Claude Desktop config)
 
 ### Network Requirements
+
 - Localhost port 9876 must be available
 - No firewall configuration needed (localhost only)
 - No external network access required
@@ -501,11 +543,11 @@ graph TB
 
 ### Key Components
 
-| Component | File | Purpose |
-|-----------|------|---------|
+| Component     | File                   | Purpose                                |
+| ------------- | ---------------------- | -------------------------------------- |
 | Bridge Server | `bridge-standalone.ts` | Standalone WebSocket bridge for Docker |
-| Bridge Client | `bridge-client.ts` | Client mode for MCP instances |
-| Path Router | `bridge.ts` | HTTP upgrade routing by path |
+| Bridge Client | `bridge-client.ts`     | Client mode for MCP instances          |
+| Path Router   | `bridge.ts`            | HTTP upgrade routing by path           |
 
 ### Connection Flow
 
@@ -522,7 +564,7 @@ graph TB
 const client = await tryConnectToExistingBridge(port);
 if (client) {
   // Bridge exists, connect as client
-  return client;  // WebSocketBridgeClient
+  return client; // WebSocketBridgeClient
 }
 // No bridge, create server
 return new WebSocketBridge(options);
@@ -538,6 +580,7 @@ return new WebSocketBridge(options);
 ## Future Architecture Considerations
 
 ### Potential Enhancements
+
 - HTTP+SSE transport for remote access
 - TLS/SSL support for secure remote connections
 - Multi-instance support (multiple Thunderbird profiles)
@@ -546,6 +589,7 @@ return new WebSocketBridge(options);
 - Bi-directional notifications for real-time updates
 
 ### Migration Paths
+
 - Experimental Calendar API → Official API when available
 - Single WebSocket port → Multi-port for profile isolation
 - Request/response → Streaming for large datasets

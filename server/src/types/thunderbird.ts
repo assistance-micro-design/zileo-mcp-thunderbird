@@ -9,7 +9,7 @@
 // =============================================================================
 
 /** Account types supported by Thunderbird */
-export type AccountType = 'imap' | 'pop3' | 'local' | 'nntp' | 'rss' | 'ews';
+export type AccountType = "imap" | "pop3" | "local" | "nntp" | "rss" | "ews";
 
 /** Mail account representation */
 export interface MailAccount {
@@ -53,14 +53,14 @@ export interface MailIdentity {
 
 /** Special folder use types */
 export type FolderSpecialUse =
-  | 'inbox'
-  | 'sent'
-  | 'drafts'
-  | 'trash'
-  | 'junk'
-  | 'templates'
-  | 'archives'
-  | 'outbox';
+  | "inbox"
+  | "sent"
+  | "drafts"
+  | "trash"
+  | "junk"
+  | "templates"
+  | "archives"
+  | "outbox";
 
 /** Mail folder representation */
 export interface MailFolder {
@@ -278,7 +278,7 @@ export interface AddressBookNode {
   /** Display name */
   name: string;
   /** Node type */
-  type: 'addressBook' | 'contact' | 'mailingList';
+  type: "addressBook" | "contact" | "mailingList";
   /** Parent ID for nesting */
   parentId?: string;
   /** Whether book is read-only */
@@ -296,7 +296,7 @@ export interface ContactNode {
   /** Unique identifier */
   id: string;
   /** Node type */
-  type: 'contact';
+  type: "contact";
   /** Parent address book ID */
   parentId: string;
   /** Whether contact is read-only */
@@ -392,7 +392,7 @@ export interface MailingListNode {
   /** Unique identifier */
   id: string;
   /** Node type */
-  type: 'mailingList';
+  type: "mailingList";
   /** Parent address book ID */
   parentId: string;
   /** Display name */
@@ -434,7 +434,7 @@ export interface ComposeDetails {
   /** Related message (for reply/forward) */
   relatedMessageId?: number;
   /** Compose type */
-  type?: 'new' | 'reply' | 'forward' | 'draft';
+  type?: "new" | "reply" | "forward" | "draft";
 }
 
 /** Compose attachment */
@@ -446,4 +446,3 @@ export interface ComposeAttachment {
   /** Size in bytes */
   size?: number;
 }
-

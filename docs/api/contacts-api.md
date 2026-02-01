@@ -17,15 +17,16 @@ The Contacts API provides comprehensive contact management capabilities includin
 Search for contacts across all address books or within a specific address book.
 
 #### Description
+
 Performs a search for contacts matching the query string against name, email, and other contact fields.
 
 #### Parameters
 
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `query` | string | Yes | Search term to match against contact fields |
-| `addressBookId` | string | No | Specific address book to search within (omit for all) |
-| `limit` | number | No | Maximum number of results to return (default: 100) |
+| Name            | Type   | Required | Description                                           |
+| --------------- | ------ | -------- | ----------------------------------------------------- |
+| `query`         | string | Yes      | Search term to match against contact fields           |
+| `addressBookId` | string | No       | Specific address book to search within (omit for all) |
+| `limit`         | number | No       | Maximum number of results to return (default: 100)    |
 
 #### Response Format
 
@@ -76,10 +77,12 @@ Performs a search for contacts matching the query string against name, email, an
   "jsonrpc": "2.0",
   "id": "req-020",
   "result": {
-    "content": [{
-      "type": "text",
-      "text": "[{\"id\":\"contact-456\",\"addressBookId\":\"addressbook-1\",\"type\":\"contact\",\"properties\":{\"DisplayName\":\"Jean Dupont\",\"PrimaryEmail\":\"jean.dupont@example.com\",\"Company\":\"ACME Corp\"}}]"
-    }]
+    "content": [
+      {
+        "type": "text",
+        "text": "[{\"id\":\"contact-456\",\"addressBookId\":\"addressbook-1\",\"type\":\"contact\",\"properties\":{\"DisplayName\":\"Jean Dupont\",\"PrimaryEmail\":\"jean.dupont@example.com\",\"Company\":\"ACME Corp\"}}]"
+      }
+    ]
   }
 }
 ```
@@ -91,15 +94,16 @@ Performs a search for contacts matching the query string against name, email, an
 List all contacts in a specific address book with pagination.
 
 #### Description
+
 Retrieves a paginated list of contacts from an address book.
 
 #### Parameters
 
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `addressBookId` | string | Yes | ID of the address book to list contacts from |
-| `limit` | number | No | Maximum number of contacts to return (default: 100, max: 1000) |
-| `offset` | number | No | Number of contacts to skip for pagination (default: 0) |
+| Name            | Type   | Required | Description                                                    |
+| --------------- | ------ | -------- | -------------------------------------------------------------- |
+| `addressBookId` | string | Yes      | ID of the address book to list contacts from                   |
+| `limit`         | number | No       | Maximum number of contacts to return (default: 100, max: 1000) |
+| `offset`        | number | No       | Number of contacts to skip for pagination (default: 0)         |
 
 #### Response Format
 
@@ -141,14 +145,15 @@ Retrieves a paginated list of contacts from an address book.
 Get detailed information about a specific contact.
 
 #### Description
+
 Retrieves complete contact information including all properties or vCard representation.
 
 #### Parameters
 
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `contactId` | string | Yes | Unique identifier of the contact |
-| `format` | string | No | Return format: `properties` (default) or `vcard` |
+| Name        | Type   | Required | Description                                      |
+| ----------- | ------ | -------- | ------------------------------------------------ |
+| `contactId` | string | Yes      | Unique identifier of the contact                 |
+| `format`    | string | No       | Return format: `properties` (default) or `vcard` |
 
 #### Response Format (Properties)
 
@@ -224,44 +229,45 @@ Retrieves complete contact information including all properties or vCard represe
 Create a new contact in an address book.
 
 #### Description
+
 Creates a new contact using either structured properties or vCard format.
 
 #### Parameters
 
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `addressBookId` | string | Yes | ID of the address book to create contact in |
-| `properties` | object | Conditional | Contact properties (required if vCard not provided) |
-| `vCard` | string | Conditional | vCard 4.0 formatted string (required if properties not provided) |
+| Name            | Type   | Required    | Description                                                      |
+| --------------- | ------ | ----------- | ---------------------------------------------------------------- |
+| `addressBookId` | string | Yes         | ID of the address book to create contact in                      |
+| `properties`    | object | Conditional | Contact properties (required if vCard not provided)              |
+| `vCard`         | string | Conditional | vCard 4.0 formatted string (required if properties not provided) |
 
 #### Standard Properties
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `DisplayName` | string | Full display name |
-| `FirstName` | string | First name |
-| `LastName` | string | Last name |
-| `PrimaryEmail` | string | Primary email address |
-| `SecondEmail` | string | Secondary email address |
-| `CellularNumber` | string | Mobile phone number |
-| `WorkPhone` | string | Work phone number |
-| `HomePhone` | string | Home phone number |
-| `Company` | string | Company/organization name |
-| `JobTitle` | string | Job title/position |
-| `Department` | string | Department |
-| `WebPage1` | string | Primary website URL |
-| `WebPage2` | string | Secondary website URL |
-| `WorkAddress` | string | Work street address |
-| `WorkCity` | string | Work city |
-| `WorkState` | string | Work state/province |
-| `WorkZipCode` | string | Work postal code |
-| `WorkCountry` | string | Work country |
-| `HomeAddress` | string | Home street address |
-| `HomeCity` | string | Home city |
-| `HomeState` | string | Home state/province |
-| `HomeZipCode` | string | Home postal code |
-| `HomeCountry` | string | Home country |
-| `Notes` | string | Additional notes |
+| Property         | Type   | Description               |
+| ---------------- | ------ | ------------------------- |
+| `DisplayName`    | string | Full display name         |
+| `FirstName`      | string | First name                |
+| `LastName`       | string | Last name                 |
+| `PrimaryEmail`   | string | Primary email address     |
+| `SecondEmail`    | string | Secondary email address   |
+| `CellularNumber` | string | Mobile phone number       |
+| `WorkPhone`      | string | Work phone number         |
+| `HomePhone`      | string | Home phone number         |
+| `Company`        | string | Company/organization name |
+| `JobTitle`       | string | Job title/position        |
+| `Department`     | string | Department                |
+| `WebPage1`       | string | Primary website URL       |
+| `WebPage2`       | string | Secondary website URL     |
+| `WorkAddress`    | string | Work street address       |
+| `WorkCity`       | string | Work city                 |
+| `WorkState`      | string | Work state/province       |
+| `WorkZipCode`    | string | Work postal code          |
+| `WorkCountry`    | string | Work country              |
+| `HomeAddress`    | string | Home street address       |
+| `HomeCity`       | string | Home city                 |
+| `HomeState`      | string | Home state/province       |
+| `HomeZipCode`    | string | Home postal code          |
+| `HomeCountry`    | string | Home country              |
+| `Notes`          | string | Additional notes          |
 
 #### Response Format
 
@@ -325,15 +331,16 @@ Creates a new contact using either structured properties or vCard format.
 Update an existing contact.
 
 #### Description
+
 Modifies contact information using either partial properties update or complete vCard replacement.
 
 #### Parameters
 
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `contactId` | string | Yes | ID of the contact to update |
-| `properties` | object | Conditional | Properties to update (required if vCard not provided) |
-| `vCard` | string | Conditional | Complete vCard replacement (required if properties not provided) |
+| Name         | Type   | Required    | Description                                                      |
+| ------------ | ------ | ----------- | ---------------------------------------------------------------- |
+| `contactId`  | string | Yes         | ID of the contact to update                                      |
+| `properties` | object | Conditional | Properties to update (required if vCard not provided)            |
+| `vCard`      | string | Conditional | Complete vCard replacement (required if properties not provided) |
 
 #### Response Format
 
@@ -376,13 +383,14 @@ Modifies contact information using either partial properties update or complete 
 Delete a contact from an address book.
 
 #### Description
+
 Permanently removes a contact from Thunderbird.
 
 #### Parameters
 
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `contactId` | string | Yes | ID of the contact to delete |
+| Name        | Type   | Required | Description                 |
+| ----------- | ------ | -------- | --------------------------- |
+| `contactId` | string | Yes      | ID of the contact to delete |
 
 #### Response Format
 
@@ -425,6 +433,7 @@ Contact deletion is permanent and cannot be undone.
 List all address books in Thunderbird.
 
 #### Description
+
 Retrieves all address books including system and user-created address books.
 
 #### Parameters
@@ -480,13 +489,14 @@ None
 Create a new address book.
 
 #### Description
+
 Creates a new local address book in Thunderbird.
 
 #### Parameters
 
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `name` | string | Yes | Name of the new address book |
+| Name   | Type   | Required | Description                  |
+| ------ | ------ | -------- | ---------------------------- |
+| `name` | string | Yes      | Name of the new address book |
 
 #### Response Format
 
@@ -524,13 +534,14 @@ Creates a new local address book in Thunderbird.
 Delete an address book and all its contacts.
 
 #### Description
+
 Permanently removes an address book and all contacts within it.
 
 #### Parameters
 
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `addressBookId` | string | Yes | ID of the address book to delete |
+| Name            | Type   | Required | Description                      |
+| --------------- | ------ | -------- | -------------------------------- |
+| `addressBookId` | string | Yes      | ID of the address book to delete |
 
 #### Response Format
 
@@ -577,15 +588,15 @@ All contacts in the address book will be permanently deleted.
 
 All contact operations may return these error codes:
 
-| Code | Message | Description |
-|------|---------|-------------|
-| -32000 | Thunderbird not running | Thunderbird application is not active |
-| -32001 | Extension not installed | Thunderbird MCP extension not found |
-| -32002 | Permission denied | addressBooks permission not granted |
-| -32003 | Resource not found | Contact or address book not found |
-| -32004 | Operation timeout | Operation exceeded timeout limit (10s) |
-| -32602 | Invalid params | Invalid properties, vCard format, or missing required fields |
-| -32603 | Internal error | Duplicate contact, read-only address book, etc. |
+| Code   | Message                 | Description                                                  |
+| ------ | ----------------------- | ------------------------------------------------------------ |
+| -32000 | Thunderbird not running | Thunderbird application is not active                        |
+| -32001 | Extension not installed | Thunderbird MCP extension not found                          |
+| -32002 | Permission denied       | addressBooks permission not granted                          |
+| -32003 | Resource not found      | Contact or address book not found                            |
+| -32004 | Operation timeout       | Operation exceeded timeout limit (10s)                       |
+| -32602 | Invalid params          | Invalid properties, vCard format, or missing required fields |
+| -32603 | Internal error          | Duplicate contact, read-only address book, etc.              |
 
 ---
 
@@ -614,22 +625,22 @@ END:VCARD
 
 ### vCard Property Mapping
 
-| vCard Property | Thunderbird Property |
-|----------------|---------------------|
-| `FN` | `DisplayName` |
-| `N` (surname) | `LastName` |
-| `N` (given) | `FirstName` |
-| `EMAIL;TYPE=work` | `PrimaryEmail` |
-| `EMAIL;TYPE=home` | `SecondEmail` |
-| `TEL;TYPE=cell` | `CellularNumber` |
-| `TEL;TYPE=work` | `WorkPhone` |
-| `TEL;TYPE=home` | `HomePhone` |
-| `ORG` | `Company` |
-| `TITLE` | `JobTitle` |
-| `URL` | `WebPage1` |
-| `NOTE` | `Notes` |
-| `ADR;TYPE=work` | Work address fields |
-| `ADR;TYPE=home` | Home address fields |
+| vCard Property    | Thunderbird Property |
+| ----------------- | -------------------- |
+| `FN`              | `DisplayName`        |
+| `N` (surname)     | `LastName`           |
+| `N` (given)       | `FirstName`          |
+| `EMAIL;TYPE=work` | `PrimaryEmail`       |
+| `EMAIL;TYPE=home` | `SecondEmail`        |
+| `TEL;TYPE=cell`   | `CellularNumber`     |
+| `TEL;TYPE=work`   | `WorkPhone`          |
+| `TEL;TYPE=home`   | `HomePhone`          |
+| `ORG`             | `Company`            |
+| `TITLE`           | `JobTitle`           |
+| `URL`             | `WebPage1`           |
+| `NOTE`            | `Notes`              |
+| `ADR;TYPE=work`   | Work address fields  |
+| `ADR;TYPE=home`   | Home address fields  |
 
 ---
 
@@ -657,12 +668,14 @@ END:VCARD
 ### Organization Strategies
 
 **By Purpose**:
+
 - Personal Address Book: Family and friends
 - Work Contacts: Professional contacts
 - Client Contacts: Business clients
 - Vendors: Service providers
 
 **By Project**:
+
 - Project A Team
 - Project B Stakeholders
 - Freelancers Pool
@@ -670,11 +683,13 @@ END:VCARD
 ### vCard vs Properties
 
 **Use Properties When**:
+
 - Creating/updating contacts programmatically
 - Partial updates needed
 - Working with simple contact data
 
 **Use vCard When**:
+
 - Importing contacts from external systems
 - Exporting contacts for backup
 - Maintaining compatibility with other applications

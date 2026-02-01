@@ -5,13 +5,86 @@
  */
 
 // Import tool definitions
-import { messageTools, handleMessagesSearch, handleMessagesList, handleMessagesListUnread, handleMessagesListRecent, handleMessagesGet, handleMessagesMove, handleMessagesCopy, handleMessagesDelete, handleMessagesUpdate, handleMessagesArchive } from './messages.js';
-import { folderTools, handleFoldersList, handleFoldersGet, handleFoldersCreate, handleFoldersRename, handleFoldersDelete, handleFoldersMove, handleFoldersMarkRead } from './folders.js';
-import { contactTools, handleContactsSearch, handleContactsList, handleContactsGet, handleContactsCreate, handleContactsUpdate, handleContactsDelete, handleAddressBooksList, handleAddressBooksCreate, handleAddressBooksDelete } from './contacts.js';
-import { tagTools, handleTagsList, handleTagsCreate, handleTagsUpdate, handleTagsDelete } from './tags.js';
-import { accountTools, handleAccountsList, handleAccountsGet, handleIdentitiesList } from './accounts.js';
-import { calendarTools, handleCalendarsList, handleCalendarsGet, handleEventsSearch, handleEventsList, handleEventsGet, handleEventsCreate, handleEventsUpdate, handleEventsMove, handleEventsDelete } from './calendar.js';
-import { taskTools, handleTasksList, handleTasksGet, handleTasksCreate, handleTasksUpdate, handleTasksDelete, handleTasksComplete } from './tasks.js';
+import {
+  messageTools,
+  handleMessagesSearch,
+  handleMessagesList,
+  handleMessagesListUnread,
+  handleMessagesListRecent,
+  handleMessagesGet,
+  handleMessagesMove,
+  handleMessagesCopy,
+  handleMessagesDelete,
+  handleMessagesUpdate,
+  handleMessagesArchive,
+} from "./messages.js";
+import {
+  folderTools,
+  handleFoldersList,
+  handleFoldersGet,
+  handleFoldersCreate,
+  handleFoldersRename,
+  handleFoldersDelete,
+  handleFoldersMove,
+  handleFoldersMarkRead,
+} from "./folders.js";
+import {
+  contactTools,
+  handleContactsSearch,
+  handleContactsList,
+  handleContactsGet,
+  handleContactsCreate,
+  handleContactsUpdate,
+  handleContactsDelete,
+  handleAddressBooksList,
+  handleAddressBooksCreate,
+  handleAddressBooksDelete,
+} from "./contacts.js";
+import {
+  tagTools,
+  handleTagsList,
+  handleTagsCreate,
+  handleTagsUpdate,
+  handleTagsDelete,
+} from "./tags.js";
+import {
+  accountTools,
+  handleAccountsList,
+  handleAccountsGet,
+  handleIdentitiesList,
+} from "./accounts.js";
+import {
+  calendarTools,
+  handleCalendarsList,
+  handleCalendarsGet,
+  handleEventsSearch,
+  handleEventsList,
+  handleEventsGet,
+  handleEventsCreate,
+  handleEventsUpdate,
+  handleEventsMove,
+  handleEventsDelete,
+} from "./calendar.js";
+import {
+  taskTools,
+  handleTasksList,
+  handleTasksGet,
+  handleTasksCreate,
+  handleTasksUpdate,
+  handleTasksDelete,
+  handleTasksComplete,
+} from "./tasks.js";
+import {
+  composeTools,
+  handleComposeBeginNew,
+  handleComposeBeginReply,
+  handleComposeBeginForward,
+  handleComposeGetDetails,
+  handleComposeSetDetails,
+  handleComposeSaveDraft,
+  handleComposeSaveTemplate,
+  handleComposeSend,
+} from "./compose.js";
 
 /**
  * Tool handler function type
@@ -85,6 +158,16 @@ export const toolHandlers: Record<string, ToolHandler> = {
   thunderbird_tasks_update: handleTasksUpdate,
   thunderbird_tasks_delete: handleTasksDelete,
   thunderbird_tasks_complete: handleTasksComplete,
+
+  // Compose tools
+  thunderbird_compose_begin_new: handleComposeBeginNew,
+  thunderbird_compose_begin_reply: handleComposeBeginReply,
+  thunderbird_compose_begin_forward: handleComposeBeginForward,
+  thunderbird_compose_get_details: handleComposeGetDetails,
+  thunderbird_compose_set_details: handleComposeSetDetails,
+  thunderbird_compose_save_draft: handleComposeSaveDraft,
+  thunderbird_compose_save_template: handleComposeSaveTemplate,
+  thunderbird_compose_send: handleComposeSend,
 };
 
 /**
@@ -100,6 +183,7 @@ export const allTools: any[] = [
   ...accountTools,
   ...calendarTools,
   ...taskTools,
+  ...composeTools,
 ];
 
 /**
@@ -127,4 +211,5 @@ export {
   accountTools,
   calendarTools,
   taskTools,
+  composeTools,
 };

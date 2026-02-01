@@ -2,12 +2,13 @@
  * Native Messaging Handler - Routes requests to appropriate API handlers
  */
 
-import { MessagesAPI } from '../api/messages.js';
-import { FoldersAPI } from '../api/folders.js';
-import { ContactsAPI } from '../api/contacts.js';
-import { AccountsAPI } from '../api/accounts.js';
-import { TagsAPI } from '../api/tags.js';
-import { CalendarAPI } from '../api/calendar.js';
+import { MessagesAPI } from "../api/messages.js";
+import { FoldersAPI } from "../api/folders.js";
+import { ContactsAPI } from "../api/contacts.js";
+import { AccountsAPI } from "../api/accounts.js";
+import { TagsAPI } from "../api/tags.js";
+import { CalendarAPI } from "../api/calendar.js";
+import { ComposeAPI } from "../api/compose.js";
 
 /**
  * Handle incoming message and dispatch to appropriate API
@@ -22,7 +23,7 @@ export async function handleNativeMessage(message) {
   try {
     // Validate message format
     if (!requestMethod) {
-      throw new Error('Missing action or method in request');
+      throw new Error("Missing action or method in request");
     }
 
     // Route to appropriate handler
@@ -30,9 +31,8 @@ export async function handleNativeMessage(message) {
 
     // Return data directly for WebSocket format
     return { data: result };
-
   } catch (error) {
-    console.error('[Handler] Error processing request:', error);
+    console.error("[Handler] Error processing request:", error);
     throw error;
   }
 }
@@ -47,44 +47,47 @@ async function dispatch(method, params) {
   let domain, action;
 
   // Support both formats: 'messages.search' and 'thunderbird_messages_search'
-  if (method.includes('.')) {
+  if (method.includes(".")) {
     // New format: 'messages.search'
-    [domain, action] = method.split('.');
+    [domain, action] = method.split(".");
   } else {
     // Legacy format: 'thunderbird_messages_search'
-    [domain, action] = method.split('_').slice(1);
+    [domain, action] = method.split("_").slice(1);
   }
 
   switch (domain) {
-    case 'messages':
+    case "messages":
       return await handleMessagesAPI(action, params);
 
-    case 'folders':
+    case "folders":
       return await handleFoldersAPI(action, params);
 
-    case 'contacts':
+    case "contacts":
       return await handleContactsAPI(action, params);
 
-    case 'addressBooks':
+    case "addressBooks":
       return await handleAddressBooksAPI(action, params);
 
-    case 'accounts':
+    case "accounts":
       return await handleAccountsAPI(action, params);
 
-    case 'identities':
+    case "identities":
       return await handleIdentitiesAPI(action, params);
 
-    case 'tags':
+    case "tags":
       return await handleTagsAPI(action, params);
 
-    case 'calendars':
+    case "calendars":
       return await handleCalendarsAPI(action, params);
 
-    case 'events':
+    case "events":
       return await handleEventsAPI(action, params);
 
-    case 'tasks':
+    case "tasks":
       return await handleTasksAPI(action, params);
+
+    case "compose":
+      return await handleComposeAPI(action, params);
 
     default:
       throw new Error(`Unknown domain: ${domain}`);
@@ -96,41 +99,45 @@ async function dispatch(method, params) {
  */
 async function handleMessagesAPI(action, params) {
   switch (action) {
-    case 'search':
+    case "search":
       return await MessagesAPI.search(params);
 
-    case 'list':
-      return await MessagesAPI.list(params.folderId, params.limit, params.offset);
+    case "list":
+      return await MessagesAPI.list(
+        params.folderId,
+        params.limit,
+        params.offset,
+      );
 
-    case 'list_unread':
+    case "list_unread":
       return await MessagesAPI.listUnread(params.accountId, params.limit);
 
-    case 'get':
-      return await MessagesAPI.get(params.messageId, 'headers');
+    case "get":
+      return await MessagesAPI.get(params.messageId, "headers");
 
-    case 'getFull':
-      return await MessagesAPI.get(params.messageId, 'full');
+    case "getFull":
+      return await MessagesAPI.get(params.messageId, "full");
 
-    case 'getRaw':
-      return await MessagesAPI.get(params.messageId, 'raw');
+    case "getRaw":
+      return await MessagesAPI.get(params.messageId, "raw");
 
-    case 'update':
+    case "update":
       await MessagesAPI.update(params.messageId, params);
       return { success: true };
 
-    case 'move':
+    case "move":
       await MessagesAPI.move(params.messageIds, params.destinationFolderId);
       return { success: true };
 
-    case 'copy':
+    case "copy":
       await MessagesAPI.copy(params.messageIds, params.destinationFolderId);
       return { success: true };
 
-    case 'delete':
+    case "delete":
       await MessagesAPI.delete(params.messageIds, params.permanent);
       return { success: true };
 
-    case 'archive':
+    case "archive":
       await MessagesAPI.archive(params.messageIds);
       return { success: true };
 
@@ -144,27 +151,27 @@ async function handleMessagesAPI(action, params) {
  */
 async function handleFoldersAPI(action, params) {
   switch (action) {
-    case 'list':
+    case "list":
       return await FoldersAPI.list(params.accountId, params.includeSubFolders);
 
-    case 'get':
+    case "get":
       return await FoldersAPI.get(params.folderId);
 
-    case 'create':
+    case "create":
       return await FoldersAPI.create(params.parentFolderId, params.name);
 
-    case 'rename':
+    case "rename":
       return await FoldersAPI.rename(params.folderId, params.newName);
 
-    case 'delete':
+    case "delete":
       await FoldersAPI.delete(params.folderId);
       return { success: true };
 
-    case 'move':
+    case "move":
       await FoldersAPI.move(params.folderId, params.destinationFolderId);
       return { success: true };
 
-    case 'markAsRead':
+    case "markAsRead":
       await FoldersAPI.markAsRead(params.folderId);
       return { success: true };
 
@@ -178,23 +185,34 @@ async function handleFoldersAPI(action, params) {
  */
 async function handleContactsAPI(action, params) {
   switch (action) {
-    case 'search':
-      return await ContactsAPI.searchContacts(params.query, params.addressBookId, params.limit);
+    case "search":
+      return await ContactsAPI.searchContacts(
+        params.query,
+        params.addressBookId,
+        params.limit,
+      );
 
-    case 'list':
-      return await ContactsAPI.listContacts(params.addressBookId, params.limit, params.offset);
+    case "list":
+      return await ContactsAPI.listContacts(
+        params.addressBookId,
+        params.limit,
+        params.offset,
+      );
 
-    case 'get':
+    case "get":
       return await ContactsAPI.getContact(params.contactId);
 
-    case 'create':
-      return await ContactsAPI.createContact(params.addressBookId, params.properties);
+    case "create":
+      return await ContactsAPI.createContact(
+        params.addressBookId,
+        params.properties,
+      );
 
-    case 'update':
+    case "update":
       await ContactsAPI.updateContact(params.contactId, params.properties);
       return { success: true };
 
-    case 'delete':
+    case "delete":
       await ContactsAPI.deleteContact(params.contactId);
       return { success: true };
 
@@ -208,13 +226,13 @@ async function handleContactsAPI(action, params) {
  */
 async function handleAddressBooksAPI(action, params) {
   switch (action) {
-    case 'list':
+    case "list":
       return await ContactsAPI.listAddressBooks();
 
-    case 'create':
+    case "create":
       return await ContactsAPI.createAddressBook(params.name);
 
-    case 'delete':
+    case "delete":
       await ContactsAPI.deleteAddressBook(params.addressBookId);
       return { success: true };
 
@@ -228,10 +246,10 @@ async function handleAddressBooksAPI(action, params) {
  */
 async function handleAccountsAPI(action, params) {
   switch (action) {
-    case 'list':
+    case "list":
       return await AccountsAPI.list();
 
-    case 'get':
+    case "get":
       return await AccountsAPI.get(params.accountId);
 
     default:
@@ -244,7 +262,7 @@ async function handleAccountsAPI(action, params) {
  */
 async function handleIdentitiesAPI(action, params) {
   switch (action) {
-    case 'list':
+    case "list":
       return await AccountsAPI.listIdentities(params.accountId);
 
     default:
@@ -257,18 +275,18 @@ async function handleIdentitiesAPI(action, params) {
  */
 async function handleTagsAPI(action, params) {
   switch (action) {
-    case 'list':
+    case "list":
       return await TagsAPI.list();
 
-    case 'create':
+    case "create":
       await TagsAPI.create(params.key, params.tag, params.color);
       return { success: true };
 
-    case 'update':
+    case "update":
       await TagsAPI.update(params.key, params);
       return { success: true };
 
-    case 'delete':
+    case "delete":
       await TagsAPI.delete(params.key);
       return { success: true };
 
@@ -282,10 +300,10 @@ async function handleTagsAPI(action, params) {
  */
 async function handleCalendarsAPI(action, params) {
   switch (action) {
-    case 'list':
+    case "list":
       return await CalendarAPI.listCalendars();
 
-    case 'get':
+    case "get":
       return await CalendarAPI.getCalendar(params.calendarId);
 
     default:
@@ -298,35 +316,39 @@ async function handleCalendarsAPI(action, params) {
  */
 async function handleEventsAPI(action, params) {
   switch (action) {
-    case 'search':
+    case "search":
       return await CalendarAPI.searchEvents(params);
 
-    case 'list':
+    case "list":
       return await CalendarAPI.listEvents(
         params.calendarId,
         params.dateFrom,
         params.dateTo,
-        params.limit
+        params.limit,
       );
 
-    case 'get':
+    case "get":
       return await CalendarAPI.getEvent(params.calendarId, params.eventId);
 
-    case 'create':
+    case "create":
       return await CalendarAPI.createEvent(params.calendarId, params);
 
-    case 'update':
-      return await CalendarAPI.updateEvent(params.calendarId, params.eventId, params);
+    case "update":
+      return await CalendarAPI.updateEvent(
+        params.calendarId,
+        params.eventId,
+        params,
+      );
 
-    case 'move':
+    case "move":
       return await CalendarAPI.moveEvent(
         params.calendarId,
         params.eventId,
         params.newStart,
-        params.newEnd
+        params.newEnd,
       );
 
-    case 'delete':
+    case "delete":
       await CalendarAPI.deleteEvent(params.calendarId, params.eventId);
       return { success: true };
 
@@ -340,26 +362,65 @@ async function handleEventsAPI(action, params) {
  */
 async function handleTasksAPI(action, params) {
   switch (action) {
-    case 'list':
+    case "list":
       return await CalendarAPI.listTasks(params);
 
-    case 'get':
+    case "get":
       return await CalendarAPI.getTask(params.calendarId, params.taskId);
 
-    case 'create':
+    case "create":
       return await CalendarAPI.createTask(params.calendarId, params);
 
-    case 'update':
-      return await CalendarAPI.updateTask(params.calendarId, params.taskId, params);
+    case "update":
+      return await CalendarAPI.updateTask(
+        params.calendarId,
+        params.taskId,
+        params,
+      );
 
-    case 'complete':
+    case "complete":
       return await CalendarAPI.completeTask(params.calendarId, params.taskId);
 
-    case 'delete':
+    case "delete":
       await CalendarAPI.deleteTask(params.calendarId, params.taskId);
       return { success: true };
 
     default:
       throw new Error(`Unknown tasks action: ${action}`);
+  }
+}
+
+/**
+ * Handle Compose API calls
+ */
+async function handleComposeAPI(action, params) {
+  switch (action) {
+    case "beginNew":
+      return await ComposeAPI.beginNew(params);
+
+    case "beginReply":
+      return await ComposeAPI.beginReply(params.messageId, params.replyType);
+
+    case "beginForward":
+      return await ComposeAPI.beginForward(params.messageId, params.forwardType);
+
+    case "getDetails":
+      return await ComposeAPI.getDetails(params.tabId);
+
+    case "setDetails":
+      await ComposeAPI.setDetails(params.tabId, params);
+      return { success: true };
+
+    case "saveDraft":
+      return await ComposeAPI.saveDraft(params.tabId);
+
+    case "saveTemplate":
+      return await ComposeAPI.saveTemplate(params.tabId);
+
+    case "send":
+      return await ComposeAPI.send(params.tabId, params.mode);
+
+    default:
+      throw new Error(`Unknown compose action: ${action}`);
   }
 }

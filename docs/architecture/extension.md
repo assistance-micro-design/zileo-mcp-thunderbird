@@ -83,7 +83,9 @@ graph TB
 ## Background Script (Service Worker)
 
 ### Purpose
+
 The background script is the main entry point and coordinator for the extension. As a Manifest V3 service worker, it:
+
 - Remains dormant until needed (event-driven)
 - Manages Native Messaging port lifecycle
 - Routes incoming requests to appropriate API wrappers
@@ -120,6 +122,7 @@ sequenceDiagram
 ```
 
 ### Key Responsibilities
+
 1. **Connection Management**: Handle Native Messaging port lifecycle
 2. **Request Routing**: Dispatch requests to correct API wrapper
 3. **Error Handling**: Catch and format errors for MCP protocol
@@ -127,6 +130,7 @@ sequenceDiagram
 5. **State Management**: Maintain minimal state for active operations
 
 ### Implementation Pattern
+
 ```javascript
 // Background script structure
 let nativePort = null;
@@ -167,6 +171,7 @@ Each API wrapper module encapsulates operations for a specific Thunderbird API d
 **Purpose**: Handle all email message operations
 
 **Functions**:
+
 - `searchMessages(params)` - Advanced message search
 - `listMessages(folderId, limit, offset)` - Paginated message listing
 - `getMessage(messageId, format)` - Retrieve single message
@@ -177,6 +182,7 @@ Each API wrapper module encapsulates operations for a specific Thunderbird API d
 - `archiveMessages(messageIds)` - Archive messages
 
 **Thunderbird APIs Used**:
+
 - `messenger.messages.list()`
 - `messenger.messages.get()`
 - `messenger.messages.query()`
@@ -191,6 +197,7 @@ Each API wrapper module encapsulates operations for a specific Thunderbird API d
 **Purpose**: Manage folder hierarchy and operations
 
 **Functions**:
+
 - `listFolders(accountId, includeSubFolders)` - List folder tree
 - `getFolder(folderId)` - Get folder details
 - `createFolder(parentFolderId, name)` - Create new folder
@@ -200,6 +207,7 @@ Each API wrapper module encapsulates operations for a specific Thunderbird API d
 - `markAllRead(folderId)` - Mark all messages as read
 
 **Thunderbird APIs Used**:
+
 - `messenger.folders.query()`
 - `messenger.folders.get()`
 - `messenger.folders.create()`
@@ -212,6 +220,7 @@ Each API wrapper module encapsulates operations for a specific Thunderbird API d
 **Purpose**: Manage contacts and address books
 
 **Functions**:
+
 - `searchContacts(query, addressBookId, limit)` - Search contacts
 - `listContacts(addressBookId, limit, offset)` - List contacts
 - `getContact(contactId)` - Get contact details
@@ -223,6 +232,7 @@ Each API wrapper module encapsulates operations for a specific Thunderbird API d
 - `deleteAddressBook(addressBookId)` - Delete address book
 
 **Thunderbird APIs Used**:
+
 - `messenger.addressBooks.list()`
 - `messenger.addressBooks.get()`
 - `messenger.addressBooks.create()`
@@ -239,11 +249,13 @@ Each API wrapper module encapsulates operations for a specific Thunderbird API d
 **Purpose**: Access account and identity information
 
 **Functions**:
+
 - `listAccounts()` - List all mail accounts
 - `getAccount(accountId)` - Get account details
 - `listIdentities(accountId)` - List account identities
 
 **Thunderbird APIs Used**:
+
 - `messenger.accounts.list()`
 - `messenger.accounts.get()`
 - `messenger.identities.list()`
@@ -253,12 +265,14 @@ Each API wrapper module encapsulates operations for a specific Thunderbird API d
 **Purpose**: Manage message tags/labels
 
 **Functions**:
+
 - `listTags()` - List all tags
 - `createTag(key, tag, color)` - Create new tag
 - `updateTag(key, tag, color)` - Update tag
 - `deleteTag(key)` - Delete tag
 
 **Thunderbird APIs Used**:
+
 - `messenger.messages.tags.list()`
 - `messenger.messages.tags.create()`
 - `messenger.messages.tags.update()`
@@ -296,6 +310,7 @@ graph LR
 ### Experiment Structure
 
 **schema.json**: Defines the JavaScript API surface
+
 ```json
 [
   {
@@ -326,9 +341,10 @@ graph LR
 ```
 
 **api.js**: Parent process implementation
+
 ```javascript
 var { ExtensionCommon } = ChromeUtils.import(
-  "resource://gre/modules/ExtensionCommon.jsm"
+  "resource://gre/modules/ExtensionCommon.jsm",
 );
 
 this.calendar = class extends ExtensionCommon.ExtensionAPI {
@@ -337,18 +353,19 @@ this.calendar = class extends ExtensionCommon.ExtensionAPI {
       calendar: {
         async listCalendars() {
           // Access Thunderbird calendar manager
-          const calMgr = Cc["@mozilla.org/calendar/manager;1"]
-            .getService(Ci.calICalendarManager);
+          const calMgr = Cc["@mozilla.org/calendar/manager;1"].getService(
+            Ci.calICalendarManager,
+          );
 
           const calendars = calMgr.getCalendars();
-          return calendars.map(cal => ({
+          return calendars.map((cal) => ({
             id: cal.id,
             name: cal.name,
             type: cal.type,
-            readOnly: cal.readOnly
+            readOnly: cal.readOnly,
           }));
-        }
-      }
+        },
+      },
     };
   }
 };
@@ -357,6 +374,7 @@ this.calendar = class extends ExtensionCommon.ExtensionAPI {
 ### Calendar Operations
 
 **Events**:
+
 - `calendar.listCalendars()` - List all calendars
 - `calendar.listEvents(calendarId, startDate, endDate)` - List events
 - `calendar.getEvent(eventId, calendarId)` - Get event details
@@ -365,6 +383,7 @@ this.calendar = class extends ExtensionCommon.ExtensionAPI {
 - `calendar.deleteEvent(eventId, calendarId)` - Delete event
 
 **Tasks**:
+
 - `calendar.listTasks(calendarId, filter)` - List tasks
 - `calendar.getTask(taskId, calendarId)` - Get task details
 - `calendar.createTask(calendarId, task)` - Create task
@@ -375,6 +394,7 @@ this.calendar = class extends ExtensionCommon.ExtensionAPI {
 ## Native Messaging Handler
 
 ### Purpose
+
 Manages bidirectional communication between extension and MCP server using Native Messaging protocol.
 
 ### Message Flow
@@ -401,6 +421,7 @@ sequenceDiagram
 ### Protocol Implementation
 
 **Message Format**:
+
 ```javascript
 // Request
 {
@@ -434,6 +455,7 @@ sequenceDiagram
 ### Error Handling
 
 **Error Categories**:
+
 1. **Protocol Errors**: Invalid JSON, missing fields
 2. **Permission Errors**: API access denied by Thunderbird
 3. **Not Found Errors**: Resource doesn't exist
@@ -441,6 +463,7 @@ sequenceDiagram
 5. **Internal Errors**: Unexpected extension errors
 
 **Error Mapping**:
+
 ```javascript
 function mapError(error) {
   if (error.message.includes("permission")) {
@@ -460,44 +483,47 @@ function mapError(error) {
 ```json
 {
   "permissions": [
-    "messagesRead",       // Read message headers and content
-    "messagesMove",       // Move, copy, delete messages
-    "messagesUpdate",     // Update message properties
-    "messagesTags",       // Create and manage tags
-    "accountsRead",       // Read account information
-    "accountsFolders",    // Manage folder structure
-    "addressBooks",       // Full contact management
-    "nativeMessaging"     // Communication with MCP server
+    "messagesRead", // Read message headers and content
+    "messagesMove", // Move, copy, delete messages
+    "messagesUpdate", // Update message properties
+    "messagesTags", // Create and manage tags
+    "accountsRead", // Read account information
+    "accountsFolders", // Manage folder structure
+    "addressBooks", // Full contact management
+    "nativeMessaging" // Communication with MCP server
   ]
 }
 ```
 
 ### Permission Scopes
 
-| Permission | Scope | Risk Level |
-|-----------|-------|------------|
-| `messagesRead` | Read all message content | Medium |
-| `messagesMove` | Modify message location | Low |
-| `messagesUpdate` | Change message flags | Low |
-| `messagesTags` | Manage tags | Low |
-| `accountsRead` | View account details | Low |
-| `accountsFolders` | Create/delete folders | Medium |
-| `addressBooks` | Full contact access | Medium |
-| `nativeMessaging` | External communication | High |
+| Permission        | Scope                    | Risk Level |
+| ----------------- | ------------------------ | ---------- |
+| `messagesRead`    | Read all message content | Medium     |
+| `messagesMove`    | Modify message location  | Low        |
+| `messagesUpdate`  | Change message flags     | Low        |
+| `messagesTags`    | Manage tags              | Low        |
+| `accountsRead`    | View account details     | Low        |
+| `accountsFolders` | Create/delete folders    | Medium     |
+| `addressBooks`    | Full contact access      | Medium     |
+| `nativeMessaging` | External communication   | High       |
 
 ### Security Considerations
 
 **Data Minimization**:
+
 - Extension requests minimum required permissions
 - Headers-only access by default
 - Full body content on explicit request only
 
 **Sandboxing**:
+
 - Extension runs in isolated context
 - Native Messaging provides IPC sandbox
 - No direct filesystem or network access
 
 **User Consent**:
+
 - All permissions shown at installation
 - User can revoke extension at any time
 - Operations logged for audit trail
@@ -505,6 +531,7 @@ function mapError(error) {
 ## Localization
 
 ### Structure
+
 ```
 _locales/
 ├── en/
@@ -516,6 +543,7 @@ _locales/
 ```
 
 ### Message Format
+
 ```json
 {
   "extensionName": {
@@ -534,6 +562,7 @@ _locales/
 ```
 
 ### Usage
+
 ```javascript
 // In extension code
 const message = browser.i18n.getMessage("errorPermissionDenied");
@@ -542,18 +571,21 @@ const message = browser.i18n.getMessage("errorPermissionDenied");
 ## Testing Strategy
 
 ### Unit Tests
+
 - API wrapper function isolation
 - Message format validation
 - Error handling logic
 - Permission checking
 
 ### Integration Tests
+
 - Native Messaging communication
 - End-to-end API call flow
 - Error propagation
 - Timeout handling
 
 ### Manual Tests
+
 - Extension installation
 - Permission approval
 - Real Thunderbird data
@@ -562,16 +594,19 @@ const message = browser.i18n.getMessage("errorPermissionDenied");
 ## Performance Optimization
 
 ### Caching Strategy
+
 - Cache folder structure (invalidate on change events)
 - Cache account list (rarely changes)
 - No caching of message content (privacy)
 
 ### Batch Operations
+
 - Support batch message operations
 - Reduce round-trips for bulk updates
 - Paginate large result sets
 
 ### Lazy Loading
+
 - Load message bodies on demand
 - Defer contact photo loading
 - Stream large calendar ranges
@@ -579,16 +614,19 @@ const message = browser.i18n.getMessage("errorPermissionDenied");
 ## Error Recovery
 
 ### Retry Logic
+
 - Retry transient errors (3 attempts)
 - Exponential backoff for rate limits
 - Fail fast for permission errors
 
 ### Graceful Degradation
+
 - Return partial results on timeout
 - Continue on individual item errors
 - Log errors for debugging
 
 ### State Consistency
+
 - Rollback on failed batch operations
 - Validate state after mutations
 - Provide transaction-like semantics where possible

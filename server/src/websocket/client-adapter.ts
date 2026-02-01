@@ -4,15 +4,15 @@
  * @module websocket/client-adapter
  */
 
-import { getWebSocketBridge, type WsMessage } from './bridge.js';
-import logger from '../utils/logger.js';
+import { getWebSocketBridge, type WsMessage } from "./bridge.js";
+import logger from "../utils/logger.js";
 
 /**
  * Response type matching the native messaging format
  */
 export interface ClientResponse {
   id: string;
-  type: 'response';
+  type: "response";
   success: boolean;
   data?: unknown;
   error?: { code: number; message: string; data?: unknown };
@@ -30,19 +30,19 @@ class WebSocketClientAdapter {
   async sendRequest(
     action: string,
     params: Record<string, unknown> = {},
-    timeout?: number
+    timeout?: number,
   ): Promise<ClientResponse> {
     const bridge = getWebSocketBridge();
 
     if (!bridge.isConnected()) {
-      throw new Error('Not connected to Thunderbird extension');
+      throw new Error("Not connected to Thunderbird extension");
     }
 
     const response = await bridge.sendRequest(action, params, timeout);
 
     return {
       id: response.id,
-      type: 'response',
+      type: "response",
       success: response.success ?? true,
       data: response.data,
       error: response.error,

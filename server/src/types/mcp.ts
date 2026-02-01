@@ -14,7 +14,7 @@ export type JsonRpcId = string | number;
 /** JSON-RPC 2.0 request */
 export interface JsonRpcRequest {
   /** JSON-RPC version (always "2.0") */
-  jsonrpc: '2.0';
+  jsonrpc: "2.0";
   /** Request ID (must be present for requests, absent for notifications) */
   id?: JsonRpcId;
   /** Method name */
@@ -26,7 +26,7 @@ export interface JsonRpcRequest {
 /** JSON-RPC 2.0 success response */
 export interface JsonRpcSuccessResponse {
   /** JSON-RPC version (always "2.0") */
-  jsonrpc: '2.0';
+  jsonrpc: "2.0";
   /** Request ID (same as request) */
   id: JsonRpcId;
   /** Result data */
@@ -46,7 +46,7 @@ export interface JsonRpcError {
 /** JSON-RPC 2.0 error response */
 export interface JsonRpcErrorResponse {
   /** JSON-RPC version (always "2.0") */
-  jsonrpc: '2.0';
+  jsonrpc: "2.0";
   /** Request ID (same as request) */
   id: JsonRpcId | null;
   /** Error details */
@@ -209,24 +209,24 @@ export interface ToolCallParams {
 }
 
 /** Content types */
-export type ContentType = 'text' | 'image' | 'resource';
+export type ContentType = "text" | "image" | "resource";
 
 /** Text content */
 export interface TextContent {
-  type: 'text';
+  type: "text";
   text: string;
 }
 
 /** Image content */
 export interface ImageContent {
-  type: 'image';
+  type: "image";
   data: string;
   mimeType: string;
 }
 
 /** Resource content */
 export interface ResourceContent {
-  type: 'resource';
+  type: "resource";
   resource: {
     uri: string;
     text?: string;
@@ -345,11 +345,11 @@ export interface PromptGetParams {
 }
 
 /** Prompt message role */
-export type PromptMessageRole = 'user' | 'assistant';
+export type PromptMessageRole = "user" | "assistant";
 
 /** Prompt message content */
 export interface PromptMessageContent {
-  type: 'text';
+  type: "text";
   text: string;
 }
 
@@ -375,7 +375,7 @@ export interface PromptGetResult {
 
 /** MCP notification (no id, no response expected) */
 export interface McpNotification {
-  jsonrpc: '2.0';
+  jsonrpc: "2.0";
   method: string;
   params?: Record<string, unknown>;
 }
@@ -383,32 +383,31 @@ export interface McpNotification {
 /** Notifications */
 export const McpNotifications = {
   /** Client has been initialized */
-  INITIALIZED: 'notifications/initialized',
+  INITIALIZED: "notifications/initialized",
   /** Tools list has changed */
-  TOOLS_LIST_CHANGED: 'notifications/tools/listChanged',
+  TOOLS_LIST_CHANGED: "notifications/tools/listChanged",
   /** Resources list has changed */
-  RESOURCES_LIST_CHANGED: 'notifications/resources/listChanged',
+  RESOURCES_LIST_CHANGED: "notifications/resources/listChanged",
   /** Prompts list has changed */
-  PROMPTS_LIST_CHANGED: 'notifications/prompts/listChanged',
+  PROMPTS_LIST_CHANGED: "notifications/prompts/listChanged",
 } as const;
 
 /** MCP methods */
 export const McpMethods = {
   /** Initialize connection */
-  INITIALIZE: 'initialize',
+  INITIALIZE: "initialize",
   /** List available tools */
-  TOOLS_LIST: 'tools/list',
+  TOOLS_LIST: "tools/list",
   /** Call a tool */
-  TOOLS_CALL: 'tools/call',
+  TOOLS_CALL: "tools/call",
   /** List available resources */
-  RESOURCES_LIST: 'resources/list',
+  RESOURCES_LIST: "resources/list",
   /** Read a resource */
-  RESOURCES_READ: 'resources/read',
+  RESOURCES_READ: "resources/read",
   /** List available prompts */
-  PROMPTS_LIST: 'prompts/list',
+  PROMPTS_LIST: "prompts/list",
   /** Get a prompt */
-  PROMPTS_GET: 'prompts/get',
+  PROMPTS_GET: "prompts/get",
   /** Ping (health check) */
-  PING: 'ping',
+  PING: "ping",
 } as const;
-

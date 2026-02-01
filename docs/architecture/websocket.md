@@ -9,12 +9,14 @@ The WebSocket bridge provides bidirectional communication between the MCP server
 ### Technical Rationale
 
 **Problem**: Traditional Native Messaging has limitations
+
 - Complex platform-specific manifest configuration
 - No built-in connection state awareness
 - Limited error handling and reconnection capabilities
 - More complex debugging workflow
 
 **Solution**: WebSocket bridge on localhost
+
 - Bidirectional real-time communication
 - Built-in connection state tracking
 - Auto-reconnect with exponential backoff
@@ -24,6 +26,7 @@ The WebSocket bridge provides bidirectional communication between the MCP server
 ### Trade-offs
 
 **Advantages**:
+
 - ✅ Bidirectional real-time communication
 - ✅ Connection state awareness (onopen, onclose, onerror)
 - ✅ Auto-reconnect capability built-in
@@ -34,6 +37,7 @@ The WebSocket bridge provides bidirectional communication between the MCP server
 - ✅ Single localhost port (9876)
 
 **Limitations**:
+
 - ⚠️ Requires localhost port availability
 - ⚠️ Single Thunderbird extension connection (by design)
 - ⚠️ Security limited to localhost binding
@@ -47,10 +51,10 @@ Starting with version 1.2.0, the WebSocket bridge supports multiple MCP client c
 
 The bridge uses HTTP upgrade path routing to differentiate connection types:
 
-| Path | Client Type | Max Connections | Purpose |
-|------|-------------|-----------------|---------|
-| `/` or `/thunderbird` | Thunderbird Extension | 1 | Handles API requests |
-| `/mcp` | MCP Client Instances | Unlimited | Sends requests via bridge |
+| Path                  | Client Type           | Max Connections | Purpose                   |
+| --------------------- | --------------------- | --------------- | ------------------------- |
+| `/` or `/thunderbird` | Thunderbird Extension | 1               | Handles API requests      |
+| `/mcp`                | MCP Client Instances  | Unlimited       | Sends requests via bridge |
 
 ### Architecture Diagram
 
@@ -134,6 +138,7 @@ curl http://localhost:9876/health
 ```
 
 Response:
+
 ```json
 {
   "status": "ok",
@@ -149,27 +154,30 @@ Response:
 WebSocket bridge uses JSON messages with correlation IDs for request/response matching.
 
 **Message Structure**:
+
 ```typescript
 interface WsMessage {
-  id: string;                    // Unique message ID
-  type: 'request' | 'response' | 'notification';
-  action?: string;               // Action name for requests
-  event?: string;                // Event name for notifications
-  params?: Record<string, unknown>;  // Request parameters
-  data?: unknown;                // Response data
-  success?: boolean;             // Response status
-  error?: {                      // Error details
+  id: string; // Unique message ID
+  type: "request" | "response" | "notification";
+  action?: string; // Action name for requests
+  event?: string; // Event name for notifications
+  params?: Record<string, unknown>; // Request parameters
+  data?: unknown; // Response data
+  success?: boolean; // Response status
+  error?: {
+    // Error details
     code: number;
     message: string;
     data?: unknown;
   };
-  timestamp: string;             // ISO 8601 timestamp
+  timestamp: string; // ISO 8601 timestamp
 }
 ```
 
 ### Message Direction
 
 **Server → Extension (Request)**:
+
 ```json
 {
   "id": "req_1_1733410000000",
@@ -185,6 +193,7 @@ interface WsMessage {
 ```
 
 **Extension → Server (Success Response)**:
+
 ```json
 {
   "id": "req_1_1733410000000",
@@ -205,6 +214,7 @@ interface WsMessage {
 ```
 
 **Extension → Server (Error Response)**:
+
 ```json
 {
   "id": "req_1_1733410000000",
@@ -223,6 +233,7 @@ interface WsMessage {
 ```
 
 **Extension → Server (Notification)**:
+
 ```json
 {
   "id": "ext_1733410000000_abc123",
@@ -230,7 +241,15 @@ interface WsMessage {
   "event": "ready",
   "data": {
     "version": "1.0.0",
-    "capabilities": ["messages", "folders", "contacts", "tags", "accounts", "calendar", "tasks"]
+    "capabilities": [
+      "messages",
+      "folders",
+      "contacts",
+      "tags",
+      "accounts",
+      "calendar",
+      "tasks"
+    ]
   },
   "timestamp": "2025-12-05T10:00:00.000Z"
 }
@@ -267,6 +286,7 @@ sequenceDiagram
 ```
 
 **Steps**:
+
 1. **Server Starts Bridge**: MCP server initializes WebSocket bridge on port 9876
 2. **Bridge Listens**: WebSocket server waits for connection on localhost:9876
 3. **Extension Connects**: Extension attempts connection on startup
@@ -342,6 +362,7 @@ sequenceDiagram
 ```
 
 **Reconnect Parameters**:
+
 - Max attempts: 10
 - Delay between attempts: 3 seconds (constant)
 - Total retry window: 30 seconds
@@ -373,6 +394,7 @@ stateDiagram-v2
 ```
 
 **States**:
+
 - **ServerStarting**: Bridge initializing
 - **Listening**: Server waiting for connection
 - **Connected**: WebSocket connection established
@@ -387,9 +409,10 @@ stateDiagram-v2
 ### Server-Side Bridge (TypeScript)
 
 **websocket/bridge.ts**:
+
 ```typescript
-import { WebSocketServer, WebSocket } from 'ws';
-import { EventEmitter } from 'events';
+import { WebSocketServer, WebSocket } from "ws";
+import { EventEmitter } from "events";
 
 export class WebSocketBridge extends EventEmitter {
   private wss: WebSocketServer | null = null;
@@ -400,11 +423,11 @@ export class WebSocketBridge extends EventEmitter {
   async start(): Promise<void> {
     this.wss = new WebSocketServer({ port: 9876 });
 
-    this.wss.on('listening', () => {
-      console.log('WebSocket bridge listening on port 9876');
+    this.wss.on("listening", () => {
+      console.log("WebSocket bridge listening on port 9876");
     });
 
-    this.wss.on('connection', (ws: WebSocket) => {
+    this.wss.on("connection", (ws: WebSocket) => {
       this.handleConnection(ws);
     });
   }
@@ -412,39 +435,39 @@ export class WebSocketBridge extends EventEmitter {
   private handleConnection(ws: WebSocket): void {
     // Only allow one client
     if (this.client) {
-      ws.close(1008, 'Only one client allowed');
+      ws.close(1008, "Only one client allowed");
       return;
     }
 
     this.client = ws;
-    this.emit('connected');
+    this.emit("connected");
 
-    ws.on('message', (data: Buffer) => {
+    ws.on("message", (data: Buffer) => {
       const message = JSON.parse(data.toString());
       this.handleMessage(message);
     });
 
-    ws.on('close', () => {
+    ws.on("close", () => {
       this.client = null;
-      this.rejectAllPending('Connection closed');
-      this.emit('disconnected');
+      this.rejectAllPending("Connection closed");
+      this.emit("disconnected");
     });
   }
 
   async sendRequest(
     action: string,
     params: Record<string, unknown>,
-    timeout: number = 30000
+    timeout: number = 30000,
   ): Promise<WsMessage> {
     if (!this.client || this.client.readyState !== WebSocket.OPEN) {
-      throw new Error('Not connected to Thunderbird extension');
+      throw new Error("Not connected to Thunderbird extension");
     }
 
     const requestId = `req_${++this.requestCounter}_${Date.now()}`;
 
     const request: WsMessage = {
       id: requestId,
-      type: 'request',
+      type: "request",
       action,
       params,
       timestamp: new Date().toISOString(),
@@ -476,6 +499,7 @@ export class WebSocketBridge extends EventEmitter {
 ### Extension-Side Client (JavaScript)
 
 **extension/background.js**:
+
 ```javascript
 let ws = null;
 let reconnectAttempts = 0;
@@ -495,17 +519,25 @@ function connectWebSocket() {
 }
 
 function handleOpen() {
-  console.log('[MCP] WebSocket connected');
+  console.log("[MCP] WebSocket connected");
   reconnectAttempts = 0;
 
   // Send ready notification
   sendMessage({
     id: generateId(),
-    type: 'notification',
-    event: 'ready',
+    type: "notification",
+    event: "ready",
     data: {
       version: browser.runtime.getManifest().version,
-      capabilities: ['messages', 'folders', 'contacts', 'tags', 'accounts', 'calendar', 'tasks'],
+      capabilities: [
+        "messages",
+        "folders",
+        "contacts",
+        "tags",
+        "accounts",
+        "calendar",
+        "tasks",
+      ],
     },
     timestamp: new Date().toISOString(),
   });
@@ -514,7 +546,7 @@ function handleOpen() {
 async function handleMessage(event) {
   const message = JSON.parse(event.data);
 
-  if (message.type === 'request') {
+  if (message.type === "request") {
     await processRequest(message);
   }
 }
@@ -525,7 +557,7 @@ async function processRequest(request) {
 
     sendMessage({
       id: request.id,
-      type: 'response',
+      type: "response",
       success: true,
       data: result.data !== undefined ? result.data : result,
       timestamp: new Date().toISOString(),
@@ -533,7 +565,7 @@ async function processRequest(request) {
   } catch (error) {
     sendMessage({
       id: request.id,
-      type: 'response',
+      type: "response",
       success: false,
       error: {
         code: -32603,
@@ -546,19 +578,21 @@ async function processRequest(request) {
 }
 
 function handleClose(event) {
-  console.log('[MCP] WebSocket closed:', event.code);
+  console.log("[MCP] WebSocket closed:", event.code);
   ws = null;
   scheduleReconnect();
 }
 
 function scheduleReconnect() {
   if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
-    console.error('[MCP] Max reconnection attempts reached');
+    console.error("[MCP] Max reconnection attempts reached");
     return;
   }
 
   reconnectAttempts++;
-  console.log(`[MCP] Reconnecting in ${RECONNECT_DELAY}ms (${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS})`);
+  console.log(
+    `[MCP] Reconnecting in ${RECONNECT_DELAY}ms (${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS})`,
+  );
 
   setTimeout(connectWebSocket, RECONNECT_DELAY);
 }
@@ -575,6 +609,7 @@ function sendMessage(message) {
 ### Extension Manifest
 
 **manifest.json**:
+
 ```json
 {
   "manifest_version": 3,
@@ -592,10 +627,7 @@ function sendMessage(message) {
     "accountsRead",
     "addressBooks"
   ],
-  "host_permissions": [
-    "ws://localhost:9876/*",
-    "http://localhost:9876/*"
-  ],
+  "host_permissions": ["ws://localhost:9876/*", "http://localhost:9876/*"],
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'self'; connect-src 'self' ws://localhost:9876"
   }
@@ -603,6 +635,7 @@ function sendMessage(message) {
 ```
 
 **Key Configuration**:
+
 - `host_permissions`: Allow WebSocket connection to localhost:9876
 - `content_security_policy`: Allow WebSocket connections in CSP
 - No platform-specific setup required
@@ -611,12 +644,14 @@ function sendMessage(message) {
 ### Server Configuration
 
 **Environment Variables**:
+
 ```bash
 THUNDERBIRD_PORT=9876    # WebSocket port (default: 9876)
 LOG_LEVEL=info           # Logging level
 ```
 
 **No Additional Setup Required**:
+
 - No registry entries (Windows)
 - No manifest files in system directories
 - No wrapper scripts
@@ -627,17 +662,20 @@ LOG_LEVEL=info           # Logging level
 ### Network Security
 
 **Localhost Binding**:
+
 - WebSocket server binds to 127.0.0.1 only
 - No external network exposure
 - Firewall configuration not required
 - No TLS needed (localhost traffic)
 
 **Single Client Enforcement**:
+
 - Bridge rejects additional connections
 - Close code 1008: "Only one client allowed"
 - Prevents unauthorized access attempts
 
 **Permission Model**:
+
 - Extension requires explicit host permissions
 - CSP enforces connection restrictions
 - User must install extension explicitly
@@ -645,12 +683,14 @@ LOG_LEVEL=info           # Logging level
 ### Data Security
 
 **Message Validation**:
+
 - JSON parsing with error handling
 - Request ID validation and correlation
 - Timeout enforcement prevents resource exhaustion
 - Pending request limit (100 max)
 
 **Error Handling**:
+
 - Stack traces sanitized in production
 - Sensitive data never logged
 - Error codes follow JSON-RPC standard
@@ -658,12 +698,14 @@ LOG_LEVEL=info           # Logging level
 ### Attack Surface
 
 **Potential Risks**:
+
 - Port availability conflicts
 - Malicious local process attempting connection
 - Message injection if port is hijacked
 - Resource exhaustion via pending requests
 
 **Mitigations**:
+
 - Single client connection limit
 - Request ID correlation prevents injection
 - Timeout and pending request limits
@@ -675,24 +717,28 @@ LOG_LEVEL=info           # Logging level
 ### Common Issues
 
 **1. Connection Refused**:
+
 - ✓ Check MCP server is running
 - ✓ Verify port 9876 is available
 - ✓ Check firewall allows localhost connections
 - ✓ Verify extension has host permissions
 
 **2. Auto-Reconnect Failing**:
+
 - ✓ Check WebSocket server is restarted
 - ✓ Verify 10 attempts not exhausted
 - ✓ Review browser console for errors
 - ✓ Check server logs for connection rejections
 
 **3. Request Timeout**:
+
 - ✓ Check server response time
 - ✓ Verify Thunderbird API is responsive
 - ✓ Review timeout configuration (default 30s)
 - ✓ Check for pending request queue overflow
 
 **4. Port Already in Use**:
+
 - ✓ Check for other processes on port 9876
 - ✓ Configure alternate port via THUNDERBIRD_PORT
 - ✓ Restart both server and extension
@@ -701,27 +747,30 @@ LOG_LEVEL=info           # Logging level
 ### Debugging
 
 **Server Side**:
+
 ```typescript
 // Enable debug logging
-process.env.LOG_LEVEL = 'debug';
+process.env.LOG_LEVEL = "debug";
 
 // Monitor connections
-bridge.on('connected', () => console.log('Client connected'));
-bridge.on('disconnected', () => console.log('Client disconnected'));
+bridge.on("connected", () => console.log("Client connected"));
+bridge.on("disconnected", () => console.log("Client disconnected"));
 ```
 
 **Extension Side**:
+
 ```javascript
 // Open Browser Console in Thunderbird
 // Tools → Developer Tools → Browser Console
 
 // Monitor WebSocket state
-ws.addEventListener('open', () => console.log('WS Open'));
-ws.addEventListener('close', (e) => console.log('WS Close:', e.code));
-ws.addEventListener('error', (e) => console.error('WS Error:', e));
+ws.addEventListener("open", () => console.log("WS Open"));
+ws.addEventListener("close", (e) => console.log("WS Close:", e.code));
+ws.addEventListener("error", (e) => console.error("WS Error:", e));
 ```
 
 **Network Inspection**:
+
 ```bash
 # Monitor WebSocket traffic
 wscat -c ws://localhost:9876
@@ -740,12 +789,14 @@ curl -i -N -H "Connection: Upgrade" -H "Upgrade: websocket" \
 ### Latency
 
 **WebSocket Overhead**:
+
 - Connection handshake: ~5-10ms (one-time)
 - Message serialization: ~1-2ms
 - Network transfer (localhost): ~1-5ms
 - Total overhead: ~10-20ms per request
 
 **Comparison to Native Messaging**:
+
 - Native Messaging: ~20-50ms overhead (IPC + serialization)
 - WebSocket: ~10-20ms overhead (network + serialization)
 - Improvement: ~2x faster for simple operations
@@ -753,12 +804,14 @@ curl -i -N -H "Connection: Upgrade" -H "Upgrade: websocket" \
 ### Throughput
 
 **Connection Capacity**:
+
 - Single WebSocket connection
 - Full-duplex bidirectional communication
 - No theoretical bandwidth limit (localhost)
 - Limited by Thunderbird API performance
 
 **Pending Request Management**:
+
 - Max 100 pending requests
 - Automatic queue cleanup on timeout
 - Per-request timeout enforcement (30s default)
@@ -768,24 +821,26 @@ curl -i -N -H "Connection: Upgrade" -H "Upgrade: websocket" \
 
 ### Key Differences
 
-| Aspect | Native Messaging | WebSocket Bridge |
-|--------|-----------------|------------------|
-| **Setup** | Platform-specific manifests | Environment variable only |
-| **Connection** | Process spawn + stdio | Network socket |
-| **State Awareness** | Manual tracking | Built-in onopen/onclose |
-| **Reconnect** | Manual implementation | Built-in with backoff |
-| **Debugging** | Complex (IPC inspection) | Standard network tools |
-| **Latency** | ~20-50ms | ~10-20ms |
-| **Security** | Process isolation | Localhost binding |
+| Aspect              | Native Messaging            | WebSocket Bridge          |
+| ------------------- | --------------------------- | ------------------------- |
+| **Setup**           | Platform-specific manifests | Environment variable only |
+| **Connection**      | Process spawn + stdio       | Network socket            |
+| **State Awareness** | Manual tracking             | Built-in onopen/onclose   |
+| **Reconnect**       | Manual implementation       | Built-in with backoff     |
+| **Debugging**       | Complex (IPC inspection)    | Standard network tools    |
+| **Latency**         | ~20-50ms                    | ~10-20ms                  |
+| **Security**        | Process isolation           | Localhost binding         |
 
 ### Compatibility
 
 **Client Adapter Layer**:
+
 - WebSocket bridge exposes same interface as Native Messaging client
 - Tool handlers require no changes
 - Drop-in replacement for existing code
 
 **Code Changes Required**:
+
 - ✅ Server: Replace Native Messaging client with WebSocket bridge
 - ✅ Extension: Replace message port with WebSocket client
 - ❌ Tool handlers: No changes needed (same interface)
@@ -799,10 +854,11 @@ curl -i -N -H "Connection: Upgrade" -H "Upgrade: websocket" \
 **Rationale**: Enable secure remote access
 
 **Implementation**:
+
 ```typescript
 const server = https.createServer({
-  cert: fs.readFileSync('cert.pem'),
-  key: fs.readFileSync('key.pem')
+  cert: fs.readFileSync("cert.pem"),
+  key: fs.readFileSync("key.pem"),
 });
 const wss = new WebSocketServer({ server });
 ```
@@ -812,6 +868,7 @@ const wss = new WebSocketServer({ server });
 **Rationale**: Multi-user or remote access scenarios
 
 **Token-based Auth**:
+
 ```json
 {
   "id": "req_1",
@@ -826,6 +883,7 @@ const wss = new WebSocketServer({ server });
 **Rationale**: Real-time notifications
 
 **Server-to-Extension**:
+
 ```json
 {
   "type": "notification",
@@ -841,6 +899,7 @@ const wss = new WebSocketServer({ server });
 **Rationale**: Reduce bandwidth for large payloads
 
 **Per-Message Compression**:
+
 ```typescript
 ws.send(JSON.stringify(message), { compress: true });
 ```

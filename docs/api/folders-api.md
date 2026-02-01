@@ -17,14 +17,15 @@ The Folders API provides complete folder management capabilities including listi
 List all folders for an account or across all accounts.
 
 #### Description
+
 Retrieves the folder hierarchy with optional subfolder inclusion and account filtering.
 
 #### Parameters
 
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `accountId` | string | No | Specific account ID to list folders from (omit for all accounts) |
-| `includeSubFolders` | boolean | No | Include nested subfolders in results (default: true) |
+| Name                | Type    | Required | Description                                                      |
+| ------------------- | ------- | -------- | ---------------------------------------------------------------- |
+| `accountId`         | string  | No       | Specific account ID to list folders from (omit for all accounts) |
+| `includeSubFolders` | boolean | No       | Include nested subfolders in results (default: true)             |
 
 #### Response Format
 
@@ -87,10 +88,12 @@ Retrieves the folder hierarchy with optional subfolder inclusion and account fil
   "jsonrpc": "2.0",
   "id": "req-010",
   "result": {
-    "content": [{
-      "type": "text",
-      "text": "[{\"id\":\"inbox-1\",\"accountId\":\"account-1\",\"name\":\"Inbox\",\"path\":\"/Inbox\",\"type\":\"inbox\",\"totalMessageCount\":250,\"unreadMessageCount\":15,\"subFolders\":[{\"id\":\"folder-clients-1\",\"name\":\"Clients\",\"path\":\"/Inbox/Clients\",\"type\":\"folder\",\"totalMessageCount\":78,\"unreadMessageCount\":5,\"subFolders\":[]}]}]"
-    }]
+    "content": [
+      {
+        "type": "text",
+        "text": "[{\"id\":\"inbox-1\",\"accountId\":\"account-1\",\"name\":\"Inbox\",\"path\":\"/Inbox\",\"type\":\"inbox\",\"totalMessageCount\":250,\"unreadMessageCount\":15,\"subFolders\":[{\"id\":\"folder-clients-1\",\"name\":\"Clients\",\"path\":\"/Inbox/Clients\",\"type\":\"folder\",\"totalMessageCount\":78,\"unreadMessageCount\":5,\"subFolders\":[]}]}]"
+      }
+    ]
   }
 }
 ```
@@ -102,13 +105,14 @@ Retrieves the folder hierarchy with optional subfolder inclusion and account fil
 Get detailed information about a specific folder.
 
 #### Description
+
 Retrieves complete metadata for a single folder including statistics and properties.
 
 #### Parameters
 
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `folderId` | string | Yes | Unique identifier of the folder |
+| Name       | Type   | Required | Description                     |
+| ---------- | ------ | -------- | ------------------------------- |
+| `folderId` | string | Yes      | Unique identifier of the folder |
 
 #### Response Format
 
@@ -155,16 +159,17 @@ Retrieves complete metadata for a single folder including statistics and propert
 Create a new subfolder within an existing folder.
 
 #### Description
+
 Creates a new folder as a child of the specified parent folder.
 
 **Permission Required**: `accountsFolders`
 
 #### Parameters
 
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `parentFolderId` | string | Yes | ID of the parent folder |
-| `name` | string | Yes | Name of the new folder (no path separators) |
+| Name             | Type   | Required | Description                                 |
+| ---------------- | ------ | -------- | ------------------------------------------- |
+| `parentFolderId` | string | Yes      | ID of the parent folder                     |
+| `name`           | string | Yes      | Name of the new folder (no path separators) |
 
 #### Response Format
 
@@ -200,11 +205,11 @@ Creates a new folder as a child of the specified parent folder.
 
 #### Error Codes
 
-| Code | Message | Description |
-|------|---------|-------------|
-| -32602 | Invalid params | Folder name contains invalid characters or is empty |
-| -32003 | Resource not found | Parent folder does not exist |
-| -32603 | Internal error | Folder already exists or creation failed |
+| Code   | Message            | Description                                         |
+| ------ | ------------------ | --------------------------------------------------- |
+| -32602 | Invalid params     | Folder name contains invalid characters or is empty |
+| -32003 | Resource not found | Parent folder does not exist                        |
+| -32603 | Internal error     | Folder already exists or creation failed            |
 
 ---
 
@@ -213,16 +218,17 @@ Creates a new folder as a child of the specified parent folder.
 Rename an existing folder.
 
 #### Description
+
 Changes the display name of a folder without affecting its contents or hierarchy.
 
 **Permission Required**: `accountsFolders`
 
 #### Parameters
 
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `folderId` | string | Yes | ID of the folder to rename |
-| `newName` | string | Yes | New name for the folder |
+| Name       | Type   | Required | Description                |
+| ---------- | ------ | -------- | -------------------------- |
+| `folderId` | string | Yes      | ID of the folder to rename |
+| `newName`  | string | Yes      | New name for the folder    |
 
 #### Response Format
 
@@ -269,15 +275,16 @@ Changes the display name of a folder without affecting its contents or hierarchy
 Delete a folder and optionally its contents.
 
 #### Description
+
 Removes a folder from the account. Messages within the folder may be deleted or moved to Trash depending on account settings.
 
 **Permission Required**: `accountsFolders`
 
 #### Parameters
 
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `folderId` | string | Yes | ID of the folder to delete |
+| Name       | Type   | Required | Description                |
+| ---------- | ------ | -------- | -------------------------- |
+| `folderId` | string | Yes      | ID of the folder to delete |
 
 #### Response Format
 
@@ -325,16 +332,17 @@ This operation cannot be undone. Messages may be recoverable from Trash unless p
 Move a folder to a different location in the hierarchy.
 
 #### Description
+
 Relocates a folder and all its contents to become a subfolder of another folder.
 
 **Permission Required**: `accountsFolders`
 
 #### Parameters
 
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `folderId` | string | Yes | ID of the folder to move |
-| `destinationFolderId` | string | Yes | ID of the new parent folder |
+| Name                  | Type   | Required | Description                 |
+| --------------------- | ------ | -------- | --------------------------- |
+| `folderId`            | string | Yes      | ID of the folder to move    |
+| `destinationFolderId` | string | Yes      | ID of the new parent folder |
 
 #### Response Format
 
@@ -381,16 +389,17 @@ Relocates a folder and all its contents to become a subfolder of another folder.
 Mark all messages in a folder as read.
 
 #### Description
+
 Bulk operation to mark all messages within a folder (and optionally subfolders) as read.
 
 **Permission Required**: `messagesUpdate`
 
 #### Parameters
 
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `folderId` | string | Yes | ID of the folder to mark read |
-| `includeSubFolders` | boolean | No | Also mark subfolders as read (default: false) |
+| Name                | Type    | Required | Description                                   |
+| ------------------- | ------- | -------- | --------------------------------------------- |
+| `folderId`          | string  | Yes      | ID of the folder to mark read                 |
+| `includeSubFolders` | boolean | No       | Also mark subfolders as read (default: false) |
 
 #### Response Format
 
@@ -429,15 +438,15 @@ Bulk operation to mark all messages within a folder (and optionally subfolders) 
 
 All folder operations may return these error codes:
 
-| Code | Message | Description |
-|------|---------|-------------|
-| -32000 | Thunderbird not running | Thunderbird application is not active |
-| -32001 | Extension not installed | Thunderbird MCP extension not found |
-| -32002 | Permission denied | Required permission not granted |
-| -32003 | Resource not found | Folder or account not found |
-| -32004 | Operation timeout | Operation exceeded timeout limit (10s) |
-| -32602 | Invalid params | Invalid or missing parameters |
-| -32603 | Internal error | Folder operation failed (name conflict, system folder, etc.) |
+| Code   | Message                 | Description                                                  |
+| ------ | ----------------------- | ------------------------------------------------------------ |
+| -32000 | Thunderbird not running | Thunderbird application is not active                        |
+| -32001 | Extension not installed | Thunderbird MCP extension not found                          |
+| -32002 | Permission denied       | Required permission not granted                              |
+| -32003 | Resource not found      | Folder or account not found                                  |
+| -32004 | Operation timeout       | Operation exceeded timeout limit (10s)                       |
+| -32602 | Invalid params          | Invalid or missing parameters                                |
+| -32603 | Internal error          | Folder operation failed (name conflict, system folder, etc.) |
 
 ---
 
@@ -464,6 +473,7 @@ All folder operations may return these error codes:
 ### Organization Patterns
 
 **By Project**:
+
 ```
 Inbox/
   ├── Project A/
@@ -472,6 +482,7 @@ Inbox/
 ```
 
 **By Date**:
+
 ```
 Archives/
   ├── 2023/
@@ -480,6 +491,7 @@ Archives/
 ```
 
 **By Client**:
+
 ```
 Clients/
   ├── ACME Corp/
@@ -505,16 +517,16 @@ These statistics are updated automatically by Thunderbird and reflect the curren
 
 Thunderbird maintains several special folders that have restrictions:
 
-| Folder Type | Can Rename | Can Delete | Can Move | Notes |
-|-------------|-----------|------------|----------|-------|
-| Inbox | No | No | No | Primary incoming mail folder |
-| Sent | No | No | No | Stores sent messages |
-| Drafts | No | No | No | Temporary draft storage |
-| Trash | No | No | No | Deleted messages |
-| Junk | No | No | No | Spam/junk messages |
-| Archives | No | No | No | Archive folder |
-| Templates | No | No | No | Message templates |
-| Custom | Yes | Yes | Yes | User-created folders |
+| Folder Type | Can Rename | Can Delete | Can Move | Notes                        |
+| ----------- | ---------- | ---------- | -------- | ---------------------------- |
+| Inbox       | No         | No         | No       | Primary incoming mail folder |
+| Sent        | No         | No         | No       | Stores sent messages         |
+| Drafts      | No         | No         | No       | Temporary draft storage      |
+| Trash       | No         | No         | No       | Deleted messages             |
+| Junk        | No         | No         | No       | Spam/junk messages           |
+| Archives    | No         | No         | No       | Archive folder               |
+| Templates   | No         | No         | No       | Message templates            |
+| Custom      | Yes        | Yes        | Yes      | User-created folders         |
 
 ---
 

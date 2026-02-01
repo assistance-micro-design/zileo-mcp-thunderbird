@@ -17,9 +17,11 @@ MCP Resources provide read-only access to contextual data from Thunderbird. Reso
 List of all configured email accounts in Thunderbird.
 
 #### Description
+
 Provides account metadata including identities, server information, and folder references. Useful for discovering available accounts before performing account-specific operations.
 
 #### URI Pattern
+
 ```
 thunderbird://accounts
 ```
@@ -95,17 +97,19 @@ thunderbird://accounts
 Folder hierarchy for a specific account.
 
 #### Description
+
 Returns the complete folder tree structure for an account including all subfolders, message counts, and folder metadata. Provides a hierarchical view useful for navigation and folder selection.
 
 #### URI Pattern
+
 ```
 thunderbird://folders/{accountId}
 ```
 
 #### Parameters
 
-| Parameter | Description | Example |
-|-----------|-------------|---------|
+| Parameter   | Description       | Example     |
+| ----------- | ----------------- | ----------- |
 | `accountId` | ID of the account | `account-1` |
 
 #### Response Format
@@ -179,9 +183,11 @@ thunderbird://folders/{accountId}
 All unread messages across all accounts.
 
 #### Description
+
 Returns a unified list of unread messages from all inbox folders across all configured accounts. Messages are sorted by date descending (newest first).
 
 #### URI Pattern
+
 ```
 thunderbird://inbox/unread
 ```
@@ -247,17 +253,19 @@ thunderbird://inbox/unread
 Unread messages for a specific account.
 
 #### Description
+
 Returns unread messages from the inbox of a specific account, allowing account-specific unread tracking.
 
 #### URI Pattern
+
 ```
 thunderbird://inbox/unread/{accountId}
 ```
 
 #### Parameters
 
-| Parameter | Description | Example |
-|-----------|-------------|---------|
+| Parameter   | Description       | Example     |
+| ----------- | ----------------- | ----------- |
 | `accountId` | ID of the account | `account-2` |
 
 #### Response Format
@@ -291,9 +299,11 @@ Same structure as `thunderbird://inbox/unread` but filtered to single account.
 Recently used or modified contacts.
 
 #### Description
+
 Returns contacts that have been recently created, modified, or used in email correspondence. Useful for quick access to frequently contacted people.
 
 #### URI Pattern
+
 ```
 thunderbird://contacts/recent
 ```
@@ -352,11 +362,13 @@ thunderbird://contacts/recent
 Events scheduled for today.
 
 #### Description
+
 Returns all calendar events occurring today across all enabled calendars. Updates automatically at midnight to reflect current day.
 
 > **Note**: Requires experimental calendarProvider API.
 
 #### URI Pattern
+
 ```
 thunderbird://calendar/today
 ```
@@ -427,11 +439,13 @@ thunderbird://calendar/today
 Events in the next 7 days.
 
 #### Description
+
 Returns upcoming calendar events for the next week, providing a forward-looking view of scheduled activities.
 
 > **Note**: Requires experimental calendarProvider API.
 
 #### URI Pattern
+
 ```
 thunderbird://calendar/upcoming
 ```
@@ -510,11 +524,13 @@ thunderbird://calendar/upcoming
 Incomplete tasks across all calendars.
 
 #### Description
+
 Returns all pending (not completed) tasks, optionally filtered by due date and priority.
 
 > **Note**: Requires experimental calendarProvider API.
 
 #### URI Pattern
+
 ```
 thunderbird://tasks/pending
 ```
@@ -622,11 +638,13 @@ All resource responses follow this structure:
   "jsonrpc": "2.0",
   "id": "unique-id",
   "result": {
-    "contents": [{
-      "uri": "thunderbird://resource-uri",
-      "mimeType": "application/json",
-      "text": "{...JSON data...}"
-    }]
+    "contents": [
+      {
+        "uri": "thunderbird://resource-uri",
+        "mimeType": "application/json",
+        "text": "{...JSON data...}"
+      }
+    ]
   }
 }
 ```
@@ -650,17 +668,20 @@ Response:
   "jsonrpc": "2.0",
   "id": "unique-id",
   "result": {
-    "resources": [{
-      "uri": "thunderbird://accounts",
-      "name": "Thunderbird Accounts",
-      "description": "List of all configured email accounts",
-      "mimeType": "application/json"
-    }, {
-      "uri": "thunderbird://folders/{accountId}",
-      "name": "Folder Hierarchy",
-      "description": "Folder tree for a specific account",
-      "mimeType": "application/json"
-    }]
+    "resources": [
+      {
+        "uri": "thunderbird://accounts",
+        "name": "Thunderbird Accounts",
+        "description": "List of all configured email accounts",
+        "mimeType": "application/json"
+      },
+      {
+        "uri": "thunderbird://folders/{accountId}",
+        "name": "Folder Hierarchy",
+        "description": "Folder tree for a specific account",
+        "mimeType": "application/json"
+      }
+    ]
   }
 }
 ```
@@ -671,13 +692,13 @@ Response:
 
 Resource operations may return these error codes:
 
-| Code | Message | Description |
-|------|---------|-------------|
+| Code   | Message                 | Description                           |
+| ------ | ----------------------- | ------------------------------------- |
 | -32000 | Thunderbird not running | Thunderbird application is not active |
-| -32001 | Extension not installed | Thunderbird MCP extension not found |
-| -32003 | Resource not found | Invalid URI or resource doesn't exist |
-| -32602 | Invalid params | Malformed URI or missing parameters |
-| -32603 | Internal error | Resource generation failed |
+| -32001 | Extension not installed | Thunderbird MCP extension not found   |
+| -32003 | Resource not found      | Invalid URI or resource doesn't exist |
+| -32602 | Invalid params          | Malformed URI or missing parameters   |
+| -32603 | Internal error          | Resource generation failed            |
 
 ---
 
@@ -705,15 +726,15 @@ Resource operations may return these error codes:
 
 Resource update frequencies:
 
-| Resource | Update Frequency | Cache Duration |
-|----------|-----------------|----------------|
-| accounts | Account changes | 5 minutes |
-| folders | Folder operations | 2 minutes |
-| inbox/unread | Message arrival | 30 seconds |
-| contacts/recent | Contact usage | 5 minutes |
-| calendar/today | Midnight UTC | Until midnight |
-| calendar/upcoming | Event changes | 5 minutes |
-| tasks/pending | Task updates | 2 minutes |
+| Resource          | Update Frequency  | Cache Duration |
+| ----------------- | ----------------- | -------------- |
+| accounts          | Account changes   | 5 minutes      |
+| folders           | Folder operations | 2 minutes      |
+| inbox/unread      | Message arrival   | 30 seconds     |
+| contacts/recent   | Contact usage     | 5 minutes      |
+| calendar/today    | Midnight UTC      | Until midnight |
+| calendar/upcoming | Event changes     | 5 minutes      |
+| tasks/pending     | Task updates      | 2 minutes      |
 
 ---
 

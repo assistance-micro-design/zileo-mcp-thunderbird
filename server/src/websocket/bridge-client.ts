@@ -4,10 +4,10 @@
  * @module websocket/bridge-client
  */
 
-import WebSocket from 'ws';
-import { EventEmitter } from 'events';
-import logger from '../utils/logger.js';
-import type { WsMessage, WebSocketBridgeOptions } from './bridge.js';
+import WebSocket from "ws";
+import { EventEmitter } from "events";
+import logger from "../utils/logger.js";
+import type { WsMessage, WebSocketBridgeOptions } from "./bridge.js";
 
 /**
  * Pending request info
@@ -60,38 +60,38 @@ export class WebSocketBridgeClient extends EventEmitter {
           reject(new Error(`Connection timeout to bridge at ${url}`));
         }, 5000);
 
-        this.ws.on('open', () => {
+        this.ws.on("open", () => {
           clearTimeout(connectionTimeout);
-          logger.info('Connected to existing WebSocket bridge');
+          logger.info("Connected to existing WebSocket bridge");
           this.reconnectAttempts = 0;
-          this.emit('connected');
+          this.emit("connected");
           resolve();
         });
 
-        this.ws.on('message', (data: Buffer) => {
+        this.ws.on("message", (data: Buffer) => {
           try {
             const message = JSON.parse(data.toString()) as WsMessage;
             this.handleMessage(message);
           } catch (error) {
-            logger.error('Failed to parse message:', error);
+            logger.error("Failed to parse message:", error);
           }
         });
 
-        this.ws.on('close', () => {
-          logger.info('Disconnected from WebSocket bridge');
+        this.ws.on("close", () => {
+          logger.info("Disconnected from WebSocket bridge");
           this.ws = null;
-          this.rejectAllPending('Connection closed');
-          this.emit('disconnected');
+          this.rejectAllPending("Connection closed");
+          this.emit("disconnected");
         });
 
-        this.ws.on('error', (error) => {
+        this.ws.on("error", (error) => {
           clearTimeout(connectionTimeout);
-          logger.error('WebSocket client error:', error);
-          this.emit('error', error);
+          logger.error("WebSocket client error:", error);
+          this.emit("error", error);
           reject(error);
         });
       } catch (error) {
-        logger.error('Failed to connect to WebSocket bridge:', error);
+        logger.error("Failed to connect to WebSocket bridge:", error);
         reject(error);
       }
     });
@@ -104,26 +104,30 @@ export class WebSocketBridgeClient extends EventEmitter {
     logger.debug(`Received message: ${message.type} (${message.id})`);
 
     switch (message.type) {
-      case 'response':
+      case "response":
         this.handleResponse(message);
         break;
-      case 'notification':
+      case "notification":
         // Handle welcome message from bridge
-        if (message.event === 'connected') {
-          const data = message.data as { thunderbirdConnected?: boolean } | undefined;
-          logger.info(`Bridge reports Thunderbird connected: ${data?.thunderbirdConnected ?? 'unknown'}`);
+        if (message.event === "connected") {
+          const data = message.data as
+            | { thunderbirdConnected?: boolean }
+            | undefined;
+          logger.info(
+            `Bridge reports Thunderbird connected: ${data?.thunderbirdConnected ?? "unknown"}`,
+          );
         }
-        this.emit('notification', message);
+        this.emit("notification", message);
         break;
-      case 'ping':
+      case "ping":
         // Respond to ping with pong
         this.sendPong(message.id);
         break;
-      case 'pong':
-        logger.debug('Pong received from bridge');
+      case "pong":
+        logger.debug("Pong received from bridge");
         break;
       default:
-        logger.warn('Unknown message type:', message);
+        logger.warn("Unknown message type:", message);
     }
   }
 
@@ -134,11 +138,11 @@ export class WebSocketBridgeClient extends EventEmitter {
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
       const pong: WsMessage = {
         id: pingId,
-        type: 'pong',
+        type: "pong",
         timestamp: new Date().toISOString(),
       };
       this.ws.send(JSON.stringify(pong));
-      logger.debug('Sent pong to bridge');
+      logger.debug("Sent pong to bridge");
     }
   }
 
@@ -161,7 +165,7 @@ export class WebSocketBridgeClient extends EventEmitter {
       pending.resolve(response);
     } else {
       logger.warn(`Request failed: ${pending.action}`, response.error);
-      pending.reject(new Error(response.error?.message || 'Request failed'));
+      pending.reject(new Error(response.error?.message || "Request failed"));
     }
   }
 
@@ -171,14 +175,14 @@ export class WebSocketBridgeClient extends EventEmitter {
   async sendRequest(
     action: string,
     params: Record<string, unknown> = {},
-    timeout?: number
+    timeout?: number,
   ): Promise<WsMessage> {
     if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
-      throw new Error('Not connected to WebSocket bridge');
+      throw new Error("Not connected to WebSocket bridge");
     }
 
     if (this.pendingRequests.size >= this.options.maxPendingRequests) {
-      throw new Error('Too many pending requests');
+      throw new Error("Too many pending requests");
     }
 
     const requestId = `req_${++this.requestCounter}_${Date.now()}`;
@@ -186,7 +190,7 @@ export class WebSocketBridgeClient extends EventEmitter {
 
     const request: WsMessage = {
       id: requestId,
-      type: 'request',
+      type: "request",
       action,
       params,
       timestamp: new Date().toISOString(),
@@ -239,13 +243,13 @@ export class WebSocketBridgeClient extends EventEmitter {
    * Disconnect from the bridge
    */
   async disconnect(): Promise<void> {
-    logger.info('Disconnecting from WebSocket bridge');
+    logger.info("Disconnecting from WebSocket bridge");
 
-    this.rejectAllPending('Client disconnecting');
+    this.rejectAllPending("Client disconnecting");
 
     return new Promise((resolve) => {
       if (this.ws) {
-        this.ws.once('close', () => {
+        this.ws.once("close", () => {
           this.ws = null;
           resolve();
         });
@@ -263,7 +267,7 @@ export class WebSocketBridgeClient extends EventEmitter {
  */
 export async function tryConnectToExistingBridge(
   port: number,
-  timeout: number = 30000
+  timeout: number = 30000,
 ): Promise<WebSocketBridgeClient | null> {
   const client = new WebSocketBridgeClient({
     port,
@@ -276,7 +280,9 @@ export async function tryConnectToExistingBridge(
     logger.info(`Successfully connected to existing bridge on port ${port}`);
     return client;
   } catch (error) {
-    logger.debug(`No existing bridge found on port ${port}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    logger.debug(
+      `No existing bridge found on port ${port}: ${error instanceof Error ? error.message : "Unknown error"}`,
+    );
     return null;
   }
 }

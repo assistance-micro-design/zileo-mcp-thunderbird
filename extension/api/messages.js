@@ -20,7 +20,7 @@ export const MessagesAPI = {
       dateFrom,
       dateTo,
       folderId,
-      limit = 50
+      limit = 50,
     } = params;
 
     const query = {};
@@ -29,7 +29,7 @@ export const MessagesAPI = {
     if (from) query.author = from;
     if (to) query.recipients = to;
     if (body) query.body = body;
-    if (tags.length > 0) query.tags = { tags, mode: 'any' };
+    if (tags.length > 0) query.tags = { tags, mode: "any" };
     if (unread !== undefined) query.read = !unread;
     if (dateFrom) query.fromDate = new Date(dateFrom);
     if (dateTo) query.toDate = new Date(dateTo);
@@ -58,7 +58,7 @@ export const MessagesAPI = {
       total: messages.length,
       limit,
       offset,
-      hasMore: offset + limit < messages.length
+      hasMore: offset + limit < messages.length,
     };
   },
 
@@ -79,7 +79,7 @@ export const MessagesAPI = {
       for (const folder of folders) {
         const messageList = await messenger.messages.query({
           ...query,
-          folderId: folder.id
+          folderId: folder.id,
         });
         allMessages.push(...messageList.messages);
       }
@@ -97,14 +97,16 @@ export const MessagesAPI = {
    * @param {string} format - Format: 'headers' | 'full' | 'raw'
    * @returns {Promise<Object>} Message details
    */
-  async get(messageId, format = 'headers') {
+  async get(messageId, format = "headers") {
     const message = await messenger.messages.get(messageId);
 
-    if (format === 'full') {
+    if (format === "full") {
       return await this.getFull(messageId);
-    } else if (format === 'raw') {
+    } else if (format === "raw") {
       // Request BinaryString format for JSON serialization (File format can't be serialized)
-      return await messenger.messages.getRaw(messageId, { data_format: 'BinaryString' });
+      return await messenger.messages.getRaw(messageId, {
+        data_format: "BinaryString",
+      });
     }
 
     return message;
@@ -118,13 +120,13 @@ export const MessagesAPI = {
   async getFull(messageId) {
     const [message, full] = await Promise.all([
       messenger.messages.get(messageId),
-      messenger.messages.getFull(messageId)
+      messenger.messages.getFull(messageId),
     ]);
 
     return {
       ...message,
       parts: full.parts || [],
-      headers: full.headers || {}
+      headers: full.headers || {},
     };
   },
 
@@ -219,5 +221,5 @@ export const MessagesAPI = {
     }
 
     return folders;
-  }
+  },
 };

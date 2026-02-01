@@ -9,11 +9,13 @@ Native Messaging is the core communication mechanism that bridges the MCP server
 ### Technical Rationale
 
 **Problem**: Thunderbird doesn't expose HTTP APIs or external interfaces
+
 - WebExtensions run in isolated browser context
 - No direct access to Thunderbird internals from external processes
 - Need secure communication between Node.js server and extension
 
 **Solution**: Native Messaging protocol
+
 - Browser-native IPC mechanism
 - Secure sandboxed communication
 - Platform-agnostic
@@ -22,6 +24,7 @@ Native Messaging is the core communication mechanism that bridges the MCP server
 ### Trade-offs
 
 **Advantages**:
+
 - ✅ Secure by design (sandboxed, permission-controlled)
 - ✅ Platform-agnostic protocol
 - ✅ Native browser integration
@@ -29,6 +32,7 @@ Native Messaging is the core communication mechanism that bridges the MCP server
 - ✅ No network overhead or firewall issues
 
 **Limitations**:
+
 - ⚠️ Requires native host installation
 - ⚠️ Platform-specific manifest configuration
 - ⚠️ ~1MB/s bandwidth theoretical limit
@@ -42,6 +46,7 @@ Native Messaging is the core communication mechanism that bridges the MCP server
 Native Messaging uses length-prefixed JSON messages for all communication.
 
 **Binary Structure**:
+
 ```
 ┌─────────────────────┬────────────────────────────────────────┐
 │    Length Prefix    │           JSON Payload                 │
@@ -51,6 +56,7 @@ Native Messaging uses length-prefixed JSON messages for all communication.
 ```
 
 **Components**:
+
 1. **Length Prefix**: 4-byte unsigned integer (little-endian)
    - Specifies the length of the JSON payload in bytes
    - Does NOT include the 4-byte prefix itself
@@ -64,6 +70,7 @@ Native Messaging uses length-prefixed JSON messages for all communication.
 ### Message Direction
 
 **Server → Extension (Request)**:
+
 ```json
 {
   "id": "req-uuid-1234",
@@ -77,6 +84,7 @@ Native Messaging uses length-prefixed JSON messages for all communication.
 ```
 
 **Extension → Server (Response)**:
+
 ```json
 {
   "id": "req-uuid-1234",
@@ -94,6 +102,7 @@ Native Messaging uses length-prefixed JSON messages for all communication.
 ```
 
 **Extension → Server (Error Response)**:
+
 ```json
 {
   "id": "req-uuid-1234",
@@ -137,6 +146,7 @@ sequenceDiagram
 ```
 
 **Steps**:
+
 1. **Server Spawns Host**: MCP server spawns native host process
 2. **Extension Connects**: Extension calls `runtime.connectNative()`
 3. **Manifest Validation**: Browser validates native host manifest
@@ -212,6 +222,7 @@ stateDiagram-v2
 ### Server-Side Serialization (TypeScript)
 
 **protocol.ts**:
+
 ```typescript
 /**
  * Serialize a message for Native Messaging protocol
@@ -247,7 +258,7 @@ export function serializeMessage(message: any): Buffer {
  * @returns Parsed message and bytes consumed, or null if incomplete
  */
 export function deserializeMessage(
-  buffer: Buffer
+  buffer: Buffer,
 ): { data: any; consumed: number } | null {
   // Need at least 4 bytes for length prefix
   if (buffer.length < 4) {
@@ -289,6 +300,7 @@ export function deserializeMessage(
 ### Server-Side Client (TypeScript)
 
 **client.ts**:
+
 ```typescript
 import { spawn, ChildProcess } from "child_process";
 import { EventEmitter } from "events";
@@ -482,6 +494,7 @@ export class NativeMessagingClient extends EventEmitter {
 ### Extension-Side Handler (JavaScript)
 
 **native-messaging/handler.js**:
+
 ```javascript
 /**
  * Native Messaging handler for Thunderbird extension
@@ -583,6 +596,7 @@ function sendError(id, error) {
 The native host manifest tells the browser how to launch the native host and which extensions can connect.
 
 **File Locations**:
+
 - **Linux**: `~/.mozilla/native-messaging-hosts/thunderbird_mcp.json`
 - **macOS**: `~/Library/Application Support/Mozilla/NativeMessagingHosts/thunderbird_mcp.json`
 - **Windows**: Registry key + manifest file
@@ -590,19 +604,19 @@ The native host manifest tells the browser how to launch the native host and whi
 ### Manifest Structure
 
 **thunderbird_mcp.json**:
+
 ```json
 {
   "name": "thunderbird_mcp",
   "description": "Thunderbird MCP Server Native Messaging Host",
   "path": "/usr/local/bin/thunderbird-mcp-host",
   "type": "stdio",
-  "allowed_extensions": [
-    "thunderbird-mcp@assistance-micro-design.com"
-  ]
+  "allowed_extensions": ["thunderbird-mcp@assistance-micro-design.com"]
 }
 ```
 
 **Fields**:
+
 - `name`: Unique identifier for the native host (must match extension connection name)
 - `description`: Human-readable description
 - `path`: Absolute path to native host executable
@@ -614,6 +628,7 @@ The native host manifest tells the browser how to launch the native host and whi
 #### Linux
 
 **1. Create manifest file**:
+
 ```bash
 mkdir -p ~/.mozilla/native-messaging-hosts
 cat > ~/.mozilla/native-messaging-hosts/thunderbird_mcp.json << 'EOF'
@@ -628,6 +643,7 @@ EOF
 ```
 
 **2. Create wrapper script**:
+
 ```bash
 cat > /usr/local/bin/thunderbird-mcp-host << 'EOF'
 #!/bin/bash
@@ -639,11 +655,13 @@ chmod +x /usr/local/bin/thunderbird-mcp-host
 #### macOS
 
 **1. Create manifest directory**:
+
 ```bash
 mkdir -p ~/Library/Application\ Support/Mozilla/NativeMessagingHosts
 ```
 
 **2. Create manifest**:
+
 ```bash
 cat > ~/Library/Application\ Support/Mozilla/NativeMessagingHosts/thunderbird_mcp.json << 'EOF'
 {
@@ -657,6 +675,7 @@ EOF
 ```
 
 **3. Create wrapper**:
+
 ```bash
 cat > /usr/local/bin/thunderbird-mcp-host << 'EOF'
 #!/bin/bash
@@ -668,11 +687,13 @@ chmod +x /usr/local/bin/thunderbird-mcp-host
 #### Windows
 
 **1. Create manifest file**:
+
 ```
 C:\Users\<username>\AppData\Roaming\Mozilla\NativeMessagingHosts\thunderbird_mcp.json
 ```
 
 **Content**:
+
 ```json
 {
   "name": "thunderbird_mcp",
@@ -684,12 +705,14 @@ C:\Users\<username>\AppData\Roaming\Mozilla\NativeMessagingHosts\thunderbird_mcp
 ```
 
 **2. Create Registry Key**:
+
 ```
 HKEY_CURRENT_USER\Software\Mozilla\NativeMessagingHosts\thunderbird_mcp
 Default = "C:\Users\<username>\AppData\Roaming\Mozilla\NativeMessagingHosts\thunderbird_mcp.json"
 ```
 
 **3. Create batch wrapper** (`C:\Program Files\ThunderbirdMCP\thunderbird-mcp-host.bat`):
+
 ```batch
 @echo off
 "C:\Program Files\nodejs\node.exe" "C:\Program Files\ThunderbirdMCP\index.js"
@@ -700,6 +723,7 @@ Default = "C:\Users\<username>\AppData\Roaming\Mozilla\NativeMessagingHosts\thun
 The Thunderbird extension must request Native Messaging permission.
 
 **manifest.json**:
+
 ```json
 {
   "manifest_version": 3,
@@ -711,11 +735,7 @@ The Thunderbird extension must request Native Messaging permission.
       "strict_min_version": "115.0"
     }
   },
-  "permissions": [
-    "nativeMessaging",
-    "messagesRead",
-    "messagesMove"
-  ],
+  "permissions": ["nativeMessaging", "messagesRead", "messagesMove"],
   "background": {
     "scripts": ["background.js"]
   }
@@ -723,6 +743,7 @@ The Thunderbird extension must request Native Messaging permission.
 ```
 
 **Key Points**:
+
 - `nativeMessaging` permission required
 - Extension ID must match manifest `allowed_extensions`
 - Background script initiates connection
@@ -732,11 +753,13 @@ The Thunderbird extension must request Native Messaging permission.
 ### Sandboxing
 
 **Browser Enforcement**:
+
 - Extension can only connect to explicitly allowed native hosts
 - Native host manifest specifies allowed extension IDs
 - Communication limited to stdio pipes (no network, filesystem)
 
 **Process Isolation**:
+
 - Native host runs as separate OS process
 - Extension runs in browser sandbox
 - No shared memory or direct IPC
@@ -744,6 +767,7 @@ The Thunderbird extension must request Native Messaging permission.
 ### Permission Model
 
 **Required Permissions**:
+
 1. **Extension Side**: `nativeMessaging` permission
 2. **Native Host**: Manifest must list extension ID
 3. **User Consent**: Extension must be explicitly installed by user
@@ -751,6 +775,7 @@ The Thunderbird extension must request Native Messaging permission.
 ### Data Validation
 
 **Defense in Depth**:
+
 1. **Native Host Manifest**: Validates extension ID
 2. **Extension**: Validates message structure
 3. **Server**: Validates parameters with Zod schemas
@@ -759,12 +784,14 @@ The Thunderbird extension must request Native Messaging permission.
 ### Attack Surface
 
 **Potential Risks**:
+
 - Malicious extension with same ID (mitigated by extension signing)
 - Manifest file tampering (mitigated by file permissions)
 - JSON injection (mitigated by proper parsing)
 - Resource exhaustion (mitigated by timeouts and size limits)
 
 **Mitigations**:
+
 - Extension signed by Mozilla/AMO
 - Manifest file restricted to user/root only
 - Strict JSON parsing
@@ -776,6 +803,7 @@ The Thunderbird extension must request Native Messaging permission.
 ### Common Issues
 
 **1. Connection Fails**:
+
 - ✓ Check manifest file exists at correct path
 - ✓ Verify extension ID matches manifest
 - ✓ Check native host executable path is correct
@@ -783,12 +811,14 @@ The Thunderbird extension must request Native Messaging permission.
 - ✓ Check extension has `nativeMessaging` permission
 
 **2. Messages Not Received**:
+
 - ✓ Verify length prefix is little-endian
 - ✓ Check JSON is valid UTF-8
 - ✓ Ensure no null bytes in JSON
 - ✓ Validate message structure
 
 **3. Performance Issues**:
+
 - ✓ Check message size (limit to <100KB for best performance)
 - ✓ Use batch operations for multiple items
 - ✓ Implement result pagination
@@ -799,12 +829,14 @@ The Thunderbird extension must request Native Messaging permission.
 **Enable Logging**:
 
 **Server Side**:
+
 ```typescript
 // Set log level to debug
 process.env.LOG_LEVEL = "debug";
 ```
 
 **Extension Side**:
+
 ```javascript
 // Open Browser Console in Thunderbird
 // Tools → Developer Tools → Browser Console
@@ -812,6 +844,7 @@ console.log("Native Messaging debug info");
 ```
 
 **Monitor Messages**:
+
 ```bash
 # Linux/macOS: Monitor stdout/stderr
 strace -e trace=read,write -p <pid>
@@ -824,6 +857,7 @@ strace -e trace=read,write -p <pid>
 ### Message Batching
 
 **Instead of**:
+
 ```typescript
 for (const id of messageIds) {
   await nmClient.send({ method: "messages.get", params: { id } });
@@ -831,16 +865,18 @@ for (const id of messageIds) {
 ```
 
 **Use**:
+
 ```typescript
 await nmClient.send({
   method: "messages.getBatch",
-  params: { ids: messageIds }
+  params: { ids: messageIds },
 });
 ```
 
 ### Compression (Future)
 
 Consider adding optional compression for large payloads:
+
 ```typescript
 const json = JSON.stringify(message);
 const compressed = await gzip(json);
@@ -852,6 +888,7 @@ compressed.copy(buffer, 4);
 ### Connection Pooling (Future)
 
 For high throughput, consider multiple connections:
+
 - Spawn multiple native host processes
 - Round-robin or load-balance requests
 - Manage connection pool lifecycle
@@ -861,12 +898,14 @@ For high throughput, consider multiple connections:
 ### WebSocket Alternative
 
 **Advantages**:
+
 - Better performance (no serialization overhead)
 - Built-in reconnection
 - Bidirectional streaming
 - No platform-specific setup
 
 **Challenges**:
+
 - Requires HTTP server in extension
 - Network firewall configuration
 - Security considerations
@@ -874,11 +913,13 @@ For high throughput, consider multiple connections:
 ### Shared Memory (Advanced)
 
 **Advantages**:
+
 - Zero-copy communication
 - Maximum performance
 - Supports large data transfers
 
 **Challenges**:
+
 - Platform-specific implementation
 - Complex synchronization
 - Security implications
