@@ -21,10 +21,19 @@ let isReconnecting = false;
 let forcedReconnect = false;
 let currentWsId = 0; // Track which WebSocket instance we're using
 
+// Flag to prevent multiple initializations
+let isInitialized = false;
+
 /**
  * Connect to the MCP server via WebSocket
  */
 function connectWebSocket() {
+  // Prevent multiple simultaneous connections
+  if (ws && (ws.readyState === WebSocket.CONNECTING || ws.readyState === WebSocket.OPEN)) {
+    console.log('[MCP] WebSocket already connected or connecting, skipping');
+    return;
+  }
+
   const wsUrl = `ws://localhost:${WS_PORT}`;
 
   console.log(`[MCP] Connecting to WebSocket server at ${wsUrl}`);
@@ -207,19 +216,35 @@ function generateId() {
  * Setup keep-alive alarms to prevent Event Page termination
  * In MV3, Event Pages are terminated after ~30-90 seconds of inactivity
  * Alarms persist and wake up the extension when triggered
+ * 
+ * Strategy: Use delayInMinutes (not setTimeout) to stagger alarms,
+ * as setTimeout is lost when the event page goes idle.
+ * Minimum periodInMinutes is 0.5 (30 seconds) in most browsers.
  */
 function setupKeepAlive() {
-  // Create staggered alarms to wake extension approximately every 20 seconds
-  browser.alarms.create('keepAlive-0', { periodInMinutes: 1 });
+  // Clear any existing alarms first to avoid duplicates on restart
+  browser.alarms.clearAll().then(() => {
+    // Create staggered alarms using delayInMinutes (survives idle)
+    // Alarm 0: starts immediately, repeats every 30 seconds
+    browser.alarms.create('keepAlive-0', { 
+      delayInMinutes: 0.1,      // First trigger in ~6 seconds
+      periodInMinutes: 0.5      // Then every 30 seconds
+    });
 
-  // Stagger additional alarms for more frequent wake-ups
-  setTimeout(() => {
-    browser.alarms.create('keepAlive-1', { periodInMinutes: 1 });
-  }, 20000);
+    // Alarm 1: starts after 10 seconds, repeats every 30 seconds
+    browser.alarms.create('keepAlive-1', { 
+      delayInMinutes: 0.17,     // First trigger in ~10 seconds
+      periodInMinutes: 0.5 
+    });
 
-  setTimeout(() => {
-    browser.alarms.create('keepAlive-2', { periodInMinutes: 1 });
-  }, 40000);
+    // Alarm 2: starts after 20 seconds, repeats every 30 seconds  
+    browser.alarms.create('keepAlive-2', { 
+      delayInMinutes: 0.33,     // First trigger in ~20 seconds
+      periodInMinutes: 0.5 
+    });
+
+    console.log('[MCP] Keep-alive alarms configured (3 alarms, ~10s intervals)');
+  });
 
   // Listen for alarms to reconnect WebSocket if needed
   browser.alarms.onAlarm.addListener((alarm) => {
@@ -228,8 +253,6 @@ function setupKeepAlive() {
       ensureWebSocketConnected();
     }
   });
-
-  console.log('[MCP] Keep-alive alarms configured');
 }
 
 /**
@@ -281,6 +304,15 @@ function ensureWebSocketConnected() {
  * Initialize extension on startup
  */
 function initialize() {
+  // Prevent multiple initializations
+  if (isInitialized) {
+    console.log('[MCP] Already initialized, skipping');
+    // Just ensure WebSocket is connected
+    ensureWebSocketConnected();
+    return;
+  }
+  isInitialized = true;
+
   console.log('[MCP] Thunderbird MCP Extension starting...');
   console.log('[MCP] Version:', browser.runtime.getManifest().version);
 
@@ -289,15 +321,34 @@ function initialize() {
 
   // Connect to MCP server via WebSocket
   connectWebSocket();
-
-  // Listen for extension lifecycle events
-  browser.runtime.onSuspend.addListener(() => {
-    console.log('[MCP] Extension suspending...');
-    if (ws) {
-      ws.close();
-    }
-  });
 }
 
-// Start the extension
+// ============================================================
+// MV3 Event Page Lifecycle - Top-level listeners (REQUIRED)
+// These must be at top-level to wake up the event page
+// ============================================================
+
+// Handle extension suspend (cleanup)
+browser.runtime.onSuspend.addListener(() => {
+  console.log('[MCP] Extension suspending...');
+  if (ws) {
+    ws.close();
+  }
+});
+
+// Handle browser/Thunderbird startup - reconnect WebSocket
+browser.runtime.onStartup.addListener(() => {
+  console.log('[MCP] Thunderbird started - initializing extension');
+  initialize();
+});
+
+// Handle extension install/update - setup alarms and connect
+browser.runtime.onInstalled.addListener((details) => {
+  console.log('[MCP] Extension installed/updated:', details.reason);
+  initialize();
+});
+
+// Also initialize immediately for when the event page wakes up
+// This handles the case where the page was terminated and restarted by an alarm
+console.log('[MCP] Event page loaded');
 initialize();

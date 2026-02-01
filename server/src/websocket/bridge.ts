@@ -145,24 +145,17 @@ export class WebSocketBridge extends EventEmitter {
 
   /**
    * Handle Thunderbird extension connection (single client)
+   * 
+   * Strategy: Always accept new connections and replace existing ones.
+   * This handles the case where the Thunderbird extension's event page
+   * was terminated and restarted, leaving a "zombie" connection on the server.
    */
   private handleThunderbirdConnection(ws: WebSocket): void {
-    // Check if existing client is still alive
+    // Always replace existing client - new connection wins
+    // This is important for MV3 event pages that can restart
     if (this.thunderbirdClient) {
-      if (this.thunderbirdClient.readyState === WebSocket.OPEN) {
-        try {
-          this.thunderbirdClient.ping();
-          logger.warn('Rejecting new Thunderbird connection - already connected');
-          ws.close(1008, 'Only one Thunderbird client allowed');
-          return;
-        } catch {
-          logger.info('Existing Thunderbird client appears dead, replacing');
-          this.cleanupThunderbirdClient();
-        }
-      } else {
-        logger.info('Existing Thunderbird client not in OPEN state, replacing');
-        this.cleanupThunderbirdClient();
-      }
+      logger.info('Replacing existing Thunderbird connection with new one');
+      this.cleanupThunderbirdClient();
     }
 
     logger.info('Thunderbird extension connected');
