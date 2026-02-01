@@ -16,7 +16,7 @@ graph TB
 
     subgraph "MCP Server Layer"
         MCP[MCP Server<br/>Node.js/TypeScript]
-        Tools[Tools Handler<br/>47 Tools]
+        Tools[Tools Handler<br/>56 Tools]
         Resources[Resources Handler]
         WSBridge[WebSocket Bridge<br/>Port 9876]
     end
@@ -28,7 +28,7 @@ graph TB
     subgraph "Thunderbird Extension"
         Background[Background Script<br/>Service Worker]
         WSClient[WebSocket Client<br/>Auto-Reconnect]
-        MessagesAPI[Messages API<br/>9 tools]
+        MessagesAPI[Messages API<br/>10 tools]
         FoldersAPI[Folders API<br/>7 tools]
         ContactsAPI[Contacts API<br/>9 tools]
         TagsAPI[Tags API<br/>4 tools]
@@ -99,7 +99,7 @@ graph TB
 **Key Responsibilities**:
 
 - Implement MCP server specification (JSON-RPC 2.0)
-- Expose 47 tools across 7 functional domains
+- Expose 56 tools across 8 functional domains
 - Expose resources to MCP clients
 - Validate input parameters using Zod schemas
 - Route requests to appropriate handlers
@@ -116,11 +116,12 @@ graph TB
 
 **Tool Distribution**:
 
-- Messages: 9 tools (search, list, get, move, copy, delete, update, archive, list unread)
+- Messages: 10 tools (search, list, list unread, list recent, get, move, copy, delete, update, archive)
 - Folders: 7 tools (list, get, create, rename, delete, move, mark read)
 - Contacts: 9 tools (search, list, get, create, update, delete + 3 address book tools)
 - Tags: 4 tools (list, create, update, delete)
 - Accounts: 3 tools (list accounts, get account, list identities)
+- Compose: 8 tools (begin new, begin reply, begin forward, get details, set details, save draft, save template, send)
 - Calendar: 9 tools (list calendars, get calendar, search/list/get/create/update/move/delete events)
 - Tasks: 6 tools (list, get, create, update, delete, complete)
 

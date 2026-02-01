@@ -26,7 +26,7 @@ Performs a search for contacts matching the query string against name, email, an
 | --------------- | ------ | -------- | ----------------------------------------------------- |
 | `query`         | string | Yes      | Search term to match against contact fields           |
 | `addressBookId` | string | No       | Specific address book to search within (omit for all) |
-| `limit`         | number | No       | Maximum number of results to return (default: 100)    |
+| `limit`         | number | No       | Maximum number of results to return (default: 50)     |
 
 #### Response Format
 
@@ -146,16 +146,15 @@ Get detailed information about a specific contact.
 
 #### Description
 
-Retrieves complete contact information including all properties or vCard representation.
+Retrieves complete contact information including all properties.
 
 #### Parameters
 
-| Name        | Type   | Required | Description                                      |
-| ----------- | ------ | -------- | ------------------------------------------------ |
-| `contactId` | string | Yes      | Unique identifier of the contact                 |
-| `format`    | string | No       | Return format: `properties` (default) or `vcard` |
+| Name        | Type   | Required | Description                      |
+| ----------- | ------ | -------- | -------------------------------- |
+| `contactId` | string | Yes      | Unique identifier of the contact |
 
-#### Response Format (Properties)
+#### Response Format
 
 ```json
 {
@@ -193,18 +192,6 @@ Retrieves complete contact information including all properties or vCard represe
 }
 ```
 
-#### Response Format (vCard)
-
-```json
-{
-  "type": "text",
-  "text": "{
-    \"id\": \"contact-123\",
-    \"vCard\": \"BEGIN:VCARD\\nVERSION:4.0\\nFN:Jean Dupont\\nN:Dupont;Jean;;;\\nEMAIL;TYPE=work:jean.dupont@example.com\\nTEL;TYPE=cell:+33612345678\\nORG:ACME Corp\\nEND:VCARD\"
-  }"
-}
-```
-
 #### Example Request
 
 ```json
@@ -215,8 +202,7 @@ Retrieves complete contact information including all properties or vCard represe
   "params": {
     "name": "thunderbird_contacts_get",
     "arguments": {
-      "contactId": "contact-123",
-      "format": "properties"
+      "contactId": "contact-123"
     }
   }
 }

@@ -390,16 +390,15 @@ Mark all messages in a folder as read.
 
 #### Description
 
-Bulk operation to mark all messages within a folder (and optionally subfolders) as read.
+Bulk operation to mark all messages within a folder as read.
 
 **Permission Required**: `messagesUpdate`
 
 #### Parameters
 
-| Name                | Type    | Required | Description                                   |
-| ------------------- | ------- | -------- | --------------------------------------------- |
-| `folderId`          | string  | Yes      | ID of the folder to mark read                 |
-| `includeSubFolders` | boolean | No       | Also mark subfolders as read (default: false) |
+| Name       | Type   | Required | Description                   |
+| ---------- | ------ | -------- | ----------------------------- |
+| `folderId` | string | Yes      | ID of the folder to mark read |
 
 #### Response Format
 
@@ -409,8 +408,7 @@ Bulk operation to mark all messages within a folder (and optionally subfolders) 
   "text": "{
     \"success\": true,
     \"folderId\": \"folder-123\",
-    \"markedCount\": 87,
-    \"includedSubFolders\": false
+    \"markedCount\": 87
   }"
 }
 ```
@@ -425,8 +423,7 @@ Bulk operation to mark all messages within a folder (and optionally subfolders) 
   "params": {
     "name": "thunderbird_folders_mark_read",
     "arguments": {
-      "folderId": "folder-inbox-1",
-      "includeSubFolders": true
+      "folderId": "folder-inbox-1"
     }
   }
 }
