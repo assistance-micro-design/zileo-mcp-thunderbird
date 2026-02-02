@@ -55,8 +55,8 @@ export const FoldersAPI = {
    * @returns {Promise<Object>} Created folder
    */
   async create(parentFolderId, name) {
-    const parentFolder = await messenger.folders.get(parentFolderId);
-    return await messenger.folders.create(parentFolder, name);
+    // messenger.folders.create expects a MailFolderId (string), not a MailFolder object
+    return await messenger.folders.create(parentFolderId, name);
   },
 
   /**
@@ -66,8 +66,8 @@ export const FoldersAPI = {
    * @returns {Promise<Object>} Renamed folder
    */
   async rename(folderId, newName) {
-    const folder = await messenger.folders.get(folderId);
-    return await messenger.folders.rename(folder, newName);
+    // messenger.folders.rename expects a MailFolderId (string), not a MailFolder object
+    return await messenger.folders.rename(folderId, newName);
   },
 
   /**
@@ -76,8 +76,8 @@ export const FoldersAPI = {
    * @returns {Promise<void>}
    */
   async delete(folderId) {
-    const folder = await messenger.folders.get(folderId);
-    await messenger.folders.delete(folder);
+    // messenger.folders.delete expects a MailFolderId (string), not a MailFolder object
+    await messenger.folders.delete(folderId);
   },
 
   /**
@@ -87,9 +87,8 @@ export const FoldersAPI = {
    * @returns {Promise<void>}
    */
   async move(folderId, destinationFolderId) {
-    const folder = await messenger.folders.get(folderId);
-    const destination = await messenger.folders.get(destinationFolderId);
-    await messenger.folders.move(folder, destination);
+    // messenger.folders.move expects MailFolderId strings, not MailFolder objects
+    return await messenger.folders.move(folderId, destinationFolderId);
   },
 
   /**

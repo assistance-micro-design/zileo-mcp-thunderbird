@@ -162,8 +162,8 @@ export const MessagesAPI = {
    * @returns {Promise<void>}
    */
   async move(messageIds, destinationFolderId) {
-    const destination = await messenger.folders.get(destinationFolderId);
-    await messenger.messages.move(messageIds, destination);
+    // messenger.messages.move expects a MailFolderId (string), not a MailFolder object
+    await messenger.messages.move(messageIds, destinationFolderId);
   },
 
   /**
@@ -173,8 +173,8 @@ export const MessagesAPI = {
    * @returns {Promise<void>}
    */
   async copy(messageIds, destinationFolderId) {
-    const destination = await messenger.folders.get(destinationFolderId);
-    await messenger.messages.copy(messageIds, destination);
+    // messenger.messages.copy expects a MailFolderId (string), not a MailFolder object
+    await messenger.messages.copy(messageIds, destinationFolderId);
   },
 
   /**
