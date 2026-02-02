@@ -13,7 +13,7 @@ Topics covered:
 - System architecture diagram (WebSocket-based)
 - Three-layer design: MCP Server, WebSocket Bridge, Extension
 - Component descriptions (MCP Client, Server, Bridge, Extension, Thunderbird)
-- 47 tools across 7 functional domains
+- 56 tools across 8 functional domains
 - Technology stack summary
 - Architectural decisions and trade-offs
 - Security model
@@ -108,7 +108,7 @@ Start here for: Understanding WebSocket bridge implementation and connection man
 │  ┌──────────┐  ┌───────────┐  ┌──────────────┐        │
 │  │  Tools   │  │ Resources │  │  WebSocket   │        │
 │  │ Handler  │  │  Handler  │  │    Bridge    │        │
-│  │ 47 tools │  │           │  │  Port 9876   │        │
+│  │ 56 tools │  │           │  │  Port 9876   │        │
 │  └──────────┘  └───────────┘  └──────────────┘        │
 └────────────────────┬───────────────────────────────────┘
                      │ WebSocket (ws://localhost:9876)
@@ -120,13 +120,13 @@ Start here for: Understanding WebSocket bridge implementation and connection man
 │  │   Background Script (Service Worker)             │  │
 │  │   WebSocket Client (Auto-Reconnect)              │  │
 │  │  ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌────────┐ │  │
-│  │  │Messages │ │ Folders │ │Contacts │ │Calendar│ │  │
-│  │  │ 9 tools │ │ 7 tools │ │ 9 tools │ │ 9 tools│ │  │
+│  │  │Messages │ │ Folders │ │Contacts │ │ Compose│ │  │
+│  │  │10 tools │ │ 7 tools │ │ 9 tools │ │ 8 tools│ │  │
 │  │  └─────────┘ └─────────┘ └─────────┘ └────────┘ │  │
-│  │  ┌─────────┐ ┌─────────┐ ┌─────────┐            │  │
-│  │  │  Tags   │ │Accounts │ │  Tasks  │            │  │
-│  │  │ 4 tools │ │ 3 tools │ │ 6 tools │            │  │
-│  │  └─────────┘ └─────────┘ └─────────┘            │  │
+│  │  ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌────────┐ │  │
+│  │  │  Tags   │ │Accounts │ │Calendar │ │ Tasks  │ │  │
+│  │  │ 4 tools │ │ 3 tools │ │ 9 tools │ │ 6 tools│ │  │
+│  │  └─────────┘ └─────────┘ └─────────┘ └────────┘ │  │
 │  └──────────────────────────────────────────────────┘  │
 │  * Calendar API experimental via webext-experiments     │
 └────────────────────┬────────────────────────────────────┘
@@ -163,11 +163,12 @@ Start here for: Understanding WebSocket bridge implementation and connection man
 
 ### Tool Coverage
 
-- **Messages** (9 tools): search, list, get, move, copy, delete, update, archive, list unread
+- **Messages** (10 tools): search, list, list unread, list recent, get, move, copy, delete, update, archive
 - **Folders** (7 tools): list, get, create, rename, delete, move, mark read
 - **Contacts** (9 tools): search, list, get, create, update, delete + 3 address book tools
 - **Tags** (4 tools): list, create, update, delete
 - **Accounts** (3 tools): list accounts, get account, list identities
+- **Compose** (8 tools): begin new, begin reply, begin forward, get details, set details, save draft, save template, send
 - **Calendar** (9 tools): list calendars, get calendar, search/list/get/create/update/move/delete events
 - **Tasks** (6 tools): list, get, create, update, delete, complete
 

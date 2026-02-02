@@ -278,6 +278,31 @@ Each API wrapper module encapsulates operations for a specific Thunderbird API d
 - `messenger.messages.tags.update()`
 - `messenger.messages.tags.delete()`
 
+### Compose API Wrapper (`api/compose.js`)
+
+**Purpose**: Handle email composition operations
+
+**Functions**:
+
+- `beginNew(options)` - Open new compose window with optional pre-filled content
+- `beginReply(messageId, replyType)` - Open reply compose window
+- `beginForward(messageId, forwardType)` - Open forward compose window
+- `getDetails(tabId)` - Get current compose window details
+- `setDetails(tabId, details)` - Update compose window content
+- `saveDraft(tabId)` - Save composition as draft
+- `saveTemplate(tabId)` - Save composition as template
+- `send(tabId, mode)` - Send the composed email
+
+**Thunderbird APIs Used**:
+
+- `messenger.compose.beginNew()`
+- `messenger.compose.beginReply()`
+- `messenger.compose.beginForward()`
+- `messenger.compose.getComposeDetails()`
+- `messenger.compose.setComposeDetails()`
+- `messenger.compose.saveMessage()`
+- `messenger.compose.sendMessage()`
+
 ## Experimental Calendar API
 
 ### Architecture

@@ -275,6 +275,7 @@ export function registerMessageTools(
 - `thunderbird_messages_search` - Advanced message search
 - `thunderbird_messages_list` - List messages in folder
 - `thunderbird_messages_list_unread` - List unread messages
+- `thunderbird_messages_list_recent` - List recent messages globally
 - `thunderbird_messages_get` - Get single message
 - `thunderbird_messages_move` - Move messages
 - `thunderbird_messages_copy` - Copy messages
@@ -346,6 +347,19 @@ export function registerMessageTools(
 - `thunderbird_accounts_list` - List all accounts
 - `thunderbird_accounts_get` - Get account details
 - `thunderbird_identities_list` - List identities
+
+### Compose Tools (`tools/compose.ts`)
+
+**Tools Implemented**:
+
+- `thunderbird_compose_begin_new` - Open new compose window
+- `thunderbird_compose_begin_reply` - Open reply compose window
+- `thunderbird_compose_begin_forward` - Open forward compose window
+- `thunderbird_compose_get_details` - Get compose window details
+- `thunderbird_compose_set_details` - Update compose window content
+- `thunderbird_compose_save_draft` - Save as draft
+- `thunderbird_compose_save_template` - Save as template
+- `thunderbird_compose_send` - Send the email
 
 ## Resource Handlers
 
