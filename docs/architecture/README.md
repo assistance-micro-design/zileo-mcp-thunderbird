@@ -237,8 +237,8 @@ overview.md
 Thunderbird-mcp/
 ├── docs/
 │   ├── architecture/          ← You are here
-│   ├── api/                   API reference (future)
-│   └── guides/                User guides (future)
+│   ├── api/                   API reference
+│   └── guides/                User guides
 ├── extension/                 Thunderbird extension code
 │   ├── background.js          WebSocket client
 │   └── native-messaging/      API handlers
