@@ -5,7 +5,6 @@
  */
 
 import type { McpResource, McpResourceTemplate } from "../types/mcp.js";
-import { getResourceHandler } from "./handlers.js";
 
 /**
  * Static resource definitions

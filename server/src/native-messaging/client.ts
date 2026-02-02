@@ -5,15 +5,9 @@
  */
 
 import { EventEmitter } from "events";
-import {
-  readMessage,
-  writeMessage,
-  createNativeRequest,
-  createTimeout,
-} from "./protocol.js";
+import { readMessage, writeMessage, createNativeRequest } from "./protocol.js";
 import {
   type NativeMessage,
-  type NativeRequest,
   type NativeResponse,
   type MessageAction,
   NotificationEvents,
@@ -177,7 +171,7 @@ export class NativeMessagingClient extends EventEmitter {
     this.reading = false;
 
     // Reject all pending requests
-    for (const [id, pending] of this.pendingRequests.entries()) {
+    for (const [_id, pending] of this.pendingRequests.entries()) {
       clearTimeout(pending.timeout);
       pending.reject(new Error("Disconnected"));
     }

@@ -4,8 +4,7 @@
  * @module websocket/client-adapter
  */
 
-import { getWebSocketBridge, type WsMessage } from "./bridge.js";
-import logger from "../utils/logger.js";
+import { getWebSocketBridge } from "./bridge.js";
 
 /**
  * Response type matching the native messaging format

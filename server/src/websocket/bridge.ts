@@ -283,7 +283,7 @@ export class WebSocketBridge extends EventEmitter {
         // Relay request to Thunderbird
         this.relayRequestToThunderbird(message, mcpClient);
         break;
-      case "ping":
+      case "ping": {
         // Respond with pong
         const pong: WsMessage = {
           id: message.id,
@@ -292,6 +292,7 @@ export class WebSocketBridge extends EventEmitter {
         };
         mcpClient.send(JSON.stringify(pong));
         break;
+      }
       default:
         logger.warn("Unexpected message type from MCP client:", message);
     }
@@ -524,7 +525,7 @@ export class WebSocketBridge extends EventEmitter {
   /**
    * Reject pending requests for a specific MCP client
    */
-  private rejectPendingForClient(client: WebSocket, reason: string): void {
+  private rejectPendingForClient(client: WebSocket, _reason: string): void {
     for (const [id, pending] of this.pendingRequests.entries()) {
       if (pending.mcpClient === client) {
         clearTimeout(pending.timeout);

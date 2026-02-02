@@ -232,7 +232,7 @@ export class WebSocketBridgeClient extends EventEmitter {
    * Reject all pending requests
    */
   private rejectAllPending(reason: string): void {
-    for (const [id, pending] of this.pendingRequests.entries()) {
+    for (const [_id, pending] of this.pendingRequests.entries()) {
       clearTimeout(pending.timeout);
       pending.reject(new Error(reason));
     }
