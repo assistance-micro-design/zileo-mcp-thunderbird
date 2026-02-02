@@ -30,7 +30,7 @@ sequenceDiagram
 
     Server-->>Client: initialized<br/>{capabilities, serverInfo}
 
-    Note over Client,Server: Capabilities Negotiated:<br/>- tools: 47 tools across 7 domains<br/>- resources: {listChanged: true}<br/>- prompts: {listChanged: false}
+    Note over Client,Server: Capabilities Negotiated:<br/>- tools: 56 tools across 8 domains<br/>- resources: {listChanged: true}<br/>- prompts: {listChanged: false}
 
     Client->>Server: Notification: initialized
 

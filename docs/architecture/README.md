@@ -49,7 +49,7 @@ Topics covered:
 - Server file structure
 - Entry point and initialization
 - WebSocket bridge initialization
-- Tool handler implementations (47 tools)
+- Tool handler implementations (56 tools)
 - Resource handler implementations
 - Schema validation with Zod
 - Error handling and mapping
@@ -244,7 +244,7 @@ Thunderbird-mcp/
 │   └── native-messaging/      API handlers
 ├── server/                    MCP server code
 │   ├── src/websocket/         WebSocket bridge
-│   ├── src/tools/             Tool handlers (47 tools)
+│   ├── src/tools/             Tool handlers (56 tools)
 │   └── src/resources/         Resource handlers
 └── tests/                     Test suites
 ```

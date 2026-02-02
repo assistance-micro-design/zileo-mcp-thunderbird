@@ -286,16 +286,16 @@ npm run dev
 
 #### Compose (8 tools)
 
-| Tool                               | Description                                    |
-| ---------------------------------- | ---------------------------------------------- |
-| `thunderbird_compose_begin_new`    | Open a new compose window                      |
-| `thunderbird_compose_begin_reply`  | Reply to an existing message                   |
-| `thunderbird_compose_begin_forward`| Forward an existing message                    |
-| `thunderbird_compose_get_details`  | Get current compose window details             |
-| `thunderbird_compose_set_details`  | Update compose window content                  |
-| `thunderbird_compose_save_draft`   | Save compose as draft                          |
-| `thunderbird_compose_save_template`| Save compose as template                       |
-| `thunderbird_compose_send`         | Send the composed email                        |
+| Tool                                | Description                        |
+| ----------------------------------- | ---------------------------------- |
+| `thunderbird_compose_begin_new`     | Open a new compose window          |
+| `thunderbird_compose_begin_reply`   | Reply to an existing message       |
+| `thunderbird_compose_begin_forward` | Forward an existing message        |
+| `thunderbird_compose_get_details`   | Get current compose window details |
+| `thunderbird_compose_set_details`   | Update compose window content      |
+| `thunderbird_compose_save_draft`    | Save compose as draft              |
+| `thunderbird_compose_save_template` | Save compose as template           |
+| `thunderbird_compose_send`          | Send the composed email            |
 
 #### Calendar (9 tools) - _Experimental_
 

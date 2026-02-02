@@ -114,7 +114,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Documentation
 
-- Complete API documentation for all 47 tools
+- Complete API documentation for all 56 tools
 - Architecture documentation with Mermaid diagrams
 - Installation guides for Linux, macOS, and Windows
 - Quick start guide for developers

@@ -62,13 +62,13 @@ None
 
 #### Account Properties
 
-| Property       | Type     | Description                          |
-| -------------- | -------- | ------------------------------------ |
-| `id`           | string   | Unique account identifier            |
-| `name`         | string   | Account display name                 |
-| `type`         | string   | Account type (imap, pop3, nntp, none)|
-| `rootFolderId` | string   | ID of the root folder                |
-| `identities`   | array    | List of sender identities            |
+| Property       | Type   | Description                           |
+| -------------- | ------ | ------------------------------------- |
+| `id`           | string | Unique account identifier             |
+| `name`         | string | Account display name                  |
+| `type`         | string | Account type (imap, pop3, nntp, none) |
+| `rootFolderId` | string | ID of the root folder                 |
+| `identities`   | array  | List of sender identities             |
 
 #### Account Types
 
@@ -142,14 +142,14 @@ Retrieves complete account details including server configuration, folder struct
 
 #### Server Properties
 
-| Property     | Type   | Description                           |
-| ------------ | ------ | ------------------------------------- |
-| `type`       | string | Server type (imap, pop3, nntp)        |
-| `hostName`   | string | Server hostname                       |
-| `port`       | number | Server port                           |
-| `username`   | string | Login username                        |
-| `socketType` | number | Connection security (see below)       |
-| `authMethod` | number | Authentication method                 |
+| Property     | Type   | Description                     |
+| ------------ | ------ | ------------------------------- |
+| `type`       | string | Server type (imap, pop3, nntp)  |
+| `hostName`   | string | Server hostname                 |
+| `port`       | number | Server port                     |
+| `username`   | string | Login username                  |
+| `socketType` | number | Connection security (see below) |
+| `authMethod` | number | Authentication method           |
 
 #### Socket Types
 
@@ -226,17 +226,17 @@ Retrieves all configured identities for a specific account. Identities define th
 
 #### Identity Properties
 
-| Property              | Type    | Description                            |
-| --------------------- | ------- | -------------------------------------- |
-| `id`                  | string  | Unique identity identifier             |
-| `accountId`           | string  | Parent account ID                      |
-| `name`                | string  | Display name (From name)               |
-| `email`               | string  | Email address (From address)           |
-| `replyTo`             | string  | Reply-To address (if different)        |
-| `organization`        | string  | Organization name                      |
-| `signature`           | string  | Email signature content                |
-| `signatureIsPlainText`| boolean | True if signature is plain text        |
-| `composeHtml`         | boolean | Default to HTML composition            |
+| Property               | Type    | Description                     |
+| ---------------------- | ------- | ------------------------------- |
+| `id`                   | string  | Unique identity identifier      |
+| `accountId`            | string  | Parent account ID               |
+| `name`                 | string  | Display name (From name)        |
+| `email`                | string  | Email address (From address)    |
+| `replyTo`              | string  | Reply-To address (if different) |
+| `organization`         | string  | Organization name               |
+| `signature`            | string  | Email signature content         |
+| `signatureIsPlainText` | boolean | True if signature is plain text |
+| `composeHtml`          | boolean | Default to HTML composition     |
 
 #### Example Request
 
@@ -260,14 +260,14 @@ Retrieves all configured identities for a specific account. Identities define th
 
 All account operations may return these error codes:
 
-| Code   | Message                 | Description                            |
-| ------ | ----------------------- | -------------------------------------- |
-| -32000 | Thunderbird not running | Thunderbird application is not active  |
-| -32001 | Extension not installed | Thunderbird MCP extension not found    |
-| -32002 | Permission denied       | accountsRead permission not granted    |
-| -32003 | Resource not found      | Account or identity not found          |
-| -32602 | Invalid params          | Missing or invalid accountId           |
-| -32603 | Internal error          | Unexpected error accessing accounts    |
+| Code   | Message                 | Description                           |
+| ------ | ----------------------- | ------------------------------------- |
+| -32000 | Thunderbird not running | Thunderbird application is not active |
+| -32001 | Extension not installed | Thunderbird MCP extension not found   |
+| -32002 | Permission denied       | accountsRead permission not granted   |
+| -32003 | Resource not found      | Account or identity not found         |
+| -32602 | Invalid params          | Missing or invalid accountId          |
+| -32603 | Internal error          | Unexpected error accessing accounts   |
 
 ---
 
@@ -283,6 +283,7 @@ All account operations may return these error codes:
 ```
 
 Use this to:
+
 - Get all account IDs for folder operations
 - Find account root folders
 - List available sender identities
@@ -299,6 +300,7 @@ Use this to:
 ```
 
 Use this to:
+
 - Verify account type and server settings
 - Check connection security
 - Get detailed identity information
@@ -315,6 +317,7 @@ Use this to:
 ```
 
 Use this to:
+
 - List available "From" addresses
 - Get identity ID for compose operations
 - Check signature settings

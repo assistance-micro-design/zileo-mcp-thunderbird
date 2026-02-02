@@ -22,15 +22,15 @@ Creates a new compose window that can be pre-populated with recipients, subject,
 
 #### Parameters
 
-| Name          | Type     | Required | Default | Description                                    |
-| ------------- | -------- | -------- | ------- | ---------------------------------------------- |
-| `to`          | string[] | No       | -       | Recipient email addresses                      |
-| `cc`          | string[] | No       | -       | CC email addresses                             |
-| `bcc`         | string[] | No       | -       | BCC email addresses                            |
-| `subject`     | string   | No       | -       | Email subject line                             |
-| `body`        | string   | No       | -       | Email body content (HTML by default)           |
-| `isPlainText` | boolean  | No       | false   | If true, body is treated as plain text         |
-| `identityId`  | string   | No       | -       | Identity ID to use for sending (from address)  |
+| Name          | Type     | Required | Default | Description                                   |
+| ------------- | -------- | -------- | ------- | --------------------------------------------- |
+| `to`          | string[] | No       | -       | Recipient email addresses                     |
+| `cc`          | string[] | No       | -       | CC email addresses                            |
+| `bcc`         | string[] | No       | -       | BCC email addresses                           |
+| `subject`     | string   | No       | -       | Email subject line                            |
+| `body`        | string   | No       | -       | Email body content (HTML by default)          |
+| `isPlainText` | boolean  | No       | false   | If true, body is treated as plain text        |
+| `identityId`  | string   | No       | -       | Identity ID to use for sending (from address) |
 
 #### Response Format
 
@@ -75,10 +75,10 @@ Creates a reply composition window for a specified message. The original message
 
 #### Parameters
 
-| Name        | Type   | Required | Default         | Description                                        |
-| ----------- | ------ | -------- | --------------- | -------------------------------------------------- |
-| `messageId` | number | Yes      | -               | ID of the message to reply to                      |
-| `replyType` | string | No       | `replyToSender` | Reply type: `replyToSender` or `replyToAll`        |
+| Name        | Type   | Required | Default         | Description                                 |
+| ----------- | ------ | -------- | --------------- | ------------------------------------------- |
+| `messageId` | number | Yes      | -               | ID of the message to reply to               |
+| `replyType` | string | No       | `replyToSender` | Reply type: `replyToSender` or `replyToAll` |
 
 #### Response Format
 
@@ -126,10 +126,10 @@ Creates a forward composition window for a specified message. The original messa
 
 #### Parameters
 
-| Name          | Type   | Required | Default         | Description                                              |
-| ------------- | ------ | -------- | --------------- | -------------------------------------------------------- |
-| `messageId`   | number | Yes      | -               | ID of the message to forward                             |
-| `forwardType` | string | No       | `forwardInline` | Forward type: `forwardInline` or `forwardAsAttachment`   |
+| Name          | Type   | Required | Default         | Description                                            |
+| ------------- | ------ | -------- | --------------- | ------------------------------------------------------ |
+| `messageId`   | number | Yes      | -               | ID of the message to forward                           |
+| `forwardType` | string | No       | `forwardInline` | Forward type: `forwardInline` or `forwardAsAttachment` |
 
 #### Response Format
 
@@ -177,9 +177,9 @@ Retrieves the current state of a composition including recipients, subject, body
 
 #### Parameters
 
-| Name    | Type   | Required | Description              |
-| ------- | ------ | -------- | ------------------------ |
-| `tabId` | number | Yes      | ID of the compose tab    |
+| Name    | Type   | Required | Description           |
+| ------- | ------ | -------- | --------------------- |
+| `tabId` | number | Yes      | ID of the compose tab |
 
 #### Response Format
 
@@ -227,14 +227,14 @@ Modifies the recipients, subject, or body of an open composition. Only the speci
 
 #### Parameters
 
-| Name      | Type     | Required | Description              |
-| --------- | -------- | -------- | ------------------------ |
-| `tabId`   | number   | Yes      | ID of the compose tab    |
-| `to`      | string[] | No       | New recipient addresses  |
-| `cc`      | string[] | No       | New CC addresses         |
-| `bcc`     | string[] | No       | New BCC addresses        |
-| `subject` | string   | No       | New subject line         |
-| `body`    | string   | No       | New body content         |
+| Name      | Type     | Required | Description             |
+| --------- | -------- | -------- | ----------------------- |
+| `tabId`   | number   | Yes      | ID of the compose tab   |
+| `to`      | string[] | No       | New recipient addresses |
+| `cc`      | string[] | No       | New CC addresses        |
+| `bcc`     | string[] | No       | New BCC addresses       |
+| `subject` | string   | No       | New subject line        |
+| `body`    | string   | No       | New body content        |
 
 #### Response Format
 
@@ -277,9 +277,9 @@ Saves the composition to the Drafts folder without closing the compose window. T
 
 #### Parameters
 
-| Name    | Type   | Required | Description              |
-| ------- | ------ | -------- | ------------------------ |
-| `tabId` | number | Yes      | ID of the compose tab    |
+| Name    | Type   | Required | Description           |
+| ------- | ------ | -------- | --------------------- |
+| `tabId` | number | Yes      | ID of the compose tab |
 
 #### Response Format
 
@@ -322,9 +322,9 @@ Saves the composition to the Templates folder. Templates can be reused to create
 
 #### Parameters
 
-| Name    | Type   | Required | Description              |
-| ------- | ------ | -------- | ------------------------ |
-| `tabId` | number | Yes      | ID of the compose tab    |
+| Name    | Type   | Required | Description           |
+| ------- | ------ | -------- | --------------------- |
+| `tabId` | number | Yes      | ID of the compose tab |
 
 #### Response Format
 
@@ -367,10 +367,10 @@ Sends the email from the compose window. Different send modes control whether th
 
 #### Parameters
 
-| Name    | Type   | Required | Default   | Description                                           |
-| ------- | ------ | -------- | --------- | ----------------------------------------------------- |
-| `tabId` | number | Yes      | -         | ID of the compose tab                                 |
-| `mode`  | string | No       | `default` | Send mode: `default`, `sendNow`, or `sendLater`       |
+| Name    | Type   | Required | Default   | Description                                     |
+| ------- | ------ | -------- | --------- | ----------------------------------------------- |
+| `tabId` | number | Yes      | -         | ID of the compose tab                           |
+| `mode`  | string | No       | `default` | Send mode: `default`, `sendNow`, or `sendLater` |
 
 #### Send Modes
 
@@ -418,15 +418,15 @@ Sending an email is irreversible. Ensure the composition is complete and correct
 
 All compose operations may return these error codes:
 
-| Code   | Message                 | Description                                  |
-| ------ | ----------------------- | -------------------------------------------- |
-| -32000 | Thunderbird not running | Thunderbird application is not active        |
-| -32001 | Extension not installed | Thunderbird MCP extension not found          |
-| -32002 | Permission denied       | compose permission not granted               |
-| -32003 | Resource not found      | Message, tab, or identity not found          |
-| -32004 | Operation timeout       | Operation exceeded timeout limit (10s)       |
-| -32602 | Invalid params          | Invalid email addresses or missing tab ID    |
-| -32603 | Internal error          | Compose window closed or send failed         |
+| Code   | Message                 | Description                               |
+| ------ | ----------------------- | ----------------------------------------- |
+| -32000 | Thunderbird not running | Thunderbird application is not active     |
+| -32001 | Extension not installed | Thunderbird MCP extension not found       |
+| -32002 | Permission denied       | compose permission not granted            |
+| -32003 | Resource not found      | Message, tab, or identity not found       |
+| -32004 | Operation timeout       | Operation exceeded timeout limit (10s)    |
+| -32602 | Invalid params          | Invalid email addresses or missing tab ID |
+| -32603 | Internal error          | Compose window closed or send failed      |
 
 ---
 
@@ -517,8 +517,8 @@ All compose operations may return these error codes:
 
 ## Permissions Summary
 
-| Tool                                | compose |
-| ----------------------------------- | ------- |
+| Tool                                | compose  |
+| ----------------------------------- | -------- |
 | `thunderbird_compose_begin_new`     | Required |
 | `thunderbird_compose_begin_reply`   | Required |
 | `thunderbird_compose_begin_forward` | Required |

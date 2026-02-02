@@ -88,12 +88,12 @@ None
 
 Thunderbird includes 5 default tags with reserved keys:
 
-| Key       | Default Name | Default Color |
-| --------- | ------------ | ------------- |
-| `$label1` | Important    | #FF0000 (Red) |
+| Key       | Default Name | Default Color    |
+| --------- | ------------ | ---------------- |
+| `$label1` | Important    | #FF0000 (Red)    |
 | `$label2` | Work         | #FF9900 (Orange) |
-| `$label3` | Personal     | #009900 (Green) |
-| `$label4` | To Do        | #3333FF (Blue) |
+| `$label3` | Personal     | #009900 (Green)  |
+| `$label4` | To Do        | #3333FF (Blue)   |
 | `$label5` | Later        | #993399 (Purple) |
 
 ---
@@ -108,11 +108,11 @@ Creates a new tag that can be applied to messages. The key must be unique and fo
 
 #### Parameters
 
-| Name    | Type   | Required | Description                                                    |
-| ------- | ------ | -------- | -------------------------------------------------------------- |
-| `key`   | string | Yes      | Unique identifier (1-50 chars, letters/numbers/underscores)   |
-| `tag`   | string | Yes      | Display name for the tag (1-100 chars)                         |
-| `color` | string | Yes      | Tag color in hex format (#RRGGBB)                              |
+| Name    | Type   | Required | Description                                                 |
+| ------- | ------ | -------- | ----------------------------------------------------------- |
+| `key`   | string | Yes      | Unique identifier (1-50 chars, letters/numbers/underscores) |
+| `tag`   | string | Yes      | Display name for the tag (1-100 chars)                      |
+| `color` | string | Yes      | Tag color in hex format (#RRGGBB)                           |
 
 #### Key Constraints
 
@@ -155,11 +155,11 @@ Creates a new tag that can be applied to messages. The key must be unique and fo
 
 #### Error Cases
 
-| Condition | Error |
-| --------- | ----- |
-| Key already exists | Duplicate key error |
-| Invalid key format | Validation error |
-| Invalid color format | Validation error |
+| Condition            | Error               |
+| -------------------- | ------------------- |
+| Key already exists   | Duplicate key error |
+| Invalid key format   | Validation error    |
+| Invalid color format | Validation error    |
 
 ---
 
@@ -173,11 +173,11 @@ Modifies the display name and/or color of an existing tag. At least one of `tag`
 
 #### Parameters
 
-| Name    | Type   | Required | Description                               |
-| ------- | ------ | -------- | ----------------------------------------- |
-| `key`   | string | Yes      | Key of the tag to update                  |
-| `tag`   | string | No       | New display name (1-100 chars)            |
-| `color` | string | No       | New color in hex format (#RRGGBB)         |
+| Name    | Type   | Required | Description                       |
+| ------- | ------ | -------- | --------------------------------- |
+| `key`   | string | Yes      | Key of the tag to update          |
+| `tag`   | string | No       | New display name (1-100 chars)    |
+| `color` | string | No       | New color in hex format (#RRGGBB) |
 
 **Note**: At least one of `tag` or `color` must be provided.
 
@@ -293,14 +293,14 @@ Permanently removes a tag. The tag is also removed from all messages that had it
 
 All tag operations may return these error codes:
 
-| Code   | Message                 | Description                                 |
-| ------ | ----------------------- | ------------------------------------------- |
-| -32000 | Thunderbird not running | Thunderbird application is not active       |
-| -32001 | Extension not installed | Thunderbird MCP extension not found         |
-| -32002 | Permission denied       | messagesTags permission not granted         |
-| -32003 | Resource not found      | Tag key does not exist                      |
+| Code   | Message                 | Description                                     |
+| ------ | ----------------------- | ----------------------------------------------- |
+| -32000 | Thunderbird not running | Thunderbird application is not active           |
+| -32001 | Extension not installed | Thunderbird MCP extension not found             |
+| -32002 | Permission denied       | messagesTags permission not granted             |
+| -32003 | Resource not found      | Tag key does not exist                          |
 | -32602 | Invalid params          | Invalid key format, color format, or empty name |
-| -32603 | Internal error          | Tag already exists or deletion failed       |
+| -32603 | Internal error          | Tag already exists or deletion failed           |
 
 ---
 
@@ -326,17 +326,17 @@ Tags are applied to messages using the `thunderbird_messages_update` tool:
 
 ### Recommended Color Palette
 
-| Color Name | Hex Code | Use Case |
-| ---------- | -------- | -------- |
-| Red | #FF0000 | Urgent/Important |
-| Orange | #FF9900 | Work-related |
-| Yellow | #FFCC00 | Pending/Review |
-| Green | #009900 | Personal/Done |
-| Blue | #3333FF | To Do |
-| Purple | #993399 | Later/Defer |
-| Cyan | #00CCFF | Projects |
-| Pink | #FF66CC | Social |
-| Gray | #666666 | Archive |
+| Color Name | Hex Code | Use Case         |
+| ---------- | -------- | ---------------- |
+| Red        | #FF0000  | Urgent/Important |
+| Orange     | #FF9900  | Work-related     |
+| Yellow     | #FFCC00  | Pending/Review   |
+| Green      | #009900  | Personal/Done    |
+| Blue       | #3333FF  | To Do            |
+| Purple     | #993399  | Later/Defer      |
+| Cyan       | #00CCFF  | Projects         |
+| Pink       | #FF66CC  | Social           |
+| Gray       | #666666  | Archive          |
 
 ### Color Format
 
@@ -429,8 +429,8 @@ Tags are applied to messages using the `thunderbird_messages_update` tool:
 
 ## Permissions Summary
 
-| Tool                    | messagesRead | messagesTags |
-| ----------------------- | ------------ | ------------ |
+| Tool                      | messagesRead | messagesTags |
+| ------------------------- | ------------ | ------------ |
 | `thunderbird_tags_list`   | Required     | -            |
 | `thunderbird_tags_create` | -            | Required     |
 | `thunderbird_tags_update` | -            | Required     |

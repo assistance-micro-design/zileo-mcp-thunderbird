@@ -60,7 +60,9 @@ graph TB
             MSG[Messages Tools]
             FLD[Folders Tools]
             CNT[Contacts Tools]
+            CMP[Compose Tools]
             CAL[Calendar Tools]
+            TSK[Tasks Tools]
             ACC[Accounts Tools]
             TAG[Tags Tools]
         end
@@ -84,7 +86,9 @@ graph TB
     Tools --> MSG
     Tools --> FLD
     Tools --> CNT
+    Tools --> CMP
     Tools --> CAL
+    Tools --> TSK
     Tools --> ACC
     Tools --> TAG
 
@@ -93,12 +97,16 @@ graph TB
     MSG --> Validation
     FLD --> Validation
     CNT --> Validation
+    CMP --> Validation
     CAL --> Validation
+    TSK --> Validation
 
     MSG --> NMClient
     FLD --> NMClient
     CNT --> NMClient
+    CMP --> NMClient
     CAL --> NMClient
+    TSK --> NMClient
     ResHandlers --> NMClient
 
     Tools --> ErrorHandler
