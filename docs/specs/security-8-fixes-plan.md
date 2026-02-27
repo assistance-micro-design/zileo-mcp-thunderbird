@@ -38,7 +38,7 @@ Bridge security:                                     [DONE]
 
 Auth + Authorization (dependants):
   Fix 2: WebSocket authentication (shared secret)      [DONE]
-  Fix 1: Tool authorization tiers + extension options UI
+  Fix 1: Tool authorization tiers + extension options UI [DONE]
 ```
 
 ---

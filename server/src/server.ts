@@ -17,8 +17,10 @@ import {
   initializeWebSocketBridge,
   stopWebSocketBridge,
   isBridgeClientMode,
+  getWebSocketBridge,
 } from "./websocket/bridge.js";
 import { allTools, getToolHandler, toolExists } from "./tools/index.js";
+import { isToolAllowed, getToolTier } from "./tools/tool-permissions.js";
 import {
   resources,
   resourceTemplates,
@@ -38,7 +40,7 @@ export class ThunderbirdMcpServer {
     this.server = new Server(
       {
         name: "thunderbird-mcp",
-        version: "1.0.0",
+        version: "1.3.0",
       },
       {
         capabilities: {
@@ -59,13 +61,20 @@ export class ThunderbirdMcpServer {
    * Set up MCP protocol handlers
    */
   private setupHandlers(): void {
-    // List available tools
+    // List available tools (filtered by SEC-AUTH-001 permissions)
     this.server.setRequestHandler(ListToolsRequestSchema, async () => {
       logger.debug("Received tools/list request");
-      return { tools: allTools };
+      const permissions = this.getToolPermissions();
+      const filteredTools = allTools.filter(
+        (tool: { name: string }) => isToolAllowed(tool.name, permissions),
+      );
+      logger.debug(
+        `Returning ${filteredTools.length}/${allTools.length} tools (${allTools.length - filteredTools.length} filtered by permissions)`,
+      );
+      return { tools: filteredTools };
     });
 
-    // Call a tool
+    // Call a tool (with SEC-AUTH-001 permission check)
     this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
       const { name, arguments: args } = request.params;
       logger.info(`Tool call: ${name}`);
@@ -74,6 +83,22 @@ export class ThunderbirdMcpServer {
       if (!toolExists(name)) {
         return {
           content: [{ type: "text", text: `Error: Tool not found: ${name}` }],
+          isError: true,
+        };
+      }
+
+      // SEC-AUTH-001: Check tool authorization
+      const permissions = this.getToolPermissions();
+      if (!isToolAllowed(name, permissions)) {
+        const tier = getToolTier(name) || "unknown";
+        logger.warn(`Tool call denied by permissions: ${name} (tier: ${tier})`);
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Error: Tool "${name}" is disabled (tier: ${tier}). Enable it in the Thunderbird extension options (Add-ons Manager > Thunderbird MCP Server > Options).`,
+            },
+          ],
           isError: true,
         };
       }
@@ -152,6 +177,20 @@ export class ThunderbirdMcpServer {
         }
       },
     );
+  }
+
+  /**
+   * SEC-AUTH-001: Get tool permissions from the WebSocket bridge.
+   * Returns an empty object if the bridge is not initialized (defaults will be used).
+   */
+  private getToolPermissions(): Record<string, boolean> {
+    try {
+      const bridge = getWebSocketBridge();
+      return bridge.getToolPermissions();
+    } catch {
+      // Bridge not initialized yet - use empty permissions (defaults apply)
+      return {};
+    }
   }
 
   /**

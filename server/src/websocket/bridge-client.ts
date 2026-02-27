@@ -84,6 +84,12 @@ export class WebSocketBridgeClient extends EventEmitter {
   private reconnectAttempts: number = 0;
   private readonly maxReconnectAttempts: number = 3;
 
+  /**
+   * SEC-AUTH-001: Tool permissions received from the bridge.
+   * Updated when the bridge broadcasts "ready" or "permissionsUpdated" notifications.
+   */
+  private toolPermissions: Record<string, boolean> = {};
+
   constructor(options: WebSocketBridgeOptions) {
     super();
     this.options = {
@@ -174,7 +180,18 @@ export class WebSocketBridgeClient extends EventEmitter {
       case "response":
         this.handleResponse(message);
         break;
-      case "notification":
+      case "notification": {
+        // SEC-AUTH-001: Capture tool permissions from any notification that carries them.
+        // - "connected" (welcome): initial permissions when joining the bridge
+        // - "ready": broadcast when Thunderbird extension connects
+        // - "permissionsUpdated": broadcast when user changes options
+        const notifData = message.data as Record<string, unknown> | undefined;
+        if (notifData?.toolPermissions) {
+          this.toolPermissions = notifData.toolPermissions as Record<string, boolean>;
+          logger.info(
+            `Tool permissions received via "${message.event}" (${Object.keys(this.toolPermissions).length} entries)`,
+          );
+        }
         // Handle welcome message from bridge
         if (message.event === "connected") {
           const data = message.data as
@@ -186,6 +203,7 @@ export class WebSocketBridgeClient extends EventEmitter {
         }
         this.emit("notification", message);
         break;
+      }
       case "ping":
         // Respond to ping with pong
         this.sendPong(message.id);
@@ -293,6 +311,14 @@ export class WebSocketBridgeClient extends EventEmitter {
    */
   isConnected(): boolean {
     return this.ws !== null && this.ws.readyState === WebSocket.OPEN;
+  }
+
+  /**
+   * SEC-AUTH-001: Get tool permissions received from the bridge.
+   * Returns an empty object if no permissions have been received yet.
+   */
+  getToolPermissions(): Record<string, boolean> {
+    return this.toolPermissions;
   }
 
   /**

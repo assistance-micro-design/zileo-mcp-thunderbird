@@ -5,6 +5,53 @@ All notable changes to the Thunderbird MCP Server project will be documented in 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2026-02-27
+
+### Added
+
+- **Tool Authorization Tiers** (SEC-AUTH-001, SEC-AUTH-002): All 56 MCP tools classified into 3 risk tiers:
+  - `read` (23 tools): list, get, search operations - enabled by default
+  - `modify` (25 tools): create, update, move, copy, archive - enabled by default
+  - `destructive` (8 tools): delete, send - **disabled by default**
+- **Extension Options Page** (`options.html`, `options.js`): Full UI in the Thunderbird Add-on Manager to toggle individual tool permissions, grouped by domain with color-coded tier badges (green/orange/red).
+- **Bulk Permission Presets**: "Enable All", "Read Only", "Read + Modify", "Disable Destructive" buttons for quick configuration.
+- **Real-time Permission Sync**: Permission changes from the options page are immediately propagated to the MCP server via `permissionsUpdated` WebSocket notification.
+- **WebSocket Authentication** (SEC-WS-001): Token-based auth on WebSocket upgrade. Bridge generates a `crypto.randomBytes(32)` token at startup, served via `GET /auth/token`. Both extension and bridge-client must present the token via query parameter to connect. Timing-safe comparison prevents timing attacks.
+- New `tool-permissions.ts` module: `ToolTier` type, `TOOL_TIERS` map, `getDefaultPermissions()`, `isToolAllowed()`, `getToolTier()`.
+- New `getToolPermissions()` method on `BridgeInterface`, `WebSocketBridge`, and `WebSocketBridgeClient`.
+- `"storage"` permission and `"options_ui"` declaration in extension manifest.
+- 18 unit tests for tool-permissions module (`tool-permissions.test.ts`).
+- 33 unit tests for WebSocket authentication (`bridge-auth.test.ts`).
+
+### Changed
+
+- MCP `tools/list` handler now filters tools based on active permissions from the Thunderbird extension.
+- MCP `tools/call` handler checks permissions before execution and returns clear error with tier info and instructions to enable the tool in options.
+- Extension `handleOpen()` is now async: loads `toolPermissions` from `browser.storage.local` and includes them in the `ready` notification.
+- Bridge `handleThunderbirdMessage()` captures `toolPermissions` from `ready` and `permissionsUpdated` notifications.
+- Bridge-client `handleMessage()` captures `toolPermissions` from broadcast notifications.
+- MCP server version string updated to `1.3.0`.
+- Extension fetches auth token via `fetch()` before WebSocket connection.
+- Bridge-client fetches auth token via `http.get()` before WebSocket connection.
+
+### Security
+
+Completes the 8-fix security plan (initial score: 72/100 B-, target: ~92/100):
+
+| Phase | Finding | Severity | Fix |
+|-------|---------|----------|-----|
+| 5 | SEC-AUTH-001 | CRITICAL | Tool authorization tier system |
+| 5 | SEC-AUTH-002 | CRITICAL | Per-tool permission toggles in extension options |
+| 4 | SEC-WS-001 | HIGH | Token-based WebSocket authentication |
+| 1 | SEC-ERR-001 | HIGH | Stack trace removed from responses |
+| 1 | SEC-ERR-002 | HIGH | Error details sanitized |
+| 3 | SEC-WS-003 | MEDIUM | Origin validation on upgrade |
+| 1 | SEC-WS-002 | MEDIUM | 5 MiB maxPayload |
+| 1 | SEC-DATA-001/002 | MEDIUM | Sensitive data in DEBUG only |
+| 2 | SEC-INPUT-001/002 | LOW | Zod .max() and .datetime() bounds |
+
+---
+
 ## [1.2.2] - 2026-02-27
 
 ### Security

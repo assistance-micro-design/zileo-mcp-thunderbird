@@ -2,107 +2,119 @@
 
 Liste des outils disponibles dans le serveur MCP Thunderbird pour integration LLM.
 
+## Tiers d'autorisation (v1.3.0+)
+
+Chaque outil est classifie selon son niveau de risque. Les permissions sont configurables dans les options de l'extension Thunderbird (Add-ons Manager > Thunderbird MCP Server > Options).
+
+| Tier | Couleur | Par defaut | Description |
+|------|---------|------------|-------------|
+| `read` | Vert | Active | Lecture seule (list, get, search) |
+| `modify` | Orange | Active | Modifications recuperables (create, update, move, copy) |
+| `destructive` | Rouge | **Desactive** | Operations irreversibles (delete, send) |
+
+---
+
 ## Messages (10 outils)
 
-| Nom de l'outil                     | Description                                  |
-| ---------------------------------- | -------------------------------------------- |
-| `thunderbird_messages_search`      | Rechercher des messages avec filtres avances |
-| `thunderbird_messages_list`        | Lister les messages d'un dossier             |
-| `thunderbird_messages_list_unread` | Lister les messages non lus                  |
-| `thunderbird_messages_list_recent` | Lister les messages recents (global)         |
-| `thunderbird_messages_get`         | Obtenir un message specifique                |
-| `thunderbird_messages_move`        | Deplacer des messages                        |
-| `thunderbird_messages_copy`        | Copier des messages                          |
-| `thunderbird_messages_delete`      | Supprimer des messages                       |
-| `thunderbird_messages_update`      | Mettre a jour des messages (lu, tags, etc.)  |
-| `thunderbird_messages_archive`     | Archiver des messages                        |
+| Nom de l'outil                     | Tier | Description                                  |
+| ---------------------------------- | ---- | -------------------------------------------- |
+| `thunderbird_messages_search`      | read | Rechercher des messages avec filtres avances |
+| `thunderbird_messages_list`        | read | Lister les messages d'un dossier             |
+| `thunderbird_messages_list_unread` | read | Lister les messages non lus                  |
+| `thunderbird_messages_list_recent` | read | Lister les messages recents (global)         |
+| `thunderbird_messages_get`         | read | Obtenir un message specifique                |
+| `thunderbird_messages_move`        | modify | Deplacer des messages                      |
+| `thunderbird_messages_copy`        | modify | Copier des messages                        |
+| `thunderbird_messages_update`      | modify | Mettre a jour des messages (lu, tags, etc.)|
+| `thunderbird_messages_archive`     | modify | Archiver des messages                      |
+| `thunderbird_messages_delete`      | destructive | Supprimer des messages                |
 
 ## Composition (8 outils)
 
-| Nom de l'outil                      | Description                                      |
-| ----------------------------------- | ------------------------------------------------ |
-| `thunderbird_compose_begin_new`     | Ouvrir une fenetre de composition vide           |
-| `thunderbird_compose_begin_reply`   | Ouvrir une fenetre de reponse a un message       |
-| `thunderbird_compose_begin_forward` | Ouvrir une fenetre de transfert d'un message     |
-| `thunderbird_compose_get_details`   | Obtenir les details d'une fenetre de composition |
-| `thunderbird_compose_set_details`   | Modifier le contenu d'une composition            |
-| `thunderbird_compose_save_draft`    | Sauvegarder en brouillon                         |
-| `thunderbird_compose_save_template` | Sauvegarder en template reutilisable             |
-| `thunderbird_compose_send`          | Envoyer l'email en cours de composition          |
+| Nom de l'outil                      | Tier | Description                                      |
+| ----------------------------------- | ---- | ------------------------------------------------ |
+| `thunderbird_compose_begin_new`     | modify | Ouvrir une fenetre de composition vide         |
+| `thunderbird_compose_begin_reply`   | modify | Ouvrir une fenetre de reponse a un message     |
+| `thunderbird_compose_begin_forward` | modify | Ouvrir une fenetre de transfert d'un message   |
+| `thunderbird_compose_get_details`   | read | Obtenir les details d'une fenetre de composition |
+| `thunderbird_compose_set_details`   | modify | Modifier le contenu d'une composition          |
+| `thunderbird_compose_save_draft`    | modify | Sauvegarder en brouillon                       |
+| `thunderbird_compose_save_template` | modify | Sauvegarder en template reutilisable           |
+| `thunderbird_compose_send`          | destructive | Envoyer l'email en cours de composition   |
 
 ## Dossiers (7 outils)
 
-| Nom de l'outil                  | Description                   |
-| ------------------------------- | ----------------------------- |
-| `thunderbird_folders_list`      | Lister les dossiers           |
-| `thunderbird_folders_get`       | Obtenir un dossier specifique |
-| `thunderbird_folders_create`    | Creer un dossier              |
-| `thunderbird_folders_rename`    | Renommer un dossier           |
-| `thunderbird_folders_delete`    | Supprimer un dossier          |
-| `thunderbird_folders_move`      | Deplacer un dossier           |
-| `thunderbird_folders_mark_read` | Marquer un dossier comme lu   |
+| Nom de l'outil                  | Tier | Description                   |
+| ------------------------------- | ---- | ----------------------------- |
+| `thunderbird_folders_list`      | read | Lister les dossiers           |
+| `thunderbird_folders_get`       | read | Obtenir un dossier specifique |
+| `thunderbird_folders_create`    | modify | Creer un dossier            |
+| `thunderbird_folders_rename`    | modify | Renommer un dossier         |
+| `thunderbird_folders_move`      | modify | Deplacer un dossier         |
+| `thunderbird_folders_mark_read` | modify | Marquer un dossier comme lu |
+| `thunderbird_folders_delete`    | destructive | Supprimer un dossier   |
 
 ## Contacts (9 outils)
 
-| Nom de l'outil                    | Description                    |
-| --------------------------------- | ------------------------------ |
-| `thunderbird_contacts_search`     | Rechercher des contacts        |
-| `thunderbird_contacts_list`       | Lister les contacts            |
-| `thunderbird_contacts_get`        | Obtenir un contact specifique  |
-| `thunderbird_contacts_create`     | Creer un contact               |
-| `thunderbird_contacts_update`     | Mettre a jour un contact       |
-| `thunderbird_contacts_delete`     | Supprimer un contact           |
-| `thunderbird_addressbooks_list`   | Lister les carnets d'adresses  |
-| `thunderbird_addressbooks_create` | Creer un carnet d'adresses     |
-| `thunderbird_addressbooks_delete` | Supprimer un carnet d'adresses |
+| Nom de l'outil                    | Tier | Description                    |
+| --------------------------------- | ---- | ------------------------------ |
+| `thunderbird_contacts_search`     | read | Rechercher des contacts        |
+| `thunderbird_contacts_list`       | read | Lister les contacts            |
+| `thunderbird_contacts_get`        | read | Obtenir un contact specifique  |
+| `thunderbird_contacts_create`     | modify | Creer un contact             |
+| `thunderbird_contacts_update`     | modify | Mettre a jour un contact     |
+| `thunderbird_contacts_delete`     | destructive | Supprimer un contact    |
+| `thunderbird_addressbooks_list`   | read | Lister les carnets d'adresses  |
+| `thunderbird_addressbooks_create` | modify | Creer un carnet d'adresses   |
+| `thunderbird_addressbooks_delete` | destructive | Supprimer un carnet d'adresses |
 
 ## Tags (4 outils)
 
-| Nom de l'outil            | Description          |
-| ------------------------- | -------------------- |
-| `thunderbird_tags_list`   | Lister les tags      |
-| `thunderbird_tags_create` | Creer un tag         |
-| `thunderbird_tags_update` | Mettre a jour un tag |
-| `thunderbird_tags_delete` | Supprimer un tag     |
+| Nom de l'outil            | Tier | Description          |
+| ------------------------- | ---- | -------------------- |
+| `thunderbird_tags_list`   | read | Lister les tags      |
+| `thunderbird_tags_create` | modify | Creer un tag       |
+| `thunderbird_tags_update` | modify | Mettre a jour un tag |
+| `thunderbird_tags_delete` | destructive | Supprimer un tag |
 
 ## Comptes (3 outils)
 
-| Nom de l'outil                | Description                  |
-| ----------------------------- | ---------------------------- |
-| `thunderbird_accounts_list`   | Lister les comptes           |
-| `thunderbird_accounts_get`    | Obtenir un compte specifique |
-| `thunderbird_identities_list` | Lister les identites         |
+| Nom de l'outil                | Tier | Description                  |
+| ----------------------------- | ---- | ---------------------------- |
+| `thunderbird_accounts_list`   | read | Lister les comptes           |
+| `thunderbird_accounts_get`    | read | Obtenir un compte specifique |
+| `thunderbird_identities_list` | read | Lister les identites         |
 
 ## Calendriers (9 outils) \*
 
-| Nom de l'outil               | Description                      |
-| ---------------------------- | -------------------------------- |
-| `thunderbird_calendars_list` | Lister les calendriers           |
-| `thunderbird_calendars_get`  | Obtenir un calendrier specifique |
-| `thunderbird_events_search`  | Rechercher des evenements        |
-| `thunderbird_events_list`    | Lister les evenements            |
-| `thunderbird_events_get`     | Obtenir un evenement specifique  |
-| `thunderbird_events_create`  | Creer un evenement               |
-| `thunderbird_events_update`  | Mettre a jour un evenement       |
-| `thunderbird_events_move`    | Deplacer un evenement            |
-| `thunderbird_events_delete`  | Supprimer un evenement           |
+| Nom de l'outil               | Tier | Description                      |
+| ---------------------------- | ---- | -------------------------------- |
+| `thunderbird_calendars_list` | read | Lister les calendriers           |
+| `thunderbird_calendars_get`  | read | Obtenir un calendrier specifique |
+| `thunderbird_events_search`  | read | Rechercher des evenements        |
+| `thunderbird_events_list`    | read | Lister les evenements            |
+| `thunderbird_events_get`     | read | Obtenir un evenement specifique  |
+| `thunderbird_events_create`  | modify | Creer un evenement             |
+| `thunderbird_events_update`  | modify | Mettre a jour un evenement     |
+| `thunderbird_events_move`    | modify | Deplacer un evenement          |
+| `thunderbird_events_delete`  | destructive | Supprimer un evenement    |
 
 ## Taches (6 outils) \*
 
-| Nom de l'outil               | Description                      |
-| ---------------------------- | -------------------------------- |
-| `thunderbird_tasks_list`     | Lister les taches                |
-| `thunderbird_tasks_get`      | Obtenir une tache specifique     |
-| `thunderbird_tasks_create`   | Creer une tache                  |
-| `thunderbird_tasks_update`   | Mettre a jour une tache          |
-| `thunderbird_tasks_delete`   | Supprimer une tache              |
-| `thunderbird_tasks_complete` | Marquer une tache comme terminee |
+| Nom de l'outil               | Tier | Description                      |
+| ---------------------------- | ---- | -------------------------------- |
+| `thunderbird_tasks_list`     | read | Lister les taches                |
+| `thunderbird_tasks_get`      | read | Obtenir une tache specifique     |
+| `thunderbird_tasks_create`   | modify | Creer une tache                |
+| `thunderbird_tasks_update`   | modify | Mettre a jour une tache        |
+| `thunderbird_tasks_complete` | modify | Marquer une tache comme terminee |
+| `thunderbird_tasks_delete`   | destructive | Supprimer une tache       |
 
 ---
 
 \* _API experimentale utilisant webext-experiments calendar_
 
-**Total: 56 outils MCP**
+**Total: 56 outils MCP** (23 read, 25 modify, 8 destructive)
 
 ---
 

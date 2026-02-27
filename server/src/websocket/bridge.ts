@@ -178,6 +178,13 @@ export class WebSocketBridge extends EventEmitter {
    */
   private readonly authToken: string;
 
+  /**
+   * SEC-AUTH-001: Tool permissions received from the Thunderbird extension.
+   * Updated when the extension sends "ready" or "permissionsUpdated" notifications.
+   * Empty object means no permissions received yet (defaults will be used).
+   */
+  private toolPermissions: Record<string, boolean> = {};
+
   constructor(options: WebSocketBridgeOptions) {
     super();
     this.options = {
@@ -400,11 +407,19 @@ export class WebSocketBridge extends EventEmitter {
     });
 
     // Send connection confirmation to MCP client
+    // SEC-AUTH-001: Include current tool permissions so the client
+    // doesn't have to wait for a future notification
+    const welcomeData: Record<string, unknown> = {
+      thunderbirdConnected: this.thunderbirdClient !== null,
+    };
+    if (Object.keys(this.toolPermissions).length > 0) {
+      welcomeData.toolPermissions = this.toolPermissions;
+    }
     const welcome: WsMessage = {
       id: `welcome_${Date.now()}`,
       type: "notification",
       event: "connected",
-      data: { thunderbirdConnected: this.thunderbirdClient !== null },
+      data: welcomeData,
       timestamp: new Date().toISOString(),
     };
     ws.send(JSON.stringify(welcome));
@@ -421,6 +436,14 @@ export class WebSocketBridge extends EventEmitter {
         this.handleResponse(message);
         break;
       case "notification":
+        // SEC-AUTH-001: Capture tool permissions from extension notifications
+        if (message.event === "ready" || message.event === "permissionsUpdated") {
+          const data = message.data as Record<string, unknown> | undefined;
+          if (data?.toolPermissions) {
+            this.toolPermissions = data.toolPermissions as Record<string, boolean>;
+            logger.info(`Tool permissions updated (${Object.keys(this.toolPermissions).length} entries)`);
+          }
+        }
         this.emit("notification", message);
         // Broadcast notifications to all MCP clients
         this.broadcastToMcpClients(message);
@@ -662,6 +685,14 @@ export class WebSocketBridge extends EventEmitter {
   }
 
   /**
+   * SEC-AUTH-001: Get tool permissions received from the Thunderbird extension.
+   * Returns an empty object if no permissions have been received yet.
+   */
+  getToolPermissions(): Record<string, boolean> {
+    return this.toolPermissions;
+  }
+
+  /**
    * Reject all pending requests
    */
   private rejectAllPending(reason: string): void {
@@ -776,6 +807,7 @@ export interface BridgeInterface {
     timeout?: number,
   ): Promise<WsMessage>;
   isConnected(): boolean;
+  getToolPermissions(): Record<string, boolean>;
   on(event: string, listener: (...args: unknown[]) => void): this;
 }
 

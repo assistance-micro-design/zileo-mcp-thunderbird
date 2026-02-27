@@ -84,31 +84,50 @@ async function connectWebSocket() {
 }
 
 /**
- * Handle WebSocket connection open
+ * Handle WebSocket connection open.
+ * SEC-AUTH-001: Loads tool permissions from storage and includes them
+ * in the ready notification so the bridge can enforce authorization.
  */
-function handleOpen() {
+async function handleOpen() {
   console.log("[MCP] WebSocket connected to MCP server");
   reconnectAttempts = 0;
   isReconnecting = false; // Reset reconnection flag
   lastMessageTime = Date.now(); // Reset connection health timer
 
-  // Send ready notification
+  // SEC-AUTH-001: Load tool permissions from storage
+  let toolPermissions = null;
+  try {
+    const stored = await browser.storage.local.get("toolPermissions");
+    if (stored.toolPermissions) {
+      toolPermissions = stored.toolPermissions;
+      console.log("[MCP] Loaded tool permissions from storage");
+    }
+  } catch (error) {
+    console.warn("[MCP] Failed to load tool permissions:", error);
+  }
+
+  // Send ready notification with permissions
+  const readyData = {
+    version: browser.runtime.getManifest().version,
+    capabilities: [
+      "messages",
+      "folders",
+      "contacts",
+      "tags",
+      "accounts",
+      "calendar",
+      "tasks",
+    ],
+  };
+  if (toolPermissions) {
+    readyData.toolPermissions = toolPermissions;
+  }
+
   sendMessage({
     id: generateId(),
     type: "notification",
     event: "ready",
-    data: {
-      version: browser.runtime.getManifest().version,
-      capabilities: [
-        "messages",
-        "folders",
-        "contacts",
-        "tags",
-        "accounts",
-        "calendar",
-        "tasks",
-      ],
-    },
+    data: readyData,
     timestamp: new Date().toISOString(),
   });
 }
@@ -381,6 +400,23 @@ function initialize() {
   // Connect to MCP server via WebSocket
   connectWebSocket();
 }
+
+// ============================================================
+// SEC-AUTH-001: Listen for permission changes from options page
+// ============================================================
+browser.storage.onChanged.addListener((changes, areaName) => {
+  if (areaName === "local" && changes.toolPermissions) {
+    console.log("[MCP] Tool permissions updated from options page");
+    const newPermissions = changes.toolPermissions.newValue;
+    sendMessage({
+      id: generateId(),
+      type: "notification",
+      event: "permissionsUpdated",
+      data: { toolPermissions: newPermissions },
+      timestamp: new Date().toISOString(),
+    });
+  }
+});
 
 // ============================================================
 // MV3 Event Page Lifecycle - Top-level listeners (REQUIRED)
