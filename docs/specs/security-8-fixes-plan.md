@@ -33,8 +33,8 @@ Fixes rapides (independants, ~1-2 lignes chacun):  [DONE]
 Schema hardening:                                    [DONE]
   Fix 8: Add .max() and .datetime() to Zod schemas   [DONE]
 
-Bridge security:
-  Fix 6: Origin validation on WebSocket upgrade
+Bridge security:                                     [DONE]
+  Fix 6: Origin validation on WebSocket upgrade        [DONE]
 
 Auth + Authorization (dependants):
   Fix 2: WebSocket authentication (shared secret)

@@ -46,6 +46,40 @@ interface PendingRequest {
 const MAX_WS_PAYLOAD = 5 * 1024 * 1024;
 
 /**
+ * Allowed local hostnames for WebSocket origin validation
+ */
+const ALLOWED_LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "[::1]"]);
+
+/**
+ * Validates whether a WebSocket upgrade origin is allowed.
+ * Accepts:
+ * - undefined/null/empty (CLI, docker exec, native connections)
+ * - localhost, 127.0.0.1, ::1 (local connections)
+ * - moz-extension:// (Thunderbird extension)
+ *
+ * Rejects all other origins (external websites, other extensions, etc.)
+ *
+ * @param origin - The Origin header from the WebSocket upgrade request
+ * @returns true if the origin is allowed, false otherwise
+ */
+export function isAllowedOrigin(origin: string | undefined | null): boolean {
+  if (origin === undefined || origin === null || origin === "") {
+    return true;
+  }
+
+  if (origin.startsWith("moz-extension://")) {
+    return true;
+  }
+
+  try {
+    const url = new URL(origin);
+    return ALLOWED_LOCAL_HOSTS.has(url.hostname);
+  } catch {
+    return false;
+  }
+}
+
+/**
  * WebSocket Bridge Options
  */
 export interface WebSocketBridgeOptions {
@@ -120,6 +154,17 @@ export class WebSocketBridge extends EventEmitter {
         this.httpServer.on(
           "upgrade",
           (request: IncomingMessage, socket, head) => {
+            // SEC-WS-003: Validate origin before allowing upgrade
+            const origin = request.headers.origin;
+            if (!isAllowedOrigin(origin)) {
+              logger.warn(
+                `WebSocket upgrade rejected: forbidden origin "${origin}"`,
+              );
+              socket.write("HTTP/1.1 403 Forbidden\r\n\r\n");
+              socket.destroy();
+              return;
+            }
+
             const pathname = new URL(
               request.url || "/",
               `http://${request.headers.host}`,
@@ -580,7 +625,7 @@ export class WebSocketBridge extends EventEmitter {
 
     // Close WebSocket servers
     return new Promise((resolve) => {
-      const closeServers = () => {
+      const closeServers = (): void => {
         if (this.httpServer) {
           this.httpServer.close(() => {
             this.httpServer = null;

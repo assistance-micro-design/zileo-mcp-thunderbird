@@ -24,7 +24,7 @@ export async function readMessage(
     const lengthBuffer = Buffer.alloc(4);
     let bytesRead = 0;
 
-    const onData = (chunk: Buffer) => {
+    const onData = (chunk: Buffer): void => {
       const remaining = 4 - bytesRead;
       const toCopy = Math.min(remaining, chunk.length);
       chunk.copy(lengthBuffer, bytesRead, 0, toCopy);
@@ -53,7 +53,7 @@ export async function readMessage(
         const messageBuffer = Buffer.alloc(messageLength);
         let messageBytes = 0;
 
-        const onMessageData = (chunk: Buffer) => {
+        const onMessageData = (chunk: Buffer): void => {
           const remaining = messageLength - messageBytes;
           const toCopy = Math.min(remaining, chunk.length);
           chunk.copy(messageBuffer, messageBytes, 0, toCopy);
@@ -85,13 +85,13 @@ export async function readMessage(
       }
     };
 
-    const onEnd = () => {
+    const onEnd = (): void => {
       stream.removeListener("data", onData);
       stream.removeListener("error", onError);
       resolve(null);
     };
 
-    const onError = (error: Error) => {
+    const onError = (error: Error): void => {
       stream.removeListener("data", onData);
       stream.removeListener("end", onEnd);
       reject(error);
