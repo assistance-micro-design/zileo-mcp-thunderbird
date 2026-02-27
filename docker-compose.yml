@@ -18,7 +18,6 @@
 # For MCP client integration (Claude Desktop, etc.):
 #   Configure command: docker exec -i thunderbird-mcp-server node dist/index.js
 
-version: "3.8"
 
 services:
   thunderbird-mcp:
