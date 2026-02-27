@@ -3,7 +3,7 @@
 **Projet**: thunderbird-mcp
 **Entreprise**: Assistance Micro Design
 **Repository**: https://github.com/assistance-micro-design/thunderbird-mcp
-**Version**: 1.2.0
+**Version**: 1.3.0
 **Date**: Décembre 2025
 **Statut**: ✅ Implémenté
 

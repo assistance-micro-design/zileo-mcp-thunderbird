@@ -46,7 +46,7 @@ This compiles TypeScript and packages the extension.
 1. Open Thunderbird
 2. Navigate to **Tools** > **Add-ons and Themes**
 3. Click the gear icon > **Install Add-on From File**
-4. Select `dist/thunderbird-mcp-extension-1.2.0.xpi`
+4. Select `dist/thunderbird-mcp-1.3.0.xpi`
 5. Click **Add** when prompted
 6. Restart Thunderbird if requested
 

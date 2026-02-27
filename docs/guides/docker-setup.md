@@ -261,7 +261,7 @@ docker compose logs --tail=50 thunderbird-mcp
 docker build -t thunderbird-mcp:latest .
 
 # Build with specific version tag
-docker build -t thunderbird-mcp:1.2.0 .
+docker build -t thunderbird-mcp:1.3.0 .
 ```
 
 ### Push to registry
