@@ -117,9 +117,10 @@ Configure Claude Desktop (`~/.config/Claude/claude_desktop_config.json`):
 
 1. Claude Desktop spawns `docker exec -i thunderbird-mcp-server node dist/index.js`
 2. The MCP server inside the container detects the running bridge
-3. It connects to `ws://127.0.0.1:9876/mcp` as a client
-4. Requests are relayed through the bridge to Thunderbird
-5. Multiple Claude instances can connect simultaneously
+3. It fetches an auth token via `GET http://127.0.0.1:9876/auth/token`
+4. It connects to `ws://127.0.0.1:9876/mcp?token=xxx` as a client
+5. Requests are relayed through the bridge to Thunderbird
+6. Multiple Claude instances can connect simultaneously
 
 ## Endpoints
 
@@ -129,6 +130,9 @@ Configure Claude Desktop (`~/.config/Claude/claude_desktop_config.json`):
 | `ws://localhost:9876/thunderbird` | WebSocket | Thunderbird extension (alias)  |
 | `ws://localhost:9876/mcp`         | WebSocket | MCP clients (multiple)         |
 | `http://localhost:9876/health`    | HTTP      | Health check endpoint          |
+| `http://localhost:9876/auth/token`| HTTP      | Auth token for WebSocket auth  |
+
+All WebSocket endpoints require a valid auth token as query parameter (`?token=xxx`). The token is fetched from `GET /auth/token` and validated on every upgrade request.
 
 ### Health Check
 
@@ -294,6 +298,8 @@ deploy:
 3. **No privileged mode**: Container doesn't require privileged access
 4. **Localhost binding**: WebSocket only accepts localhost connections
 5. **Single Thunderbird client**: Only one extension can connect
+6. **Token authentication**: WebSocket connections require a valid auth token (generated at startup, validated with timing-safe comparison)
+7. **Origin validation**: WebSocket upgrade requests are validated against an allowlist (localhost, moz-extension://)
 
 ## Commands Reference
 

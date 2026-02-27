@@ -40,7 +40,7 @@ The WebSocket bridge provides bidirectional communication between the MCP server
 
 - ⚠️ Requires localhost port availability
 - ⚠️ Single Thunderbird extension connection (by design)
-- ⚠️ Security relies on localhost binding + origin validation
+- ⚠️ Security relies on localhost binding + origin validation + auth token
 - ⚠️ No encryption (localhost-only mitigates risk)
 
 ## Multi-Client Architecture (Docker)
@@ -81,6 +81,7 @@ Endpoints:
   - ws://localhost:9876/          → Extension Thunderbird
   - ws://localhost:9876/mcp       → Clients MCP (multiples)
   - http://localhost:9876/health  → Status JSON
+  - http://localhost:9876/auth/token → Auth token (SEC-WS-001)
 ```
 
 ### Request Flow (Multi-Client)
@@ -94,13 +95,19 @@ sequenceDiagram
 
     Note over Bridge: Listening on port 9876
 
-    TB->>Bridge: Connect to /thunderbird
+    TB->>Bridge: GET /auth/token
+    Bridge->>TB: {token: "abc..."}
+    TB->>Bridge: Connect to /thunderbird?token=abc...
     Bridge->>TB: Accept (single client)
 
-    MCP1->>Bridge: Connect to /mcp
+    MCP1->>Bridge: GET /auth/token (via HTTP)
+    Bridge->>MCP1: {token: "abc..."}
+    MCP1->>Bridge: Connect to /mcp?token=abc...
     Bridge->>MCP1: Accept + Welcome notification
 
-    MCP2->>Bridge: Connect to /mcp
+    MCP2->>Bridge: GET /auth/token (via HTTP)
+    Bridge->>MCP2: {token: "abc..."}
+    MCP2->>Bridge: Connect to /mcp?token=abc...
     Bridge->>MCP2: Accept + Welcome notification
 
     MCP1->>Bridge: Request (messages.search)
@@ -146,6 +153,24 @@ Response:
   "mcpClients": 2
 }
 ```
+
+### Auth Token Endpoint (SEC-WS-001)
+
+The bridge generates a random auth token at startup. Clients must fetch this token via HTTP before connecting via WebSocket:
+
+```bash
+curl http://localhost:9876/auth/token
+```
+
+Response:
+
+```json
+{
+  "token": "a1b2c3d4..."
+}
+```
+
+The token (64-character hex string, 32 bytes) must be passed as a query parameter on WebSocket upgrade: `ws://localhost:9876/thunderbird?token=<token>`. Connections without a valid token are rejected with HTTP 401. See [Security Considerations](#security-considerations) for details.
 
 ## Protocol Specification
 
@@ -270,14 +295,20 @@ sequenceDiagram
     Note over Bridge: Server Ready
 
     Extension->>Extension: Initialize on Startup
-    Extension->>Bridge: WebSocket Connect<br/>ws://localhost:9876
+    Extension->>Bridge: GET /auth/token
+    Bridge->>Extension: {token: "abc..."}
+    Extension->>Bridge: WebSocket Connect<br/>ws://localhost:9876?token=abc...
 
     alt Connection Success
+        Bridge->>Bridge: Validate token (timing-safe)
         Bridge->>Bridge: Accept Connection
         Bridge->>Extension: Connection Established (onopen)
         Extension->>Bridge: {type:notification, event:ready}
         Bridge->>Server: Emit 'connected' event
         Note over Server,Extension: Communication Ready
+    else Invalid/Missing Token
+        Bridge-->>Extension: HTTP 401 Unauthorized
+        Extension->>Extension: Schedule Reconnect (3s)
     else Connection Failed
         Bridge-->>Extension: Connection Refused
         Extension->>Extension: Schedule Reconnect (3s)
@@ -287,12 +318,14 @@ sequenceDiagram
 
 **Steps**:
 
-1. **Server Starts Bridge**: MCP server initializes WebSocket bridge on port 9876
+1. **Server Starts Bridge**: MCP server initializes WebSocket bridge on port 9876, generates auth token
 2. **Bridge Listens**: WebSocket server waits for connection on localhost:9876
-3. **Extension Connects**: Extension attempts connection on startup
-4. **Connection Established**: WebSocket handshake completes
-5. **Ready Notification**: Extension sends ready notification with capabilities
-6. **System Ready**: Both sides can now exchange messages
+3. **Token Fetch**: Extension fetches auth token via `GET /auth/token`
+4. **Extension Connects**: Extension connects with `?token=xxx` query parameter
+5. **Token Validation**: Bridge validates token using timing-safe comparison
+6. **Connection Established**: WebSocket handshake completes
+7. **Ready Notification**: Extension sends ready notification with capabilities
+8. **System Ready**: Both sides can now exchange messages
 
 ### Request/Response Cycle
 
@@ -507,15 +540,29 @@ const MAX_RECONNECT_ATTEMPTS = 10;
 const RECONNECT_DELAY = 3000;
 const WS_PORT = 9876;
 
-function connectWebSocket() {
-  const wsUrl = `ws://localhost:${WS_PORT}`;
+async function fetchAuthToken() {
+  const response = await fetch(`http://localhost:${WS_PORT}/auth/token`);
+  if (!response.ok) throw new Error(`Token fetch failed: HTTP ${response.status}`);
+  const data = await response.json();
+  if (!data.token) throw new Error("No token in auth response");
+  return data.token;
+}
 
-  ws = new WebSocket(wsUrl);
+async function connectWebSocket() {
+  try {
+    const token = await fetchAuthToken();
+    const wsUrl = `ws://localhost:${WS_PORT}?token=${token}`;
 
-  ws.onopen = handleOpen;
-  ws.onmessage = handleMessage;
-  ws.onclose = handleClose;
-  ws.onerror = handleError;
+    ws = new WebSocket(wsUrl);
+
+    ws.onopen = handleOpen;
+    ws.onmessage = handleMessage;
+    ws.onclose = handleClose;
+    ws.onerror = handleError;
+  } catch (error) {
+    console.error("[MCP] Failed to connect:", error);
+    scheduleReconnect();
+  }
 }
 
 function handleOpen() {
@@ -630,15 +677,15 @@ function sendMessage(message) {
   ],
   "host_permissions": ["ws://localhost:9876/*", "http://localhost:9876/*"],
   "content_security_policy": {
-    "extension_pages": "script-src 'self'; object-src 'self'; connect-src 'self' ws://localhost:9876"
+    "extension_pages": "script-src 'self'; object-src 'self'; connect-src 'self' ws://localhost:9876 http://localhost:9876"
   }
 }
 ```
 
 **Key Configuration**:
 
-- `host_permissions`: Allow WebSocket connection to localhost:9876
-- `content_security_policy`: Allow WebSocket connections in CSP
+- `host_permissions`: Allow WebSocket and HTTP connections to localhost:9876
+- `content_security_policy`: Allow both WebSocket (`ws://`) and HTTP (`http://`) connections in CSP. HTTP is needed for fetching the auth token via `GET /auth/token`
 - No platform-specific setup required
 - No native messaging manifests needed
 
@@ -694,6 +741,30 @@ export function isAllowedOrigin(origin: string | undefined | null): boolean {
 
 This prevents cross-origin WebSocket hijacking from malicious web pages.
 
+**Token Authentication (SEC-WS-001)**:
+
+All WebSocket connections require a valid auth token. The token is generated at bridge startup using `crypto.randomBytes(32)` and served via `GET /auth/token`. Clients must pass the token as a query parameter on upgrade: `?token=xxx`.
+
+```typescript
+// Token validation in upgrade handler (bridge.ts)
+const token = requestUrl.searchParams.get("token");
+if (
+  !token ||
+  token.length !== this.authToken.length ||
+  !crypto.timingSafeEqual(Buffer.from(token), Buffer.from(this.authToken))
+) {
+  socket.write("HTTP/1.1 401 Unauthorized\r\n\r\n");
+  socket.destroy();
+  return;
+}
+```
+
+Security properties:
+- Token is 64-character hex (256-bit entropy)
+- Timing-safe comparison prevents timing attacks
+- Token rotates on every bridge restart
+- `Access-Control-Allow-Origin: *` on `/auth/token` is safe because browsers enforce CORS on `fetch()` responses, and the origin validation (SEC-WS-003) separately blocks non-local WebSocket upgrades
+
 **Single Client Enforcement**:
 
 - Thunderbird endpoint accepts only one connection (new replaces existing)
@@ -735,14 +806,15 @@ This prevents cross-origin WebSocket hijacking from malicious web pages.
 
 **Mitigations**:
 
-- Origin validation on WebSocket upgrade (allowlist: localhost, moz-extension://)
+- Token authentication on WebSocket upgrade (SEC-WS-001)
+- Origin validation on WebSocket upgrade (allowlist: localhost, moz-extension://) (SEC-WS-003)
 - Request ID correlation prevents injection
 - Timeout and pending request limits (100 max pending, 30s timeout)
 - Localhost-only binding prevents remote attacks
 - Extension permission model
-- WebSocket maxPayload (5 MiB) prevents memory exhaustion
-- Stack traces never sent to clients
-- Sensitive data logged at DEBUG level only
+- WebSocket maxPayload (5 MiB) prevents memory exhaustion (SEC-WS-002)
+- Stack traces never sent to clients (SEC-ERR-001, SEC-ERR-002)
+- Sensitive data logged at DEBUG level only (SEC-DATA-001, SEC-DATA-002)
 
 ## Troubleshooting
 
@@ -895,11 +967,9 @@ const server = https.createServer({
 const wss = new WebSocketServer({ server });
 ```
 
-### Authentication (Planned - Fix 2)
+### Authentication (Implemented - SEC-WS-001)
 
-**Rationale**: Prevent unauthorized local processes from connecting to the bridge
-
-**Planned mechanism**: Token generated at bridge startup, served via HTTP `GET /auth/token` (localhost only), validated on WebSocket upgrade via query parameter `?token=xxx`. See `docs/specs/security-8-fixes-plan.md` for details.
+Token-based authentication is implemented since version 1.2.2. A 32-byte random token is generated at bridge startup, served via `GET /auth/token`, and validated on every WebSocket upgrade using timing-safe comparison. See [Security Considerations](#security-considerations) for details.
 
 ### Event Streaming
 

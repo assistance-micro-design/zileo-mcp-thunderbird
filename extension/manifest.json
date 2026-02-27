@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Thunderbird MCP Server",
   "description": "Model Context Protocol server for Thunderbird - enables AI assistants to interact with emails, contacts, and calendars",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "author": "Assistance Micro Design",
   "homepage_url": "https://github.com/assistance-micro-design/thunderbird-mcp",
 
@@ -34,7 +34,7 @@
   "host_permissions": ["ws://localhost:9876/*", "http://localhost:9876/*"],
 
   "content_security_policy": {
-    "extension_pages": "script-src 'self'; object-src 'self'; connect-src 'self' ws://localhost:9876"
+    "extension_pages": "script-src 'self'; object-src 'self'; connect-src 'self' ws://localhost:9876 http://localhost:9876"
   },
 
   "icons": {

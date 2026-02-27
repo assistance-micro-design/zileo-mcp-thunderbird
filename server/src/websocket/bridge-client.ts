@@ -4,10 +4,63 @@
  * @module websocket/bridge-client
  */
 
+import http from "http";
 import WebSocket from "ws";
 import { EventEmitter } from "events";
 import logger from "../utils/logger.js";
 import type { WsMessage, WebSocketBridgeOptions } from "./bridge.js";
+
+/**
+ * Fetches the auth token from the bridge HTTP endpoint.
+ * The bridge serves the token at GET /auth/token for localhost connections only.
+ *
+ * @param port - The bridge port number
+ * @returns The auth token string
+ * @throws Error if the token cannot be fetched
+ */
+export function fetchBridgeToken(port: number): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const req = http.get(
+      `http://127.0.0.1:${port}/auth/token`,
+      (res) => {
+        let data = "";
+        res.on("data", (chunk: Buffer) => {
+          data += chunk.toString();
+        });
+        res.on("end", () => {
+          if (res.statusCode !== 200) {
+            reject(
+              new Error(
+                `Auth token fetch failed with status ${res.statusCode}`,
+              ),
+            );
+            return;
+          }
+          try {
+            const parsed = JSON.parse(data) as { token?: string };
+            if (!parsed.token) {
+              reject(new Error("No token in auth response"));
+              return;
+            }
+            resolve(parsed.token);
+          } catch {
+            reject(new Error("Invalid auth token response"));
+          }
+        });
+      },
+    );
+    req.on("error", (error) => {
+      reject(
+        new Error(
+          `Auth token fetch error: ${error instanceof Error ? error.message : String(error)}`,
+        ),
+      );
+    });
+    req.setTimeout(5000, () => {
+      req.destroy(new Error("Auth token fetch timeout"));
+    });
+  });
+}
 
 /**
  * Pending request info
@@ -42,13 +95,27 @@ export class WebSocketBridgeClient extends EventEmitter {
   }
 
   /**
-   * Connect to an existing WebSocket bridge server
+   * Connect to an existing WebSocket bridge server.
+   * Fetches the auth token via HTTP first, then connects via WebSocket.
    */
   async connect(): Promise<void> {
+    // SEC-WS-001: Fetch auth token before WebSocket connection
+    let token: string;
+    try {
+      token = await fetchBridgeToken(this.options.port);
+      logger.debug("Auth token fetched successfully");
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : String(error);
+      throw new Error(`Failed to authenticate with bridge: ${message}`);
+    }
+
     return new Promise((resolve, reject) => {
       // Connect to /mcp path for MCP clients (allows multiple connections)
-      const url = `ws://127.0.0.1:${this.options.port}/mcp`;
-      logger.info(`Connecting to existing bridge at ${url}`);
+      const url = `ws://127.0.0.1:${this.options.port}/mcp?token=${token}`;
+      logger.info(
+        `Connecting to existing bridge at ws://127.0.0.1:${this.options.port}/mcp`,
+      );
 
       try {
         this.ws = new WebSocket(url);

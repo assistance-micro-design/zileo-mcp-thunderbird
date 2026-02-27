@@ -1,0 +1,226 @@
+/**
+ * Tests for WebSocket authentication
+ * SEC-WS-001: Token-based authentication for WebSocket connections
+ */
+
+import { describe, it, expect, beforeAll, afterAll } from "vitest";
+import http from "http";
+import WebSocket from "ws";
+import { WebSocketBridge, isLocalAddress } from "../../websocket/bridge.js";
+
+const TEST_PORT = 19876;
+
+/**
+ * Helper: fetch auth token from bridge HTTP endpoint
+ */
+function fetchToken(port: number): Promise<{ status: number; body: string }> {
+  return new Promise((resolve, reject) => {
+    const req = http.get(`http://127.0.0.1:${port}/auth/token`, (res) => {
+      let data = "";
+      res.on("data", (chunk: Buffer) => {
+        data += chunk.toString();
+      });
+      res.on("end", () => {
+        resolve({ status: res.statusCode ?? 0, body: data });
+      });
+    });
+    req.on("error", reject);
+    req.setTimeout(3000, () => {
+      req.destroy(new Error("Timeout"));
+    });
+  });
+}
+
+/**
+ * Helper: attempt WebSocket upgrade and return the HTTP response code
+ */
+function attemptWsUpgrade(
+  port: number,
+  path: string,
+  token?: string,
+): Promise<{ connected: boolean; closeCode?: number }> {
+  return new Promise((resolve) => {
+    const url = token
+      ? `ws://127.0.0.1:${port}${path}?token=${token}`
+      : `ws://127.0.0.1:${port}${path}`;
+
+    const ws = new WebSocket(url);
+    const timeout = setTimeout(() => {
+      ws.close();
+      resolve({ connected: false });
+    }, 3000);
+
+    ws.on("open", () => {
+      clearTimeout(timeout);
+      ws.close();
+      resolve({ connected: true });
+    });
+
+    ws.on("unexpected-response", (_req, res) => {
+      clearTimeout(timeout);
+      resolve({ connected: false, closeCode: res.statusCode });
+    });
+
+    ws.on("error", () => {
+      clearTimeout(timeout);
+      resolve({ connected: false });
+    });
+  });
+}
+
+describe("WebSocket Authentication (SEC-WS-001)", () => {
+  let bridge: WebSocketBridge;
+
+  beforeAll(async () => {
+    bridge = new WebSocketBridge({
+      port: TEST_PORT,
+      timeout: 5000,
+      maxPendingRequests: 10,
+    });
+    await bridge.start();
+  });
+
+  afterAll(async () => {
+    await bridge.stop();
+  });
+
+  describe("GET /auth/token endpoint", () => {
+    it("should return a token with HTTP 200 for localhost requests", async () => {
+      const result = await fetchToken(TEST_PORT);
+
+      expect(result.status).toBe(200);
+
+      const parsed = JSON.parse(result.body);
+      expect(parsed).toHaveProperty("token");
+      expect(typeof parsed.token).toBe("string");
+    });
+
+    it("should return a 64-character hex token (32 bytes)", async () => {
+      const result = await fetchToken(TEST_PORT);
+      const parsed = JSON.parse(result.body);
+
+      expect(parsed.token).toMatch(/^[0-9a-f]{64}$/);
+    });
+
+    it("should return the same token on multiple calls", async () => {
+      const result1 = await fetchToken(TEST_PORT);
+      const result2 = await fetchToken(TEST_PORT);
+
+      const token1 = JSON.parse(result1.body).token;
+      const token2 = JSON.parse(result2.body).token;
+
+      expect(token1).toBe(token2);
+    });
+  });
+
+  describe("WebSocket upgrade with token validation", () => {
+    it("should reject /thunderbird upgrade without token (401)", async () => {
+      const result = await attemptWsUpgrade(TEST_PORT, "/thunderbird");
+
+      expect(result.connected).toBe(false);
+      expect(result.closeCode).toBe(401);
+    });
+
+    it("should reject /mcp upgrade without token (401)", async () => {
+      const result = await attemptWsUpgrade(TEST_PORT, "/mcp");
+
+      expect(result.connected).toBe(false);
+      expect(result.closeCode).toBe(401);
+    });
+
+    it("should reject upgrade with invalid token (401)", async () => {
+      const result = await attemptWsUpgrade(
+        TEST_PORT,
+        "/thunderbird",
+        "invalid-token-value",
+      );
+
+      expect(result.connected).toBe(false);
+      expect(result.closeCode).toBe(401);
+    });
+
+    it("should reject / path upgrade without token (401)", async () => {
+      const result = await attemptWsUpgrade(TEST_PORT, "/");
+
+      expect(result.connected).toBe(false);
+      expect(result.closeCode).toBe(401);
+    });
+
+    it("should accept /thunderbird upgrade with valid token", async () => {
+      const tokenResult = await fetchToken(TEST_PORT);
+      const token = JSON.parse(tokenResult.body).token;
+
+      const result = await attemptWsUpgrade(TEST_PORT, "/thunderbird", token);
+
+      expect(result.connected).toBe(true);
+    });
+
+    it("should accept /mcp upgrade with valid token", async () => {
+      const tokenResult = await fetchToken(TEST_PORT);
+      const token = JSON.parse(tokenResult.body).token;
+
+      const result = await attemptWsUpgrade(TEST_PORT, "/mcp", token);
+
+      expect(result.connected).toBe(true);
+    });
+
+    it("should accept / path upgrade with valid token", async () => {
+      const tokenResult = await fetchToken(TEST_PORT);
+      const token = JSON.parse(tokenResult.body).token;
+
+      const result = await attemptWsUpgrade(TEST_PORT, "/", token);
+
+      expect(result.connected).toBe(true);
+    });
+  });
+
+  describe("isLocalAddress (utility function)", () => {
+    it("should accept 127.0.0.1 (IPv4 loopback)", () => {
+      expect(isLocalAddress("127.0.0.1")).toBe(true);
+    });
+
+    it("should accept ::1 (IPv6 loopback)", () => {
+      expect(isLocalAddress("::1")).toBe(true);
+    });
+
+    it("should accept ::ffff:127.0.0.1 (IPv4-mapped IPv6 loopback)", () => {
+      expect(isLocalAddress("::ffff:127.0.0.1")).toBe(true);
+    });
+
+    it("should accept 172.17.0.1 (Docker bridge gateway)", () => {
+      expect(isLocalAddress("172.17.0.1")).toBe(true);
+    });
+
+    it("should accept 172.20.0.3 (Docker network range)", () => {
+      expect(isLocalAddress("172.20.0.3")).toBe(true);
+    });
+
+    it("should accept 10.0.0.1 (private network)", () => {
+      expect(isLocalAddress("10.0.0.1")).toBe(true);
+    });
+
+    it("should accept 192.168.1.1 (private network)", () => {
+      expect(isLocalAddress("192.168.1.1")).toBe(true);
+    });
+
+    it("should accept ::ffff:172.17.0.1 (IPv4-mapped Docker address)", () => {
+      expect(isLocalAddress("::ffff:172.17.0.1")).toBe(true);
+    });
+
+    it("should reject undefined", () => {
+      expect(isLocalAddress(undefined)).toBe(false);
+    });
+
+    it("should reject public IP 8.8.8.8", () => {
+      expect(isLocalAddress("8.8.8.8")).toBe(false);
+    });
+
+    it("should reject public IP 203.0.113.1", () => {
+      expect(isLocalAddress("203.0.113.1")).toBe(false);
+    });
+
+    it("should reject 172.32.0.1 (outside Docker range)", () => {
+      expect(isLocalAddress("172.32.0.1")).toBe(false);
+    });
+  });
+});

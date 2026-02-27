@@ -19,16 +19,39 @@ const CONNECTION_HEALTH_TIMEOUT = 60000; // 60 seconds
 // Flag to prevent duplicate reconnection attempts
 let isReconnecting = false;
 let forcedReconnect = false;
+let isConnecting = false; // Prevent concurrent connectWebSocket() calls
 let currentWsId = 0; // Track which WebSocket instance we're using
 
 // Flag to prevent multiple initializations
 let isInitialized = false;
 
 /**
- * Connect to the MCP server via WebSocket
+ * Fetch authentication token from the bridge HTTP endpoint.
+ * SEC-WS-001: Token-based WebSocket authentication.
+ * @returns {Promise<string>} The auth token
  */
-function connectWebSocket() {
-  // Prevent multiple simultaneous connections
+async function fetchAuthToken() {
+  const response = await fetch(`http://localhost:${WS_PORT}/auth/token`);
+  if (!response.ok) {
+    throw new Error(`Token fetch failed: HTTP ${response.status}`);
+  }
+  const data = await response.json();
+  if (!data.token) {
+    throw new Error("No token in auth response");
+  }
+  return data.token;
+}
+
+/**
+ * Connect to the MCP server via WebSocket.
+ * Fetches an auth token first, then connects with the token as a query parameter.
+ */
+async function connectWebSocket() {
+  // Prevent multiple simultaneous connections (including during async token fetch)
+  if (isConnecting) {
+    console.log("[MCP] Connection already in progress, skipping");
+    return;
+  }
   if (
     ws &&
     (ws.readyState === WebSocket.CONNECTING || ws.readyState === WebSocket.OPEN)
@@ -37,11 +60,14 @@ function connectWebSocket() {
     return;
   }
 
-  const wsUrl = `ws://localhost:${WS_PORT}`;
-
-  console.log(`[MCP] Connecting to WebSocket server at ${wsUrl}`);
-
+  isConnecting = true;
   try {
+    // SEC-WS-001: Fetch auth token before connecting
+    const token = await fetchAuthToken();
+
+    const wsUrl = `ws://localhost:${WS_PORT}?token=${token}`;
+    console.log(`[MCP] Connecting to WebSocket server at ws://localhost:${WS_PORT}`);
+
     const thisWsId = ++currentWsId;
     ws = new WebSocket(wsUrl);
 
@@ -50,8 +76,10 @@ function connectWebSocket() {
     ws.onclose = (event) => handleClose(event, thisWsId);
     ws.onerror = handleError;
   } catch (error) {
-    console.error("[MCP] Failed to create WebSocket:", error);
+    console.error("[MCP] Failed to connect (auth or WebSocket):", error);
     scheduleReconnect();
+  } finally {
+    isConnecting = false;
   }
 }
 

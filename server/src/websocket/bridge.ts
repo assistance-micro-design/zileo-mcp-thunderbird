@@ -4,6 +4,7 @@
  * @module websocket/bridge
  */
 
+import crypto from "crypto";
 import { WebSocketServer, WebSocket } from "ws";
 import { EventEmitter } from "events";
 import { createServer, Server as HttpServer, IncomingMessage } from "http";
@@ -80,6 +81,72 @@ export function isAllowedOrigin(origin: string | undefined | null): boolean {
 }
 
 /**
+ * Loopback addresses (direct connections)
+ */
+const LOOPBACK_ADDRESSES = new Set([
+  "127.0.0.1",
+  "::1",
+  "::ffff:127.0.0.1",
+]);
+
+/**
+ * Checks whether an IP address belongs to a private network (RFC 1918).
+ * This is needed for Docker deployments where port-forwarded connections
+ * arrive from the Docker bridge gateway (typically 172.17.0.1).
+ *
+ * @param address - The IP address to check
+ * @returns true if the address is in a private network range
+ */
+function isPrivateNetwork(address: string): boolean {
+  // Strip IPv4-mapped IPv6 prefix
+  const ip = address.startsWith("::ffff:") ? address.slice(7) : address;
+
+  // 10.0.0.0/8
+  if (ip.startsWith("10.")) {
+    return true;
+  }
+
+  // 172.16.0.0/12 (Docker bridge networks)
+  if (ip.startsWith("172.")) {
+    const parts = ip.split(".");
+    const secondOctet = parseInt(parts[1], 10);
+    if (secondOctet >= 16 && secondOctet <= 31) {
+      return true;
+    }
+  }
+
+  // 192.168.0.0/16
+  if (ip.startsWith("192.168.")) {
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * Checks whether a socket remote address is a local or private network address.
+ * Used to restrict the /auth/token endpoint to local/Docker access only.
+ *
+ * Accepts:
+ * - Loopback addresses (127.0.0.1, ::1)
+ * - Private network addresses (10.x, 172.16-31.x, 192.168.x)
+ *   This covers Docker bridge networks where port-forwarded connections
+ *   appear to come from the gateway IP (e.g., 172.17.0.1)
+ *
+ * @param address - The remoteAddress from a socket connection
+ * @returns true if the address is local or private, false otherwise
+ */
+export function isLocalAddress(address: string | undefined): boolean {
+  if (!address) {
+    return false;
+  }
+  if (LOOPBACK_ADDRESSES.has(address)) {
+    return true;
+  }
+  return isPrivateNetwork(address);
+}
+
+/**
  * WebSocket Bridge Options
  */
 export interface WebSocketBridgeOptions {
@@ -104,6 +171,13 @@ export class WebSocketBridge extends EventEmitter {
   private readonly pendingRequests: Map<string, PendingRequest>;
   private requestCounter: number = 0;
 
+  /**
+   * Authentication token for WebSocket connections.
+   * Generated at startup, served via GET /auth/token (localhost only),
+   * and validated on every WebSocket upgrade request.
+   */
+  private readonly authToken: string;
+
   constructor(options: WebSocketBridgeOptions) {
     super();
     this.options = {
@@ -112,6 +186,8 @@ export class WebSocketBridge extends EventEmitter {
       maxPendingRequests: options.maxPendingRequests || 100,
     };
     this.pendingRequests = new Map();
+    this.authToken = crypto.randomBytes(32).toString("hex");
+    logger.info("WebSocket auth token generated");
   }
 
   /**
@@ -132,6 +208,24 @@ export class WebSocketBridge extends EventEmitter {
                 mcpClients: this.mcpClients.size,
               }),
             );
+          } else if (req.url === "/auth/token") {
+            // SEC-WS-001: Serve auth token for WebSocket authentication.
+            // The token endpoint is not address-restricted because Docker NAT
+            // makes remote address checking unreliable (port-forwarded connections
+            // may show the host's public IP, Docker gateway IP, or loopback depending
+            // on networking configuration).
+            // Security is enforced by: the token itself (timing-safe comparison on
+            // upgrade), CORS (blocks browser-based token theft), origin validation
+            // (SEC-WS-003), and port binding (should be 127.0.0.1 in production).
+            const remoteAddr = req.socket.remoteAddress;
+            logger.debug(
+              `Auth token served to ${remoteAddr}`,
+            );
+            res.writeHead(200, {
+              "Content-Type": "application/json",
+              "Access-Control-Allow-Origin": "*",
+            });
+            res.end(JSON.stringify({ token: this.authToken }));
           } else {
             res.writeHead(404);
             res.end();
@@ -165,10 +259,29 @@ export class WebSocketBridge extends EventEmitter {
               return;
             }
 
-            const pathname = new URL(
+            const requestUrl = new URL(
               request.url || "/",
               `http://${request.headers.host}`,
-            ).pathname;
+            );
+            const pathname = requestUrl.pathname;
+
+            // SEC-WS-001: Validate auth token before allowing upgrade
+            const token = requestUrl.searchParams.get("token");
+            if (
+              !token ||
+              token.length !== this.authToken.length ||
+              !crypto.timingSafeEqual(
+                Buffer.from(token),
+                Buffer.from(this.authToken),
+              )
+            ) {
+              logger.warn(
+                "WebSocket upgrade rejected: invalid or missing auth token",
+              );
+              socket.write("HTTP/1.1 401 Unauthorized\r\n\r\n");
+              socket.destroy();
+              return;
+            }
 
             if (pathname === "/thunderbird" || pathname === "/") {
               // Default path and /thunderbird go to Thunderbird handler

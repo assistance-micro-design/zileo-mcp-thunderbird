@@ -397,8 +397,11 @@ sequenceDiagram
 
 - WebSocket server binds to localhost only (127.0.0.1)
 - No remote connections accepted
-- Single client connection enforced
+- Single Thunderbird client connection enforced
 - Host permissions limited to localhost:9876
+- Token-based WebSocket authentication (SEC-WS-001): 32-byte random token generated at startup, validated on every upgrade with timing-safe comparison
+- Origin validation (SEC-WS-003): WebSocket upgrade requests checked against allowlist (localhost, moz-extension://)
+- Maximum WebSocket payload size: 5 MiB (SEC-WS-002)
 
 ### Data Minimization
 
@@ -552,10 +555,10 @@ graph TB
 
 ### Connection Flow
 
-1. **Container starts**: `bridge-standalone.ts` creates WebSocket server on port 9876
-2. **Extension connects**: Thunderbird extension connects to `/` or `/thunderbird`
+1. **Container starts**: `bridge-standalone.ts` creates WebSocket server on port 9876 and generates auth token
+2. **Extension connects**: Thunderbird extension fetches auth token via `GET /auth/token`, then connects to `/thunderbird?token=xxx`
 3. **MCP client starts**: `docker exec` runs MCP server which detects existing bridge
-4. **Client mode**: MCP server connects to `/mcp` path as client
+4. **Client mode**: MCP server fetches auth token, then connects to `/mcp?token=xxx` path as client
 5. **Request relay**: Bridge relays requests from MCP to Thunderbird and responses back
 
 ### Client Mode Detection
@@ -594,4 +597,4 @@ return new WebSocketBridge(options);
 - Experimental Calendar API → Official API when available
 - Single WebSocket port → Multi-port for profile isolation
 - Request/response → Streaming for large datasets
-- Local-only → Optional remote access with authentication
+- Local-only → Optional remote access (token auth already implemented)
