@@ -62,9 +62,9 @@ sequenceDiagram
   },
   "serverInfo": {
     "name": "thunderbird-mcp",
-    "version": "1.0.0"
+    "version": "1.3.1"
   },
-  "tools": 47,
+  "tools": 56,
   "domains": [
     "messages",
     "folders",

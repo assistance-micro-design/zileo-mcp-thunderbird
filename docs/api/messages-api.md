@@ -181,6 +181,44 @@ Same as `thunderbird_messages_search` response format - returns an array of mess
 
 ---
 
+### thunderbird_messages_list_recent
+
+List the most recent messages across all folders.
+
+#### Description
+
+Retrieves the latest messages across all folders using date-based search. Ideal for "show me my latest emails" scenarios without requiring a specific folder ID. Results are sorted by date descending (newest first).
+
+#### Parameters
+
+| Name        | Type   | Required | Default | Description                                              |
+| ----------- | ------ | -------- | ------- | -------------------------------------------------------- |
+| `accountId` | string | No       | -       | Specific account ID to filter by (omit for all accounts) |
+| `limit`     | number | No       | 20      | Maximum number of results (max: 100)                     |
+| `hoursAgo`  | number | No       | 24      | How many hours back to search (max: 168 = 7 days)        |
+
+#### Response Format
+
+Same as `thunderbird_messages_search` response format - returns an array of message headers.
+
+#### Example Request
+
+```json
+{
+  "name": "thunderbird_messages_list_recent",
+  "arguments": {
+    "limit": 10,
+    "hoursAgo": 48
+  }
+}
+```
+
+#### Permission Required
+
+- `messagesRead`
+
+---
+
 ### thunderbird_messages_get
 
 Retrieve complete details of a specific message.
@@ -634,7 +672,7 @@ Exceeding these limits will return error code `-32004` (Operation timeout).
 
 - Keep search queries focused with specific filters
 - Limit batch operations to 100 messages for reliability
-- Implement retry logic with exponential backoff for timeouts
+- Implement retry logic with fixed delay for timeouts
 - Use pagination for large result sets
 
 ---

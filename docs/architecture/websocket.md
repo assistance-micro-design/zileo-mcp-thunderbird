@@ -19,7 +19,7 @@ The WebSocket bridge provides bidirectional communication between the MCP server
 
 - Bidirectional real-time communication
 - Built-in connection state tracking
-- Auto-reconnect with exponential backoff
+- Auto-reconnect with fixed 3-second delay (10 attempts max)
 - Standard debugging tools (browser devtools, network inspection)
 - Simpler cross-platform deployment
 
@@ -265,7 +265,7 @@ interface WsMessage {
   "type": "notification",
   "event": "ready",
   "data": {
-    "version": "1.0.0",
+    "version": "1.3.1",
     "capabilities": [
       "messages",
       "folders",
@@ -400,6 +400,34 @@ sequenceDiagram
 - Delay between attempts: 3 seconds (constant)
 - Total retry window: 30 seconds
 - Reset counter on successful connection
+
+### Keep-Alive Mechanism
+
+Thunderbird MV3 Event Pages are suspended after ~30-90 seconds of inactivity. The extension uses `browser.alarms` to maintain the WebSocket connection.
+
+**Staggered Alarms**:
+
+| Alarm         | Initial Delay | Period     |
+| ------------- | ------------- | ---------- |
+| `keepAlive-0` | ~6 seconds    | 30 seconds |
+| `keepAlive-1` | ~10 seconds   | 30 seconds |
+| `keepAlive-2` | ~20 seconds   | 30 seconds |
+
+This staggering ensures at least one alarm fires approximately every 10 seconds, preventing Event Page termination.
+
+**Connection Health Check**:
+
+Each alarm trigger calls `ensureWebSocketConnected()`, which:
+
+1. Skips if a reconnection is already in progress
+2. Reconnects if the WebSocket is not in `OPEN` state
+3. Detects stale connections via `CONNECTION_HEALTH_TIMEOUT` (60 seconds) - if no message has been received within this window, the connection is considered "zombie" and force-reconnected
+
+**Constants**:
+
+- `CONNECTION_HEALTH_TIMEOUT`: 60000 ms (60 seconds)
+- Alarm period: 0.5 minutes (30 seconds, minimum allowed by the Alarms API)
+- Alarms survive Event Page suspension (unlike `setTimeout`/`setInterval`)
 
 ### Connection Lifecycle
 
@@ -662,7 +690,7 @@ function sendMessage(message) {
 {
   "manifest_version": 3,
   "name": "Thunderbird MCP Server",
-  "version": "1.0.0",
+  "version": "1.3.1",
   "browser_specific_settings": {
     "gecko": {
       "id": "thunderbird-mcp@assistance-micro-design.com",
@@ -930,7 +958,7 @@ curl -i -N -H "Connection: Upgrade" -H "Upgrade: websocket" \
 | **Setup**           | Platform-specific manifests | Environment variable only |
 | **Connection**      | Process spawn + stdio       | Network socket            |
 | **State Awareness** | Manual tracking             | Built-in onopen/onclose   |
-| **Reconnect**       | Manual implementation       | Built-in with backoff     |
+| **Reconnect**       | Manual implementation       | Built-in (3s fixed delay) |
 | **Debugging**       | Complex (IPC inspection)    | Standard network tools    |
 | **Latency**         | ~20-50ms                    | ~10-20ms                  |
 | **Security**        | Process isolation           | Localhost binding         |

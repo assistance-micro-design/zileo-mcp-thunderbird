@@ -35,6 +35,7 @@ graph TB
         AccountsAPI[Accounts API<br/>3 tools]
         CalendarAPI[Calendar API<br/>9 tools]
         TasksAPI[Tasks API<br/>6 tools]
+        ComposeAPI[Compose API<br/>8 tools]
     end
 
     subgraph "Thunderbird Application"
@@ -64,6 +65,7 @@ graph TB
     Background --> AccountsAPI
     Background --> CalendarAPI
     Background --> TasksAPI
+    Background --> ComposeAPI
 
     MessagesAPI --> TB
     FoldersAPI --> TB
@@ -72,6 +74,7 @@ graph TB
     AccountsAPI --> TB
     CalendarAPI --> TB
     TasksAPI --> TB
+    ComposeAPI --> TB
 
     TB --> Mail
     TB --> Contacts
@@ -135,7 +138,7 @@ graph TB
 - **Protocol**: JSON-based message format with request/response correlation
 - **Request Tracking**: Unique IDs for correlation (format: `req_{counter}_{timestamp}`)
 - **Timeout Management**: Configurable timeout per request (default: 30s)
-- **Connection Management**: Single client allowed, reject additional connections
+- **Connection Management**: Single Thunderbird extension client; multiple MCP clients via `/mcp` path (see [Docker Architecture](#docker-architecture-multi-client))
 - **Pending Requests**: Map-based tracking with automatic cleanup
 
 **Message Structure**:
@@ -174,7 +177,7 @@ interface WsMessage {
 **Key Responsibilities**:
 
 - Maintain WebSocket connection to MCP server
-- Implement auto-reconnect with exponential backoff
+- Implement auto-reconnect with fixed 3-second delay (10 attempts max)
 - Receive requests from MCP server via WebSocket
 - Translate requests into Thunderbird API calls
 - Handle Thunderbird API responses and errors
@@ -263,7 +266,7 @@ sequenceDiagram
         Extension->>Bridge: {type:notification, event:ready}
         Extension->>Extension: Reset reconnectAttempts
     else Connection failed
-        Extension->>Extension: Retry with backoff
+        Extension->>Extension: Retry (3s fixed delay)
         Extension->>Extension: Max attempts → Give up
     end
 ```
@@ -350,7 +353,7 @@ sequenceDiagram
 - ✅ Better error handling and timeout management
 - ✅ Simpler debugging (standard network tools)
 - ⚠️ Requires localhost port availability (9876)
-- ⚠️ Single client limitation (enforced by bridge)
+- ⚠️ Single Thunderbird extension connection (by design); multiple MCP clients supported
 
 ### Why Three-Layer Architecture?
 
@@ -397,7 +400,7 @@ sequenceDiagram
 
 - WebSocket server binds to localhost only (127.0.0.1)
 - No remote connections accepted
-- Single Thunderbird client connection enforced
+- Single Thunderbird extension connection enforced; multiple MCP clients via `/mcp`
 - Host permissions limited to localhost:9876
 - Token-based WebSocket authentication (SEC-WS-001): 32-byte random token generated at startup, validated on every upgrade with timing-safe comparison
 - Origin validation (SEC-WS-003): WebSocket upgrade requests checked against allowlist (localhost, moz-extension://)

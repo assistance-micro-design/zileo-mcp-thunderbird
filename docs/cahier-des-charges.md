@@ -335,7 +335,7 @@ Les ressources MCP permettent aux LLMs d'accéder à des données contextuelles 
   },
   "serverInfo": {
     "name": "thunderbird-mcp",
-    "version": "1.0.0"
+    "version": "1.3.1"
   }
 }
 ```

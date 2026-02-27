@@ -641,7 +641,7 @@ const message = browser.i18n.getMessage("errorPermissionDenied");
 ### Retry Logic
 
 - Retry transient errors (3 attempts)
-- Exponential backoff for rate limits
+- Fixed 3-second delay between retry attempts
 - Fail fast for permission errors
 
 ### Graceful Degradation

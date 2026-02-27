@@ -31,7 +31,7 @@ Topics covered:
 - Extension file structure
 - Component architecture (Background script, WebSocket client, API wrappers)
 - Service Worker lifecycle
-- Auto-reconnect with exponential backoff
+- Auto-reconnect with fixed 3-second delay (10 attempts max)
 - API wrapper modules (Messages, Folders, Contacts, Accounts, Tags, Calendar, Tasks)
 - Experimental Calendar API integration
 - Permission model and security
@@ -155,7 +155,7 @@ Start here for: Understanding WebSocket bridge implementation and connection man
 ### WebSocket Architecture
 
 - Bidirectional real-time communication
-- Auto-reconnect with exponential backoff (10 attempts, 3s delay)
+- Auto-reconnect with fixed 3-second delay (10 attempts max)
 - Request/response correlation via unique IDs
 - Connection state awareness (onopen, onclose, onerror)
 - No platform-specific setup required
