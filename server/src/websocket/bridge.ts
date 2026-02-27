@@ -546,9 +546,14 @@ export class WebSocketBridge extends EventEmitter {
       return;
     }
 
-    // SEC-REVIEW-009: Enforce tool permissions at the bridge level
-    if (request.action && !isToolAllowed(request.action, this.toolPermissions)) {
-      const tier = getToolTier(request.action) || "unknown";
+    // SEC-REVIEW-009: Enforce tool permissions at the bridge level.
+    // Convert native action format (e.g. "calendars.list") to MCP tool name
+    // (e.g. "thunderbird_calendars_list") for permission lookup.
+    const mcpToolName = request.action
+      ? `thunderbird_${request.action.replace(/\./g, "_")}`
+      : undefined;
+    if (mcpToolName && !isToolAllowed(mcpToolName, this.toolPermissions)) {
+      const tier = getToolTier(mcpToolName) || "unknown";
       logger.warn(`Bridge denied tool call: ${request.action} (tier: ${tier})`);
       const errorResponse: WsMessage = {
         id: request.id,
