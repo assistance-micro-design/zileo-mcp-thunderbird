@@ -747,3 +747,144 @@ describe("tasks.ts schema hardening", () => {
     });
   });
 });
+
+// =============================================================================
+// folders.ts schema tests (SEC-REVIEW-005)
+// =============================================================================
+
+describe("folders.ts schema hardening", () => {
+  describe("foldersListSchema max constraints", () => {
+    it("should reject accountId exceeding 200 chars", async () => {
+      const { handleFoldersList } = await import("../../tools/folders.js");
+      const result = await handleFoldersList({
+        accountId: strOfLen(201),
+      });
+      expectZodValidationError(result);
+    });
+  });
+
+  describe("foldersGetSchema max constraints", () => {
+    it("should reject folderId exceeding 500 chars", async () => {
+      const { handleFoldersGet } = await import("../../tools/folders.js");
+      const result = await handleFoldersGet({
+        folderId: strOfLen(501),
+      });
+      expectZodValidationError(result);
+    });
+  });
+
+  describe("foldersCreateSchema max constraints", () => {
+    it("should reject parentFolderId exceeding 500 chars", async () => {
+      const { handleFoldersCreate } = await import("../../tools/folders.js");
+      const result = await handleFoldersCreate({
+        parentFolderId: strOfLen(501),
+        name: "test",
+      });
+      expectZodValidationError(result);
+    });
+  });
+
+  describe("foldersRenameSchema max constraints", () => {
+    it("should reject folderId exceeding 500 chars", async () => {
+      const { handleFoldersRename } = await import("../../tools/folders.js");
+      const result = await handleFoldersRename({
+        folderId: strOfLen(501),
+        newName: "test",
+      });
+      expectZodValidationError(result);
+    });
+  });
+
+  describe("foldersDeleteSchema max constraints", () => {
+    it("should reject folderId exceeding 500 chars", async () => {
+      const { handleFoldersDelete } = await import("../../tools/folders.js");
+      const result = await handleFoldersDelete({
+        folderId: strOfLen(501),
+      });
+      expectZodValidationError(result);
+    });
+  });
+
+  describe("foldersMoveSchema max constraints", () => {
+    it("should reject folderId exceeding 500 chars", async () => {
+      const { handleFoldersMove } = await import("../../tools/folders.js");
+      const result = await handleFoldersMove({
+        folderId: strOfLen(501),
+        destinationFolderId: "dest",
+      });
+      expectZodValidationError(result);
+    });
+
+    it("should reject destinationFolderId exceeding 500 chars", async () => {
+      const { handleFoldersMove } = await import("../../tools/folders.js");
+      const result = await handleFoldersMove({
+        folderId: "src",
+        destinationFolderId: strOfLen(501),
+      });
+      expectZodValidationError(result);
+    });
+  });
+
+  describe("foldersMarkReadSchema max constraints", () => {
+    it("should reject folderId exceeding 500 chars", async () => {
+      const { handleFoldersMarkRead } = await import("../../tools/folders.js");
+      const result = await handleFoldersMarkRead({
+        folderId: strOfLen(501),
+      });
+      expectZodValidationError(result);
+    });
+  });
+});
+
+// =============================================================================
+// tags.ts schema tests (SEC-REVIEW-006)
+// =============================================================================
+
+describe("tags.ts schema hardening", () => {
+  describe("tagsUpdateSchema max constraints", () => {
+    it("should reject key exceeding 50 chars", async () => {
+      const { handleTagsUpdate } = await import("../../tools/tags.js");
+      const result = await handleTagsUpdate({
+        key: strOfLen(51),
+        tag: "updated",
+      });
+      expectZodValidationError(result);
+    });
+  });
+
+  describe("tagsDeleteSchema max constraints", () => {
+    it("should reject key exceeding 50 chars", async () => {
+      const { handleTagsDelete } = await import("../../tools/tags.js");
+      const result = await handleTagsDelete({
+        key: strOfLen(51),
+      });
+      expectZodValidationError(result);
+    });
+  });
+});
+
+// =============================================================================
+// accounts.ts schema tests (SEC-REVIEW-006)
+// =============================================================================
+
+describe("accounts.ts schema hardening", () => {
+  describe("accountsGetSchema max constraints", () => {
+    it("should reject accountId exceeding 200 chars", async () => {
+      const { handleAccountsGet } = await import("../../tools/accounts.js");
+      const result = await handleAccountsGet({
+        accountId: strOfLen(201),
+      });
+      expectZodValidationError(result);
+    });
+  });
+
+  describe("identitiesListSchema max constraints", () => {
+    it("should reject accountId exceeding 200 chars", async () => {
+      const { handleIdentitiesList } = await import("../../tools/accounts.js");
+      const result = await handleIdentitiesList({
+        accountId: strOfLen(201),
+      });
+      expectZodValidationError(result);
+    });
+  });
+});

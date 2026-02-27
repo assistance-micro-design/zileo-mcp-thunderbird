@@ -174,7 +174,7 @@ export async function handleEventsSearch(
     const params = eventsSearchSchema.parse(args);
     const client = getNativeClient();
 
-    logger.debug(`Searching events: ${params.query || "all"}`);
+    logger.debug("Searching events");
 
     const response = await client.sendRequest(
       MessageActions.EVENTS_SEARCH,
@@ -284,7 +284,7 @@ export async function handleEventsCreate(
     const params = eventsCreateSchema.parse(args);
     const client = getNativeClient();
 
-    logger.debug(`Creating event: ${params.title}`);
+    logger.debug(`Creating event in calendar: ${params.calendarId}`);
 
     const response = await client.sendRequest(
       MessageActions.EVENTS_CREATE,

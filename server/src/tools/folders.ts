@@ -16,35 +16,35 @@ import { nativeErrorToJsonRpc } from "../utils/errors.js";
 // =============================================================================
 
 const foldersListSchema = z.object({
-  accountId: z.string().optional(),
+  accountId: z.string().max(200).optional(),
   includeSubFolders: z.boolean().optional().default(true),
 });
 
 const foldersGetSchema = z.object({
-  folderId: z.string(),
+  folderId: z.string().max(500),
 });
 
 const foldersCreateSchema = z.object({
-  parentFolderId: z.string(),
+  parentFolderId: z.string().max(500),
   name: z.string().min(1).max(255),
 });
 
 const foldersRenameSchema = z.object({
-  folderId: z.string(),
+  folderId: z.string().max(500),
   newName: z.string().min(1).max(255),
 });
 
 const foldersDeleteSchema = z.object({
-  folderId: z.string(),
+  folderId: z.string().max(500),
 });
 
 const foldersMoveSchema = z.object({
-  folderId: z.string(),
-  destinationFolderId: z.string(),
+  folderId: z.string().max(500),
+  destinationFolderId: z.string().max(500),
 });
 
 const foldersMarkReadSchema = z.object({
-  folderId: z.string(),
+  folderId: z.string().max(500),
 });
 
 // =============================================================================

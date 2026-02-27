@@ -79,7 +79,7 @@ export async function handleContactsSearch(
     const params = contactsSearchSchema.parse(args);
     const client = getNativeClient();
 
-    logger.debug(`Searching contacts: ${params.query}`);
+    logger.debug("Searching contacts");
 
     const response = await client.sendRequest(
       MessageActions.CONTACTS_SEARCH,
@@ -345,7 +345,7 @@ export async function handleAddressBooksCreate(
     const params = addressBooksCreateSchema.parse(args);
     const client = getNativeClient();
 
-    logger.info(`Creating address book: ${params.name}`);
+    logger.info("Creating address book");
 
     const response = await client.sendRequest(
       MessageActions.ADDRESSBOOKS_CREATE,

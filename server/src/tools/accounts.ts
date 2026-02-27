@@ -18,11 +18,11 @@ import { nativeErrorToJsonRpc } from "../utils/errors.js";
 const accountsListSchema = z.object({});
 
 const accountsGetSchema = z.object({
-  accountId: z.string(),
+  accountId: z.string().max(200),
 });
 
 const identitiesListSchema = z.object({
-  accountId: z.string(),
+  accountId: z.string().max(200),
 });
 
 // =============================================================================

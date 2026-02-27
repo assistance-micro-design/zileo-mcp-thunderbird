@@ -9,6 +9,7 @@ import { WebSocketServer, WebSocket } from "ws";
 import { EventEmitter } from "events";
 import { createServer, Server as HttpServer, IncomingMessage } from "http";
 import logger from "../utils/logger.js";
+import { isToolAllowed, getToolTier } from "../tools/tool-permissions.js";
 import {
   WebSocketBridgeClient,
   tryConnectToExistingBridge,
@@ -45,6 +46,13 @@ interface PendingRequest {
  * Messages exceeding this limit are rejected with close code 1009
  */
 const MAX_WS_PAYLOAD = 5 * 1024 * 1024;
+
+/**
+ * SEC-REVIEW-001: Rate limiter constants for /auth/token endpoint.
+ * Allows max TOKEN_RATE_LIMIT requests per TOKEN_RATE_WINDOW_MS per IP.
+ */
+const TOKEN_RATE_LIMIT = 10;
+const TOKEN_RATE_WINDOW_MS = 60_000;
 
 /**
  * Allowed local hostnames for WebSocket origin validation
@@ -185,6 +193,11 @@ export class WebSocketBridge extends EventEmitter {
    */
   private toolPermissions: Record<string, boolean> = {};
 
+  /**
+   * SEC-REVIEW-001: Per-IP request timestamps for /auth/token rate limiting.
+   */
+  private readonly tokenRequestLog: Map<string, number[]> = new Map();
+
   constructor(options: WebSocketBridgeOptions) {
     super();
     this.options = {
@@ -217,20 +230,33 @@ export class WebSocketBridge extends EventEmitter {
             );
           } else if (req.url === "/auth/token") {
             // SEC-WS-001: Serve auth token for WebSocket authentication.
-            // The token endpoint is not address-restricted because Docker NAT
-            // makes remote address checking unreliable (port-forwarded connections
-            // may show the host's public IP, Docker gateway IP, or loopback depending
-            // on networking configuration).
-            // Security is enforced by: the token itself (timing-safe comparison on
-            // upgrade), CORS (blocks browser-based token theft), origin validation
-            // (SEC-WS-003), and port binding (should be 127.0.0.1 in production).
-            const remoteAddr = req.socket.remoteAddress;
-            logger.debug(
-              `Auth token served to ${remoteAddr}`,
-            );
+            // SEC-REVIEW-001: Restricted CORS + rate limiting + local address check.
+            const remoteAddr = req.socket.remoteAddress || "";
+
+            // Rate limiting: max TOKEN_RATE_LIMIT requests per TOKEN_RATE_WINDOW_MS per IP
+            const now = Date.now();
+            const timestamps = this.tokenRequestLog.get(remoteAddr) || [];
+            const recent = timestamps.filter((t) => now - t < TOKEN_RATE_WINDOW_MS);
+            if (recent.length >= TOKEN_RATE_LIMIT) {
+              logger.warn(`Auth token rate limit exceeded for ${remoteAddr}`);
+              res.writeHead(429, { "Content-Type": "application/json" });
+              res.end(JSON.stringify({ error: "Too many requests" }));
+              return;
+            }
+            recent.push(now);
+            this.tokenRequestLog.set(remoteAddr, recent);
+
+            logger.debug(`Auth token served to ${remoteAddr}`);
+            // SEC-REVIEW-001: Reflect origin only if allowed (moz-extension://, localhost);
+            // reject all others with "null" to block cross-origin web page attacks.
+            const requestOrigin = req.headers.origin;
+            const corsOrigin = isAllowedOrigin(requestOrigin) && requestOrigin
+              ? requestOrigin
+              : "null";
             res.writeHead(200, {
               "Content-Type": "application/json",
-              "Access-Control-Allow-Origin": "*",
+              "Access-Control-Allow-Origin": corsOrigin,
+              "Cache-Control": "no-store",
             });
             res.end(JSON.stringify({ token: this.authToken }));
           } else {
@@ -514,6 +540,24 @@ export class WebSocketBridge extends EventEmitter {
         type: "response",
         success: false,
         error: { code: -2, message: "Too many pending requests" },
+        timestamp: new Date().toISOString(),
+      };
+      mcpClient.send(JSON.stringify(errorResponse));
+      return;
+    }
+
+    // SEC-REVIEW-009: Enforce tool permissions at the bridge level
+    if (request.action && !isToolAllowed(request.action, this.toolPermissions)) {
+      const tier = getToolTier(request.action) || "unknown";
+      logger.warn(`Bridge denied tool call: ${request.action} (tier: ${tier})`);
+      const errorResponse: WsMessage = {
+        id: request.id,
+        type: "response",
+        success: false,
+        error: {
+          code: -5,
+          message: `Tool "${request.action}" is disabled by user (tier: ${tier}). Enable it in the Thunderbird extension options (Add-ons Manager > Thunderbird MCP Server > Options).`,
+        },
         timestamp: new Date().toISOString(),
       };
       mcpClient.send(JSON.stringify(errorResponse));

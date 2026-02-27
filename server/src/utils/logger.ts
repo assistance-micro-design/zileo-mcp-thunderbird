@@ -49,16 +49,20 @@ const logger = winston.createLogger({
       stderrLevels: ["error", "warn", "info", "debug"], // All levels to stderr
       format: winston.format.combine(winston.format.colorize(), customFormat),
     }),
-    // File transport for errors
+    // File transport for errors (SEC-REVIEW-011: rotation enabled)
     new winston.transports.File({
       filename: "logs/error.log",
       level: "error",
       format: customFormat,
+      maxsize: 10 * 1024 * 1024, // 10 MB
+      maxFiles: 5,
     }),
-    // File transport for all logs
+    // File transport for all logs (SEC-REVIEW-011: rotation enabled)
     new winston.transports.File({
       filename: "logs/combined.log",
       format: customFormat,
+      maxsize: 10 * 1024 * 1024, // 10 MB
+      maxFiles: 5,
     }),
   ],
 });

@@ -139,7 +139,7 @@ export async function handleTasksCreate(
     const params = tasksCreateSchema.parse(args);
     const client = getNativeClient();
 
-    logger.info(`Creating task: ${params.title}`);
+    logger.info(`Creating task in calendar: ${params.calendarId}`);
 
     const response = await client.sendRequest(
       MessageActions.TASKS_CREATE,

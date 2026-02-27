@@ -35,8 +35,9 @@ services:
 
     # Port mapping for WebSocket connection to Thunderbird extension
     # The extension connects to this port from the host
+    # SEC-REVIEW-008: Bind to localhost only to prevent network exposure
     ports:
-      - "${THUNDERBIRD_PORT:-9876}:9876"
+      - "127.0.0.1:${THUNDERBIRD_PORT:-9876}:9876"
 
     # Volume for persistent logs
     volumes:
@@ -59,14 +60,14 @@ services:
     networks:
       - mcp-network
 
-    # Health check - verify WebSocket bridge is listening
+    # Health check - verify HTTP /health endpoint (SEC-REVIEW-013)
     healthcheck:
       test:
         [
           "CMD",
           "node",
           "-e",
-          "const net = require('net'); const s = new net.Socket(); s.setTimeout(5000); s.connect(9876, '127.0.0.1', () => { s.destroy(); process.exit(0); }); s.on('error', () => process.exit(1)); s.on('timeout', () => { s.destroy(); process.exit(1); });",
+          "const http = require('http'); http.get('http://127.0.0.1:9876/health', r => { let d=''; r.on('data',c=>d+=c); r.on('end',()=>{ try { const j=JSON.parse(d); process.exit(j.status==='ok'?0:1); } catch { process.exit(1); }}); }).on('error',()=>process.exit(1));",
         ]
       interval: 30s
       timeout: 10s
@@ -91,8 +92,9 @@ services:
       - LOG_LEVEL=debug
       - THUNDERBIRD_PORT=9876
 
+    # SEC-REVIEW-008: Bind to localhost only
     ports:
-      - "9876:9876"
+      - "127.0.0.1:9876:9876"
 
     volumes:
       - ./server/src:/app/server/src:ro

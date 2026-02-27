@@ -34,7 +34,7 @@ const tagsCreateSchema = z.object({
 
 const tagsUpdateSchema = z
   .object({
-    key: z.string(),
+    key: z.string().max(50),
     tag: z.string().min(1).max(100).optional(),
     color: z
       .string()
@@ -46,7 +46,7 @@ const tagsUpdateSchema = z
   });
 
 const tagsDeleteSchema = z.object({
-  key: z.string(),
+  key: z.string().max(50),
 });
 
 // =============================================================================

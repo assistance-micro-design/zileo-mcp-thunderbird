@@ -142,7 +142,7 @@ async function handleMessage(event) {
 
   try {
     const message = JSON.parse(event.data);
-    console.log("[MCP] Received:", message);
+    console.log("[MCP] Received:", message.type, message.id || "");
 
     // Handle ping from server
     if (message.type === "ping") {
@@ -272,7 +272,7 @@ function scheduleReconnect() {
 function sendMessage(message) {
   if (ws && ws.readyState === WebSocket.OPEN) {
     ws.send(JSON.stringify(message));
-    console.log("[MCP] Sent:", message);
+    console.log("[MCP] Sent:", message.type, message.id || "");
   } else {
     console.warn("[MCP] Cannot send - WebSocket not connected");
   }

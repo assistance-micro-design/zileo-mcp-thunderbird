@@ -4,8 +4,8 @@
 
 | Version | Supported |
 | ------- | --------- |
-| 1.2.x   | Yes       |
-| < 1.2   | No        |
+| 1.3.x   | Yes       |
+| < 1.3   | No        |
 
 ## Reporting a Vulnerability
 
@@ -32,7 +32,7 @@ Always verify operations before execution, especially when using automation.
 
 - **Local processing only** - No email content is sent to external servers
 - **MCP protocol** - Communication stays between your local MCP client and Thunderbird
-- **Logs may contain metadata** - Folder names, message subjects may appear in logs
+- **Logs contain metadata only** - No email content, subjects, or addresses are logged
 
 ### Best Practices
 
@@ -56,7 +56,7 @@ Always verify operations before execution, especially when using automation.
 
 - Stack traces are never sent to clients (logged locally only)
 - Error responses contain message strings only, no full error objects
-- Sensitive user data (email content, search queries) is logged at DEBUG level only
+- Sensitive user data (email content, search queries, subjects) is never logged
 
 ## Dependencies
 
