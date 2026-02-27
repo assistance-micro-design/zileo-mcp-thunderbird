@@ -40,7 +40,7 @@ export class ThunderbirdMcpServer {
     this.server = new Server(
       {
         name: "thunderbird-mcp",
-        version: "1.3.0",
+        version: "1.3.1",
       },
       {
         capabilities: {

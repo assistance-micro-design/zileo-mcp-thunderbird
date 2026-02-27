@@ -28,7 +28,7 @@ The Thunderbird extension is a **MailExtension (Manifest V3)** that:
 2. Locate the extension file:
 
    ```
-   dist/thunderbird-mcp-1.3.0.xpi
+   dist/thunderbird-mcp-1.3.1.xpi
    ```
 
 3. Open Thunderbird

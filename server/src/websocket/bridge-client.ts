@@ -94,6 +94,7 @@ export class WebSocketBridgeClient extends EventEmitter {
     super();
     this.options = {
       port: options.port,
+      host: options.host || "127.0.0.1",
       timeout: options.timeout || 30000,
       maxPendingRequests: options.maxPendingRequests || 100,
     };

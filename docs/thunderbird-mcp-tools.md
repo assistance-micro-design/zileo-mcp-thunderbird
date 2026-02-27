@@ -2,7 +2,7 @@
 
 Liste des outils disponibles dans le serveur MCP Thunderbird pour integration LLM.
 
-## Tiers d'autorisation (v1.3.0+)
+## Tiers d'autorisation (v1.3.1+)
 
 Chaque outil est classifie selon son niveau de risque. Les permissions sont configurables dans les options de l'extension Thunderbird (Add-ons Manager > Thunderbird MCP Server > Options).
 

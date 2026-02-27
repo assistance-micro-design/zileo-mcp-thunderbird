@@ -155,10 +155,16 @@ export function isLocalAddress(address: string | undefined): boolean {
 }
 
 /**
+ * SEC-REVIEW-003: Rate limiter cleanup interval (5 minutes)
+ */
+const RATE_LIMITER_CLEANUP_INTERVAL_MS = 5 * 60_000;
+
+/**
  * WebSocket Bridge Options
  */
 export interface WebSocketBridgeOptions {
   port: number;
+  host?: string;
   timeout?: number;
   maxPendingRequests?: number;
 }
@@ -198,10 +204,16 @@ export class WebSocketBridge extends EventEmitter {
    */
   private readonly tokenRequestLog: Map<string, number[]> = new Map();
 
+  /**
+   * SEC-REVIEW-003: Periodic cleanup timer for rate limiter Map.
+   */
+  private rateLimiterCleanupTimer: NodeJS.Timeout | null = null;
+
   constructor(options: WebSocketBridgeOptions) {
     super();
     this.options = {
       port: options.port,
+      host: options.host || "127.0.0.1",
       timeout: options.timeout || 30000,
       maxPendingRequests: options.maxPendingRequests || 100,
     };
@@ -232,6 +244,14 @@ export class WebSocketBridge extends EventEmitter {
             // SEC-WS-001: Serve auth token for WebSocket authentication.
             // SEC-REVIEW-001: Restricted CORS + rate limiting + local address check.
             const remoteAddr = req.socket.remoteAddress || "";
+
+            // SEC-REVIEW-002: Reject requests from non-local IPs
+            if (!isLocalAddress(remoteAddr)) {
+              logger.warn(`Auth token request rejected: non-local IP ${remoteAddr}`);
+              res.writeHead(403, { "Content-Type": "application/json" });
+              res.end(JSON.stringify({ error: "Forbidden: local access only" }));
+              return;
+            }
 
             // Rate limiting: max TOKEN_RATE_LIMIT requests per TOKEN_RATE_WINDOW_MS per IP
             const now = Date.now();
@@ -343,15 +363,21 @@ export class WebSocketBridge extends EventEmitter {
           reject(error);
         });
 
-        this.httpServer.listen(this.options.port, () => {
+        // SEC-REVIEW-003: Start periodic rate limiter cleanup
+        this.rateLimiterCleanupTimer = setInterval(() => {
+          this.cleanupRateLimiter();
+        }, RATE_LIMITER_CLEANUP_INTERVAL_MS);
+
+        // SEC-REVIEW-002: Bind to host (default 127.0.0.1) to prevent network exposure
+        this.httpServer.listen(this.options.port, this.options.host, () => {
           logger.info(
-            `WebSocket bridge listening on port ${this.options.port}`,
+            `WebSocket bridge listening on ${this.options.host}:${this.options.port}`,
           );
           logger.info(
-            `  - Thunderbird extension: ws://localhost:${this.options.port}/thunderbird (or /)`,
+            `  - Thunderbird extension: ws://${this.options.host}:${this.options.port}/thunderbird (or /)`,
           );
           logger.info(
-            `  - MCP clients: ws://localhost:${this.options.port}/mcp`,
+            `  - MCP clients: ws://${this.options.host}:${this.options.port}/mcp`,
           );
           resolve();
         });
@@ -742,6 +768,30 @@ export class WebSocketBridge extends EventEmitter {
   }
 
   /**
+   * SEC-REVIEW-003: Remove expired entries from the rate limiter Map.
+   * Called periodically to prevent unbounded memory growth.
+   */
+  cleanupRateLimiter(): void {
+    const now = Date.now();
+    for (const [ip, timestamps] of this.tokenRequestLog.entries()) {
+      const recent = timestamps.filter((t) => now - t < TOKEN_RATE_WINDOW_MS);
+      if (recent.length === 0) {
+        this.tokenRequestLog.delete(ip);
+      } else {
+        this.tokenRequestLog.set(ip, recent);
+      }
+    }
+    logger.debug(`Rate limiter cleanup: ${this.tokenRequestLog.size} IPs tracked`);
+  }
+
+  /**
+   * SEC-REVIEW-003: Get current rate limiter size (for testing).
+   */
+  getRateLimiterSize(): number {
+    return this.tokenRequestLog.size;
+  }
+
+  /**
    * Reject all pending requests
    */
   private rejectAllPending(reason: string): void {
@@ -801,6 +851,12 @@ export class WebSocketBridge extends EventEmitter {
    */
   async stop(): Promise<void> {
     logger.info("Stopping WebSocket bridge");
+
+    // SEC-REVIEW-003: Clear rate limiter cleanup timer
+    if (this.rateLimiterCleanupTimer) {
+      clearInterval(this.rateLimiterCleanupTimer);
+      this.rateLimiterCleanupTimer = null;
+    }
 
     this.rejectAllPending("Server stopping");
 

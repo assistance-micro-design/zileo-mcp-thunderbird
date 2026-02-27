@@ -18,14 +18,18 @@ import logger from "./utils/logger.js";
  */
 async function main(): Promise<void> {
   const wsPort = parseInt(process.env.THUNDERBIRD_PORT || "9876", 10);
+  // SEC-REVIEW-002: In Docker containers, bind to 0.0.0.0 for port forwarding;
+  // outside Docker, default to 127.0.0.1 for security
+  const wsHost = process.env.BRIDGE_HOST || (process.env.NODE_ENV === "production" ? "0.0.0.0" : "127.0.0.1");
 
   logger.info("Starting Thunderbird WebSocket Bridge (Standalone Mode)");
-  logger.info(`Port: ${wsPort}`);
+  logger.info(`Host: ${wsHost}, Port: ${wsPort}`);
 
   try {
     // Initialize WebSocket bridge server only (no MCP server)
     const bridge = await initializeWebSocketBridgeServer({
       port: wsPort,
+      host: wsHost,
       timeout: 30000,
       maxPendingRequests: 100,
     });

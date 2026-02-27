@@ -11,19 +11,38 @@ import { CalendarAPI } from "../api/calendar.js";
 import { ComposeAPI } from "../api/compose.js";
 
 /**
+ * SEC-REVIEW-005: Validate that input is a plain object (not null, not array, not primitive).
+ * @param {unknown} value - Value to validate
+ * @returns {boolean} true if value is a plain object
+ */
+function isPlainObject(value) {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+/**
  * Handle incoming message and dispatch to appropriate API
  * @param {Object} message - Message from MCP server (via WebSocket or native messaging)
  * @returns {Promise<Object>} Response object with data
  */
 export async function handleNativeMessage(message) {
+  // SEC-REVIEW-005: Validate message is a plain object
+  if (!isPlainObject(message)) {
+    throw new Error("Invalid message: expected an object");
+  }
+
   // Support both 'action' (WebSocket) and 'method' (legacy) format
   const { action, method, params } = message;
   const requestMethod = action || method;
 
   try {
     // Validate message format
-    if (!requestMethod) {
-      throw new Error("Missing action or method in request");
+    if (!requestMethod || typeof requestMethod !== "string") {
+      throw new Error("Missing or invalid action/method in request");
+    }
+
+    // SEC-REVIEW-005: Validate params is a plain object if provided
+    if (params !== undefined && params !== null && !isPlainObject(params)) {
+      throw new Error("Invalid params: expected an object");
     }
 
     // Route to appropriate handler
@@ -53,6 +72,11 @@ async function dispatch(method, params) {
   } else {
     // Legacy format: 'thunderbird_messages_search'
     [domain, action] = method.split("_").slice(1);
+  }
+
+  // SEC-REVIEW-005: Validate extracted domain and action
+  if (!domain || !action) {
+    throw new Error(`Invalid method format: "${method}". Expected "domain.action" or "thunderbird_domain_action"`);
   }
 
   switch (domain) {
