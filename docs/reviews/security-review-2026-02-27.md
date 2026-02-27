@@ -27,24 +27,10 @@ port binding**. These are addressable with targeted fixes.
 
 ### 1. WebSocket & Network Security (72/100)
 
-#### SEC-REVIEW-001 [HIGH] Auth token endpoint serves token to any requester
+#### SEC-REVIEW-001 [HIGH] Auth token endpoint serves token to any requester — RESOLVED
 - **File**: `server/src/websocket/bridge.ts:218-236`
-- **Issue**: The `GET /auth/token` endpoint returns the bridge's authentication token
-  to **any** HTTP client, regardless of source IP. The code comment explains this was
-  intentional due to Docker NAT unreliability, but the consequence is that if port
-  9876 is reachable from an untrusted network, an attacker can trivially obtain the
-  token and then establish an authenticated WebSocket connection.
-- **CORS header**: `Access-Control-Allow-Origin: *` further reduces protection as
-  browser-based code from any origin can fetch the token via JavaScript.
-- **Mitigation**: The design relies on the port being bound to localhost only. This
-  assumption holds for local development but breaks in Docker (see SEC-REVIEW-008).
-- **Recommendation**:
-  1. Restore `isLocalAddress()` check on the token endpoint with an allowlist for
-     known Docker bridge subnets
-  2. Change CORS to `Access-Control-Allow-Origin: null` or restrict to
-     `moz-extension://*` origins only
-  3. Add a rate limiter (e.g., max 5 requests/minute per IP) to the token endpoint
-  4. Consider short-lived tokens with rotation
+- **Issue**: The `GET /auth/token` endpoint returned the token with `Access-Control-Allow-Origin: *`.
+- **Fix applied**: CORS now reflects origin only if `isAllowedOrigin()` passes (localhost, `moz-extension://`); returns `"null"` for all others. Rate limiter added (10 req/min per IP, HTTP 429). Combined with SEC-REVIEW-008 (port bound to 127.0.0.1).
 
 #### SEC-REVIEW-002 [HIGH] Token passed as WebSocket URL query parameter
 - **File**: `server/src/websocket/bridge.ts:276`, `extension/background.js:68`
@@ -82,30 +68,13 @@ port binding**. These are addressable with targeted fixes.
 
 ### 2. Input Validation (82/100)
 
-#### SEC-REVIEW-005 [MEDIUM] Folder schemas missing .max() on string fields
-- **File**: `server/src/tools/folders.ts:18-48`
-- **Issue**: The following Zod schemas have `z.string()` without `.max()`:
-  - `foldersGetSchema.folderId`
-  - `foldersDeleteSchema.folderId`
-  - `foldersMoveSchema.folderId`
-  - `foldersMoveSchema.destinationFolderId`
-  - `foldersMarkReadSchema.folderId`
-  - `foldersListSchema.accountId`
-  This is inconsistent with the hardening applied to messages.ts, contacts.ts, and
-  calendar.ts schemas (all have `.max()` constraints as verified by schema-hardening
-  tests).
-- **Impact**: An attacker could send arbitrarily large strings through the MCP protocol,
-  consuming memory on the server and extension side.
-- **Recommendation**: Add `.max(500)` to all folderId fields and `.max(200)` to
-  accountId fields, consistent with other schemas.
+#### SEC-REVIEW-005 [MEDIUM] Folder schemas missing .max() on string fields — RESOLVED
+- **File**: `server/src/tools/folders.ts`
+- **Fix applied**: Added `.max(500)` to all folderId fields, `.max(200)` to accountId, `.max(255)` to folder names. 9 new tests added.
 
-#### SEC-REVIEW-006 [MEDIUM] Tags/Accounts schemas missing .max() constraints
+#### SEC-REVIEW-006 [MEDIUM] Tags/Accounts schemas missing .max() constraints — RESOLVED
 - **File**: `server/src/tools/tags.ts`, `server/src/tools/accounts.ts`
-- **Issue**: Need to verify these schemas also have .max() constraints. Based on the
-  schema-hardening test file, tags and accounts schemas are not covered by the tests,
-  suggesting they may lack max constraints.
-- **Recommendation**: Audit and add .max() to all string fields in tags.ts and
-  accounts.ts schemas. Add corresponding tests.
+- **Fix applied**: Added `.max(50)` to tag keys, `.max(200)` to accountId. 4 new tests added.
 
 #### SEC-REVIEW-007 [LOW] Extension handler.js dispatch has no action allowlist
 - **File**: `extension/native-messaging/handler.js:46-95`
@@ -124,92 +93,46 @@ port binding**. These are addressable with targeted fixes.
 
 ### 3. Authentication & Authorization (78/100)
 
-#### SEC-REVIEW-008 [HIGH] Docker compose exposes port to all interfaces
-- **File**: `docker-compose.yml:38-39`
-- **Issue**: Port mapping `"${THUNDERBIRD_PORT:-9876}:9876"` binds to 0.0.0.0 by
-  default. Combined with SEC-REVIEW-001 (unrestricted token endpoint), any host on
-  the same network can:
-  1. `curl http://<host-ip>:9876/auth/token` to get the token
-  2. Connect to `ws://<host-ip>:9876/thunderbird?token=<token>` as the extension
-  3. Impersonate the Thunderbird extension and intercept all MCP requests
-  This is the most critical combined attack vector.
-- **Recommendation**: Change to `"127.0.0.1:${THUNDERBIRD_PORT:-9876}:9876"` in
-  docker-compose.yml and document that external access requires explicit configuration.
+#### SEC-REVIEW-008 [HIGH] Docker compose exposes port to all interfaces — RESOLVED
+- **File**: `docker-compose.yml`
+- **Fix applied**: Port binding changed to `"127.0.0.1:${THUNDERBIRD_PORT:-9876}:9876"`. Health check upgraded to HTTP `/health` endpoint.
 
-#### SEC-REVIEW-009 [MEDIUM] Tool permissions are advisory, not enforced at extension level
-- **File**: `extension/native-messaging/handler.js`, `extension/background.js`
-- **Issue**: The tool permission system (SEC-AUTH-001) is enforced only on the
-  MCP server side (`server.ts:91-104`). The extension's handler.js dispatches any
-  valid action without checking permissions. This means:
-  - If an attacker bypasses the MCP server (by connecting directly to the bridge as
-    an MCP client), they can send requests for any tool regardless of permissions
-  - The bridge relays all requests to the extension without filtering
-- **Impact**: Medium - requires already having bridge access (authenticated), but
-  defeats the purpose of tiered permissions for rogue MCP clients.
-- **Recommendation**: Add permission checking in the bridge's `relayRequestToThunderbird`
-  method before forwarding to the extension.
+#### SEC-REVIEW-009 [MEDIUM] Tool permissions are advisory, not enforced at extension level — RESOLVED
+- **File**: `server/src/websocket/bridge.ts`
+- **Fix applied**: `relayRequestToThunderbird()` now calls `isToolAllowed()` before forwarding. Denied tools return error code -5 with tier info and instructions to enable in extension options.
 
 ---
 
 ### 4. Data Exposure & Logging (88/100)
 
-#### SEC-REVIEW-010 [MEDIUM] Search parameters logged at DEBUG level in messages.ts
-- **File**: `server/src/tools/messages.ts:96`
-- **Issue**: `logger.debug('Searching messages with filters: ${JSON.stringify(params)}')`
-  logs the full search parameters including `body` (up to 10,000 chars), `subject`,
-  `from`, `to` fields. While this is DEBUG level (not enabled by default), if
-  LOG_LEVEL=debug is set in production, email content and addresses are written to
-  `logs/combined.log` on disk.
-- **Recommendation**: Log only non-sensitive fields (folderId, limit, accountId) at
-  debug level. Never log `body`, `subject`, `from`, `to` fields.
+#### SEC-REVIEW-010 [MEDIUM] Search parameters logged at DEBUG level — RESOLVED
+- **File**: `server/src/tools/messages.ts`, `contacts.ts`, `calendar.ts`, `tasks.ts`
+- **Fix applied**: Sensitive fields (body, subject, from, to, query, title) removed from all debug logs. Only metadata (folderId, accountId, limit, calendarId) is logged.
 
-#### SEC-REVIEW-011 [LOW] Log files have no rotation or size limit
-- **File**: `server/src/utils/logger.ts:52-63`
-- **Issue**: Winston file transports write to `logs/error.log` and `logs/combined.log`
-  without any rotation, max size, or max file count configuration. Over time, these
-  files can grow unboundedly.
-- **Impact**: Potential disk exhaustion (denial of service) in long-running deployments,
-  and retention of sensitive data longer than necessary.
-- **Recommendation**: Add `maxsize` and `maxFiles` options to the Winston file
-  transports. Example: `maxsize: 10 * 1024 * 1024` (10 MB), `maxFiles: 5`.
+#### SEC-REVIEW-011 [LOW] Log files have no rotation or size limit — RESOLVED
+- **File**: `server/src/utils/logger.ts`
+- **Fix applied**: Winston file transports now have `maxsize: 10 MiB` and `maxFiles: 5`.
 
 ---
 
 ### 5. Docker & Deployment (75/100)
 
-#### SEC-REVIEW-012 [HIGH] Combined: unrestricted token + 0.0.0.0 port binding
-- Cross-reference of SEC-REVIEW-001 + SEC-REVIEW-008. See those entries for details.
-- This is the single most critical security concern in the project.
+#### SEC-REVIEW-012 [HIGH] Combined: unrestricted token + 0.0.0.0 port binding — RESOLVED
+- Cross-reference of SEC-REVIEW-001 + SEC-REVIEW-008. Both resolved.
 
-#### SEC-REVIEW-013 [MEDIUM] Health check does not verify service health
-- **File**: `Dockerfile:69-70`, `docker-compose.yml:63-74`
-- **Issue**: The health check only verifies that a TCP socket can connect to port 9876.
-  It does not verify the HTTP `/health` endpoint, which would confirm the bridge is
-  actually functional. A crashed but still-listening socket would pass the check.
-- **Recommendation**: Use `wget -q --spider http://localhost:9876/health || exit 1`
-  or `node -e "require('http').get('http://localhost:9876/health', r => process.exit(r.statusCode === 200 ? 0 : 1))"`
+#### SEC-REVIEW-013 [MEDIUM] Health check does not verify service health — RESOLVED
+- **Fix applied**: docker-compose.yml health check upgraded to HTTP `/health` endpoint with JSON parsing.
 
-#### SEC-REVIEW-014 [LOW] SECURITY.md version out of date
-- **File**: `SECURITY.md:7`
-- **Issue**: States "Version 1.2.x: Yes" as supported, but the current version is
-  1.3.0. Users may believe 1.3.0 is unsupported or that 1.2.x is the latest.
-- **Recommendation**: Update to reflect 1.3.x as the supported version.
+#### SEC-REVIEW-014 [LOW] SECURITY.md version out of date — RESOLVED
+- **Fix applied**: Updated to 1.3.x.
 
 ---
 
 ### 6. Extension Security (85/100)
 
-#### SEC-REVIEW-015 [MEDIUM] Extension uses console.log extensively
-- **File**: `extension/background.js` (throughout)
-- **Issue**: The extension uses `console.log` for all logging (e.g., lines 52, 69, 92,
-  145, 170, 184, 210, etc.). While this is acceptable in a browser extension context
-  (not stdio), sensitive data such as message contents may be logged. Line 145:
-  `console.log("[MCP] Received:", message)` logs the entire message object including
-  any data payload.
-- **Impact**: Sensitive email data could appear in Thunderbird's debug console and
-  persist in browser internal logs.
-- **Recommendation**: Remove or guard verbose logging behind a debug flag. Never log
-  full message payloads - log only type and id.
+#### SEC-REVIEW-015 [MEDIUM] Extension uses console.log extensively — RESOLVED
+- **File**: `extension/background.js`
+- **Fix applied**: `console.log` now logs only message type and id (e.g., `"[MCP] Received: request req_1"`). Full payloads no longer logged.
 
 #### SEC-REVIEW-016 [LOW] Extension CSP allows ws://localhost and http://localhost
 - **File**: `extension/manifest.json:37-39`
@@ -277,8 +200,8 @@ port binding**. These are addressable with targeted fixes.
 | Schema hardening (SEC-INPUT-001/002) | `schema-hardening.test.ts` | Covered (40+ tests) |
 | Tool permissions (SEC-AUTH-001) | `tool-permissions.test.ts` | Covered |
 | Error sanitization | `errors.test.ts` | Covered |
-| **Folder schema max constraints** | **Not covered** | **Gap** |
-| **Tags/Accounts schema constraints** | **Not covered** | **Gap** |
+| Folder schema max constraints | `schema-hardening.test.ts` | Covered (9 tests) |
+| Tags/Accounts schema constraints | `schema-hardening.test.ts` | Covered (4 tests) |
 | **Token endpoint access control** | **Not covered** | **Gap** |
 
 ---

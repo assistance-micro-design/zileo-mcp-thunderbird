@@ -156,7 +156,7 @@ The container uses a bridge network. The Thunderbird extension connects from the
 
 ```yaml
 ports:
-  - "9876:9876" # Expose WebSocket port
+  - "127.0.0.1:9876:9876" # Expose WebSocket port (localhost only)
 ```
 
 ### Host Network Mode (Alternative)
@@ -296,10 +296,12 @@ deploy:
 1. **Non-root user**: Container runs as non-root user `mcp` (UID 1001)
 2. **Network isolation**: Uses dedicated bridge network by default
 3. **No privileged mode**: Container doesn't require privileged access
-4. **Localhost binding**: WebSocket only accepts localhost connections
+4. **Localhost binding**: Docker port bound to `127.0.0.1` only (not `0.0.0.0`)
 5. **Single Thunderbird client**: Only one extension can connect
 6. **Token authentication**: WebSocket connections require a valid auth token (generated at startup, validated with timing-safe comparison)
 7. **Origin validation**: WebSocket upgrade requests are validated against an allowlist (localhost, moz-extension://)
+8. **Rate limiting**: `/auth/token` endpoint limited to 10 requests/minute per IP
+9. **Bridge permission enforcement**: Tool permissions checked before relaying requests to extension
 
 ## Commands Reference
 

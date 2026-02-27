@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.3.0] - 2026-02-27
 
+### Security (Phase 6 - Review Findings)
+
+Implements the top 5 priorities from the security review (score: 80/100 B+):
+
+| # | Finding | Fix |
+|---|---------|-----|
+| P1 | SEC-REVIEW-008: Docker port 0.0.0.0 | Bind to `127.0.0.1` in docker-compose.yml |
+| P2 | SEC-REVIEW-005/006: Missing .max() | Added to folders, tags, accounts schemas |
+| P3 | SEC-REVIEW-001: CORS `*` on /auth/token | Dynamic origin reflection (allowed origins only) + rate limiter (10 req/min/IP) |
+| P4 | SEC-REVIEW-009: No bridge permission check | `isToolAllowed()` in `relayRequestToThunderbird()`, error code -5 |
+| P5 | SEC-REVIEW-010/011: Log exposure + no rotation | Winston `maxsize: 10MiB, maxFiles: 5`, sensitive data removed from logs |
+
+- Extension `console.log` sanitized: logs only message type+id (SEC-REVIEW-015)
+- Security review document added: `docs/reviews/security-review-2026-02-27.md`
+- 18 new schema hardening tests for folders/tags/accounts (138 total)
+
 ### Added
 
 - **Tool Authorization Tiers** (SEC-AUTH-001, SEC-AUTH-002): All 56 MCP tools classified into 3 risk tiers:

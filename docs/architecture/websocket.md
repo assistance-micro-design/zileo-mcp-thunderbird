@@ -763,7 +763,7 @@ Security properties:
 - Token is 64-character hex (256-bit entropy)
 - Timing-safe comparison prevents timing attacks
 - Token rotates on every bridge restart
-- `Access-Control-Allow-Origin: *` on `/auth/token` is safe because browsers enforce CORS on `fetch()` responses, and the origin validation (SEC-WS-003) separately blocks non-local WebSocket upgrades
+- `/auth/token` CORS: reflects the request origin only if it passes `isAllowedOrigin()` (localhost, `moz-extension://`); returns `"null"` for all others. Rate-limited to 10 requests/minute per IP (HTTP 429 on exceed)
 
 **Single Client Enforcement**:
 
