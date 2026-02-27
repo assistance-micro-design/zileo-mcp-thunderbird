@@ -422,9 +422,14 @@ npm run lint
 ## Security
 
 - WebSocket communication on localhost only
+- **Origin validation** on WebSocket upgrade (rejects non-local origins with HTTP 403)
 - Granular Thunderbird permissions model
 - No credentials stored in server memory
-- Input validation with Zod schemas
+- Input validation with Zod schemas (bounded strings, datetime format enforcement)
+- WebSocket payload limit (5 MiB)
+- Error responses sanitized (no stack traces or internal details)
+
+See [SECURITY.md](SECURITY.md) for the full security policy.
 
 ## Troubleshooting
 
@@ -463,4 +468,4 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 ---
 
-**Status**: Beta (Active Development) | **Version**: 1.2.0 | **Tools**: 56 | **Last Updated**: 2026-02-01
+**Status**: Beta (Active Development) | **Version**: 1.2.2 | **Tools**: 56 | **Last Updated**: 2026-02-27

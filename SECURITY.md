@@ -46,6 +46,17 @@ Always verify operations before execution, especially when using automation.
 - The WebSocket bridge defaults to localhost only
 - Docker deployments should not expose the bridge port publicly
 - Use appropriate firewall rules in production environments
+- **Origin validation**: WebSocket upgrade requests are validated against an allowlist
+  - Allowed: `localhost`, `127.0.0.1`, `[::1]`, `moz-extension://` origins
+  - Allowed: no origin (CLI, `docker exec`, native connections)
+  - Rejected: all other origins with HTTP 403 Forbidden
+- **Payload limits**: WebSocket messages are limited to 5 MiB (close code 1009 on exceeded)
+
+### Error Handling
+
+- Stack traces are never sent to clients (logged locally only)
+- Error responses contain message strings only, no full error objects
+- Sensitive user data (email content, search queries) is logged at DEBUG level only
 
 ## Dependencies
 

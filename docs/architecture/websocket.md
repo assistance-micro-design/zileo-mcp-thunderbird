@@ -40,7 +40,7 @@ The WebSocket bridge provides bidirectional communication between the MCP server
 
 - ⚠️ Requires localhost port availability
 - ⚠️ Single Thunderbird extension connection (by design)
-- ⚠️ Security limited to localhost binding
+- ⚠️ Security relies on localhost binding + origin validation
 - ⚠️ No encryption (localhost-only mitigates risk)
 
 ## Multi-Client Architecture (Docker)
@@ -669,10 +669,35 @@ LOG_LEVEL=info           # Logging level
 - Firewall configuration not required
 - No TLS needed (localhost traffic)
 
+**Origin Validation (SEC-WS-003)**:
+
+The bridge validates the `Origin` header on every WebSocket upgrade request:
+
+- Allowed: `undefined`/`null`/empty (CLI, `docker exec`, native connections)
+- Allowed: `http://localhost`, `http://127.0.0.1`, `http://[::1]` (with any port)
+- Allowed: `moz-extension://...` (Thunderbird extension)
+- Rejected: all other origins with HTTP 403 Forbidden + `socket.destroy()`
+
+```typescript
+// server/src/websocket/bridge.ts
+export function isAllowedOrigin(origin: string | undefined | null): boolean {
+  if (origin === undefined || origin === null || origin === "") return true;
+  if (origin.startsWith("moz-extension://")) return true;
+  try {
+    const url = new URL(origin);
+    return ALLOWED_LOCAL_HOSTS.has(url.hostname);
+  } catch {
+    return false;
+  }
+}
+```
+
+This prevents cross-origin WebSocket hijacking from malicious web pages.
+
 **Single Client Enforcement**:
 
-- Bridge rejects additional connections
-- Close code 1008: "Only one client allowed"
+- Thunderbird endpoint accepts only one connection (new replaces existing)
+- MCP endpoint accepts multiple simultaneous connections
 - Prevents unauthorized access attempts
 
 **Permission Model**:
@@ -704,17 +729,20 @@ LOG_LEVEL=info           # Logging level
 
 - Port availability conflicts
 - Malicious local process attempting connection
+- Cross-origin WebSocket hijacking from browser tabs
 - Message injection if port is hijacked
 - Resource exhaustion via pending requests
 
 **Mitigations**:
 
-- Single client connection limit
+- Origin validation on WebSocket upgrade (allowlist: localhost, moz-extension://)
 - Request ID correlation prevents injection
-- Timeout and pending request limits
+- Timeout and pending request limits (100 max pending, 30s timeout)
 - Localhost-only binding prevents remote attacks
 - Extension permission model
 - WebSocket maxPayload (5 MiB) prevents memory exhaustion
+- Stack traces never sent to clients
+- Sensitive data logged at DEBUG level only
 
 ## Troubleshooting
 
@@ -867,20 +895,11 @@ const server = https.createServer({
 const wss = new WebSocketServer({ server });
 ```
 
-### Authentication
+### Authentication (Planned - Fix 2)
 
-**Rationale**: Multi-user or remote access scenarios
+**Rationale**: Prevent unauthorized local processes from connecting to the bridge
 
-**Token-based Auth**:
-
-```json
-{
-  "id": "req_1",
-  "type": "request",
-  "auth": "Bearer <token>",
-  "action": "messages.search"
-}
-```
+**Planned mechanism**: Token generated at bridge startup, served via HTTP `GET /auth/token` (localhost only), validated on WebSocket upgrade via query parameter `?token=xxx`. See `docs/specs/security-8-fixes-plan.md` for details.
 
 ### Event Streaming
 

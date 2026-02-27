@@ -5,6 +5,35 @@ All notable changes to the Thunderbird MCP Server project will be documented in 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.2] - 2026-02-27
+
+### Security
+
+- **Phase 1 - Quick Wins** (SEC-ERR-001, SEC-ERR-002, SEC-WS-002, SEC-DATA-001, SEC-DATA-002):
+  - Remove `error.stack` from WebSocket error responses in extension
+  - Sanitize `nativeErrorToJsonRpc` to return message only, no full error objects
+  - Set `maxPayload` (5 MiB) on WebSocket servers to prevent memory exhaustion
+  - Move sensitive user data logging (search queries, email content) to DEBUG level
+- **Phase 2 - Schema Hardening** (SEC-INPUT-001, SEC-INPUT-002):
+  - Add `.max()` constraints to all unbounded string fields in Zod schemas
+  - Add `.datetime({ offset: true })` validation to all date fields
+  - Affects: messages, contacts, calendar, compose, tasks schemas
+- **Phase 3 - Bridge Security** (SEC-WS-003):
+  - Add origin validation on WebSocket upgrade requests
+  - Accept: `undefined/null` (CLI, docker exec), `localhost/127.0.0.1/[::1]`, `moz-extension://`
+  - Reject external origins with HTTP 403 Forbidden
+
+### Fixed
+
+- Fix 7 pre-existing ESLint warnings (`explicit-function-return-type`) across 4 files
+
+### Added
+
+- 19 unit tests for WebSocket origin validation (`bridge-origin.test.ts`)
+- 56 unit tests for Zod schema hardening (`schema-hardening.test.ts`)
+
+---
+
 ## [1.2.0] - 2026-01-21
 
 ### Added
