@@ -240,6 +240,8 @@ export type ToolResultContent = TextContent | ImageContent | ResourceContent;
 
 /** Tool call result */
 export interface ToolCallResult {
+  /** Index signature for SDK compatibility */
+  [key: string]: unknown;
   /** Result content */
   content: ToolResultContent[];
   /** Whether this is an error result */

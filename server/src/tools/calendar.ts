@@ -5,11 +5,9 @@
  */
 
 import { z } from "zod";
-import { getNativeClient } from "../websocket/client-adapter.js";
 import { MessageActions } from "../types/native-messaging.js";
 import type { McpTool, ToolCallResult } from "../types/mcp.js";
-import logger from "../utils/logger.js";
-import { nativeErrorToJsonRpc } from "../utils/errors.js";
+import { executeToolHandler } from "./tool-handler.js";
 
 // =============================================================================
 // Schemas
@@ -94,36 +92,12 @@ const eventsDeleteSchema = z.object({
 export async function handleCalendarsList(
   args: unknown,
 ): Promise<ToolCallResult> {
-  try {
-    calendarsListSchema.parse(args);
-    const client = getNativeClient();
-
-    logger.info("Listing calendars");
-
-    const response = await client.sendRequest(
-      MessageActions.CALENDARS_LIST,
-      {},
-    );
-
-    if (!response.success) {
-      const error = nativeErrorToJsonRpc(response.error);
-      return {
-        content: [{ type: "text", text: JSON.stringify(error) }],
-        isError: true,
-      };
-    }
-
-    return {
-      content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }],
-    };
-  } catch (error) {
-    logger.error("Error in handleCalendarsList:", error);
-    const jsonRpcError = nativeErrorToJsonRpc(error);
-    return {
-      content: [{ type: "text", text: JSON.stringify(jsonRpcError) }],
-      isError: true,
-    };
-  }
+  return executeToolHandler(
+    args,
+    calendarsListSchema,
+    MessageActions.CALENDARS_LIST,
+    "handleCalendarsList",
+  );
 }
 
 /**
@@ -132,36 +106,12 @@ export async function handleCalendarsList(
 export async function handleCalendarsGet(
   args: unknown,
 ): Promise<ToolCallResult> {
-  try {
-    const params = calendarsGetSchema.parse(args);
-    const client = getNativeClient();
-
-    logger.info(`Getting calendar: ${params.calendarId}`);
-
-    const response = await client.sendRequest(
-      MessageActions.CALENDARS_GET,
-      params,
-    );
-
-    if (!response.success) {
-      const error = nativeErrorToJsonRpc(response.error);
-      return {
-        content: [{ type: "text", text: JSON.stringify(error) }],
-        isError: true,
-      };
-    }
-
-    return {
-      content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }],
-    };
-  } catch (error) {
-    logger.error("Error in handleCalendarsGet:", error);
-    const jsonRpcError = nativeErrorToJsonRpc(error);
-    return {
-      content: [{ type: "text", text: JSON.stringify(jsonRpcError) }],
-      isError: true,
-    };
-  }
+  return executeToolHandler(
+    args,
+    calendarsGetSchema,
+    MessageActions.CALENDARS_GET,
+    "handleCalendarsGet",
+  );
 }
 
 /**
@@ -170,108 +120,36 @@ export async function handleCalendarsGet(
 export async function handleEventsSearch(
   args: unknown,
 ): Promise<ToolCallResult> {
-  try {
-    const params = eventsSearchSchema.parse(args);
-    const client = getNativeClient();
-
-    logger.debug("Searching events");
-
-    const response = await client.sendRequest(
-      MessageActions.EVENTS_SEARCH,
-      params,
-    );
-
-    if (!response.success) {
-      const error = nativeErrorToJsonRpc(response.error);
-      return {
-        content: [{ type: "text", text: JSON.stringify(error) }],
-        isError: true,
-      };
-    }
-
-    return {
-      content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }],
-    };
-  } catch (error) {
-    logger.error("Error in handleEventsSearch:", error);
-    const jsonRpcError = nativeErrorToJsonRpc(error);
-    return {
-      content: [{ type: "text", text: JSON.stringify(jsonRpcError) }],
-      isError: true,
-    };
-  }
+  return executeToolHandler(
+    args,
+    eventsSearchSchema,
+    MessageActions.EVENTS_SEARCH,
+    "handleEventsSearch",
+  );
 }
 
 /**
  * List events in a calendar
  */
 export async function handleEventsList(args: unknown): Promise<ToolCallResult> {
-  try {
-    const params = eventsListSchema.parse(args);
-    const client = getNativeClient();
-
-    logger.info(`Listing events in calendar: ${params.calendarId}`);
-
-    const response = await client.sendRequest(
-      MessageActions.EVENTS_LIST,
-      params,
-    );
-
-    if (!response.success) {
-      const error = nativeErrorToJsonRpc(response.error);
-      return {
-        content: [{ type: "text", text: JSON.stringify(error) }],
-        isError: true,
-      };
-    }
-
-    return {
-      content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }],
-    };
-  } catch (error) {
-    logger.error("Error in handleEventsList:", error);
-    const jsonRpcError = nativeErrorToJsonRpc(error);
-    return {
-      content: [{ type: "text", text: JSON.stringify(jsonRpcError) }],
-      isError: true,
-    };
-  }
+  return executeToolHandler(
+    args,
+    eventsListSchema,
+    MessageActions.EVENTS_LIST,
+    "handleEventsList",
+  );
 }
 
 /**
  * Get event details
  */
 export async function handleEventsGet(args: unknown): Promise<ToolCallResult> {
-  try {
-    const params = eventsGetSchema.parse(args);
-    const client = getNativeClient();
-
-    logger.info(`Getting event: ${params.eventId}`);
-
-    const response = await client.sendRequest(
-      MessageActions.EVENTS_GET,
-      params,
-    );
-
-    if (!response.success) {
-      const error = nativeErrorToJsonRpc(response.error);
-      return {
-        content: [{ type: "text", text: JSON.stringify(error) }],
-        isError: true,
-      };
-    }
-
-    return {
-      content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }],
-    };
-  } catch (error) {
-    logger.error("Error in handleEventsGet:", error);
-    const jsonRpcError = nativeErrorToJsonRpc(error);
-    return {
-      content: [{ type: "text", text: JSON.stringify(jsonRpcError) }],
-      isError: true,
-    };
-  }
+  return executeToolHandler(
+    args,
+    eventsGetSchema,
+    MessageActions.EVENTS_GET,
+    "handleEventsGet",
+  );
 }
 
 /**
@@ -280,36 +158,12 @@ export async function handleEventsGet(args: unknown): Promise<ToolCallResult> {
 export async function handleEventsCreate(
   args: unknown,
 ): Promise<ToolCallResult> {
-  try {
-    const params = eventsCreateSchema.parse(args);
-    const client = getNativeClient();
-
-    logger.debug(`Creating event in calendar: ${params.calendarId}`);
-
-    const response = await client.sendRequest(
-      MessageActions.EVENTS_CREATE,
-      params,
-    );
-
-    if (!response.success) {
-      const error = nativeErrorToJsonRpc(response.error);
-      return {
-        content: [{ type: "text", text: JSON.stringify(error) }],
-        isError: true,
-      };
-    }
-
-    return {
-      content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }],
-    };
-  } catch (error) {
-    logger.error("Error in handleEventsCreate:", error);
-    const jsonRpcError = nativeErrorToJsonRpc(error);
-    return {
-      content: [{ type: "text", text: JSON.stringify(jsonRpcError) }],
-      isError: true,
-    };
-  }
+  return executeToolHandler(
+    args,
+    eventsCreateSchema,
+    MessageActions.EVENTS_CREATE,
+    "handleEventsCreate",
+  );
 }
 
 /**
@@ -318,72 +172,24 @@ export async function handleEventsCreate(
 export async function handleEventsUpdate(
   args: unknown,
 ): Promise<ToolCallResult> {
-  try {
-    const params = eventsUpdateSchema.parse(args);
-    const client = getNativeClient();
-
-    logger.info(`Updating event: ${params.eventId}`);
-
-    const response = await client.sendRequest(
-      MessageActions.EVENTS_UPDATE,
-      params,
-    );
-
-    if (!response.success) {
-      const error = nativeErrorToJsonRpc(response.error);
-      return {
-        content: [{ type: "text", text: JSON.stringify(error) }],
-        isError: true,
-      };
-    }
-
-    return {
-      content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }],
-    };
-  } catch (error) {
-    logger.error("Error in handleEventsUpdate:", error);
-    const jsonRpcError = nativeErrorToJsonRpc(error);
-    return {
-      content: [{ type: "text", text: JSON.stringify(jsonRpcError) }],
-      isError: true,
-    };
-  }
+  return executeToolHandler(
+    args,
+    eventsUpdateSchema,
+    MessageActions.EVENTS_UPDATE,
+    "handleEventsUpdate",
+  );
 }
 
 /**
  * Move an event (change time)
  */
 export async function handleEventsMove(args: unknown): Promise<ToolCallResult> {
-  try {
-    const params = eventsMoveSchema.parse(args);
-    const client = getNativeClient();
-
-    logger.info(`Moving event: ${params.eventId}`);
-
-    const response = await client.sendRequest(
-      MessageActions.EVENTS_MOVE,
-      params,
-    );
-
-    if (!response.success) {
-      const error = nativeErrorToJsonRpc(response.error);
-      return {
-        content: [{ type: "text", text: JSON.stringify(error) }],
-        isError: true,
-      };
-    }
-
-    return {
-      content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }],
-    };
-  } catch (error) {
-    logger.error("Error in handleEventsMove:", error);
-    const jsonRpcError = nativeErrorToJsonRpc(error);
-    return {
-      content: [{ type: "text", text: JSON.stringify(jsonRpcError) }],
-      isError: true,
-    };
-  }
+  return executeToolHandler(
+    args,
+    eventsMoveSchema,
+    MessageActions.EVENTS_MOVE,
+    "handleEventsMove",
+  );
 }
 
 /**
@@ -392,36 +198,12 @@ export async function handleEventsMove(args: unknown): Promise<ToolCallResult> {
 export async function handleEventsDelete(
   args: unknown,
 ): Promise<ToolCallResult> {
-  try {
-    const params = eventsDeleteSchema.parse(args);
-    const client = getNativeClient();
-
-    logger.info(`Deleting event: ${params.eventId} (scope: ${params.scope})`);
-
-    const response = await client.sendRequest(
-      MessageActions.EVENTS_DELETE,
-      params,
-    );
-
-    if (!response.success) {
-      const error = nativeErrorToJsonRpc(response.error);
-      return {
-        content: [{ type: "text", text: JSON.stringify(error) }],
-        isError: true,
-      };
-    }
-
-    return {
-      content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }],
-    };
-  } catch (error) {
-    logger.error("Error in handleEventsDelete:", error);
-    const jsonRpcError = nativeErrorToJsonRpc(error);
-    return {
-      content: [{ type: "text", text: JSON.stringify(jsonRpcError) }],
-      isError: true,
-    };
-  }
+  return executeToolHandler(
+    args,
+    eventsDeleteSchema,
+    MessageActions.EVENTS_DELETE,
+    "handleEventsDelete",
+  );
 }
 
 // =============================================================================

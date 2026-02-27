@@ -30,7 +30,7 @@ FROM node:20-alpine AS production
 # Add labels for container identification
 LABEL org.opencontainers.image.title="Thunderbird MCP Server"
 LABEL org.opencontainers.image.description="MCP Server for Thunderbird email client integration"
-LABEL org.opencontainers.image.version="1.3.0"
+LABEL org.opencontainers.image.version="1.3.1"
 LABEL org.opencontainers.image.vendor="Assistance Micro Design"
 LABEL org.opencontainers.image.source="https://github.com/assistance-micro-design/thunderbird-mcp"
 

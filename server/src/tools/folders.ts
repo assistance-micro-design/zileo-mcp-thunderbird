@@ -5,11 +5,9 @@
  */
 
 import { z } from "zod";
-import { getNativeClient } from "../websocket/client-adapter.js";
+import { executeToolHandler } from "./tool-handler.js";
 import { MessageActions } from "../types/native-messaging.js";
 import type { McpTool, ToolCallResult } from "../types/mcp.js";
-import logger from "../utils/logger.js";
-import { nativeErrorToJsonRpc } from "../utils/errors.js";
 
 // =============================================================================
 // Schemas
@@ -57,72 +55,14 @@ const foldersMarkReadSchema = z.object({
 export async function handleFoldersList(
   args: unknown,
 ): Promise<ToolCallResult> {
-  try {
-    const params = foldersListSchema.parse(args);
-    const client = getNativeClient();
-
-    logger.info(`Listing folders (accountId: ${params.accountId || "all"})`);
-
-    const response = await client.sendRequest(
-      MessageActions.FOLDERS_LIST,
-      params,
-    );
-
-    if (!response.success) {
-      const error = nativeErrorToJsonRpc(response.error);
-      return {
-        content: [{ type: "text", text: JSON.stringify(error) }],
-        isError: true,
-      };
-    }
-
-    return {
-      content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }],
-    };
-  } catch (error) {
-    logger.error("Error in handleFoldersList:", error);
-    const jsonRpcError = nativeErrorToJsonRpc(error);
-    return {
-      content: [{ type: "text", text: JSON.stringify(jsonRpcError) }],
-      isError: true,
-    };
-  }
+  return executeToolHandler(args, foldersListSchema, MessageActions.FOLDERS_LIST, "handleFoldersList");
 }
 
 /**
  * Get folder details
  */
 export async function handleFoldersGet(args: unknown): Promise<ToolCallResult> {
-  try {
-    const params = foldersGetSchema.parse(args);
-    const client = getNativeClient();
-
-    logger.info(`Getting folder: ${params.folderId}`);
-
-    const response = await client.sendRequest(
-      MessageActions.FOLDERS_GET,
-      params,
-    );
-
-    if (!response.success) {
-      const error = nativeErrorToJsonRpc(response.error);
-      return {
-        content: [{ type: "text", text: JSON.stringify(error) }],
-        isError: true,
-      };
-    }
-
-    return {
-      content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }],
-    };
-  } catch (error) {
-    logger.error("Error in handleFoldersGet:", error);
-    const jsonRpcError = nativeErrorToJsonRpc(error);
-    return {
-      content: [{ type: "text", text: JSON.stringify(jsonRpcError) }],
-      isError: true,
-    };
-  }
+  return executeToolHandler(args, foldersGetSchema, MessageActions.FOLDERS_GET, "handleFoldersGet");
 }
 
 /**
@@ -131,38 +71,7 @@ export async function handleFoldersGet(args: unknown): Promise<ToolCallResult> {
 export async function handleFoldersCreate(
   args: unknown,
 ): Promise<ToolCallResult> {
-  try {
-    const params = foldersCreateSchema.parse(args);
-    const client = getNativeClient();
-
-    logger.info(
-      `Creating folder: ${params.name} under ${params.parentFolderId}`,
-    );
-
-    const response = await client.sendRequest(
-      MessageActions.FOLDERS_CREATE,
-      params,
-    );
-
-    if (!response.success) {
-      const error = nativeErrorToJsonRpc(response.error);
-      return {
-        content: [{ type: "text", text: JSON.stringify(error) }],
-        isError: true,
-      };
-    }
-
-    return {
-      content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }],
-    };
-  } catch (error) {
-    logger.error("Error in handleFoldersCreate:", error);
-    const jsonRpcError = nativeErrorToJsonRpc(error);
-    return {
-      content: [{ type: "text", text: JSON.stringify(jsonRpcError) }],
-      isError: true,
-    };
-  }
+  return executeToolHandler(args, foldersCreateSchema, MessageActions.FOLDERS_CREATE, "handleFoldersCreate");
 }
 
 /**
@@ -171,36 +80,7 @@ export async function handleFoldersCreate(
 export async function handleFoldersRename(
   args: unknown,
 ): Promise<ToolCallResult> {
-  try {
-    const params = foldersRenameSchema.parse(args);
-    const client = getNativeClient();
-
-    logger.info(`Renaming folder: ${params.folderId} to ${params.newName}`);
-
-    const response = await client.sendRequest(
-      MessageActions.FOLDERS_RENAME,
-      params,
-    );
-
-    if (!response.success) {
-      const error = nativeErrorToJsonRpc(response.error);
-      return {
-        content: [{ type: "text", text: JSON.stringify(error) }],
-        isError: true,
-      };
-    }
-
-    return {
-      content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }],
-    };
-  } catch (error) {
-    logger.error("Error in handleFoldersRename:", error);
-    const jsonRpcError = nativeErrorToJsonRpc(error);
-    return {
-      content: [{ type: "text", text: JSON.stringify(jsonRpcError) }],
-      isError: true,
-    };
-  }
+  return executeToolHandler(args, foldersRenameSchema, MessageActions.FOLDERS_RENAME, "handleFoldersRename");
 }
 
 /**
@@ -209,36 +89,7 @@ export async function handleFoldersRename(
 export async function handleFoldersDelete(
   args: unknown,
 ): Promise<ToolCallResult> {
-  try {
-    const params = foldersDeleteSchema.parse(args);
-    const client = getNativeClient();
-
-    logger.info(`Deleting folder: ${params.folderId}`);
-
-    const response = await client.sendRequest(
-      MessageActions.FOLDERS_DELETE,
-      params,
-    );
-
-    if (!response.success) {
-      const error = nativeErrorToJsonRpc(response.error);
-      return {
-        content: [{ type: "text", text: JSON.stringify(error) }],
-        isError: true,
-      };
-    }
-
-    return {
-      content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }],
-    };
-  } catch (error) {
-    logger.error("Error in handleFoldersDelete:", error);
-    const jsonRpcError = nativeErrorToJsonRpc(error);
-    return {
-      content: [{ type: "text", text: JSON.stringify(jsonRpcError) }],
-      isError: true,
-    };
-  }
+  return executeToolHandler(args, foldersDeleteSchema, MessageActions.FOLDERS_DELETE, "handleFoldersDelete");
 }
 
 /**
@@ -247,38 +98,7 @@ export async function handleFoldersDelete(
 export async function handleFoldersMove(
   args: unknown,
 ): Promise<ToolCallResult> {
-  try {
-    const params = foldersMoveSchema.parse(args);
-    const client = getNativeClient();
-
-    logger.info(
-      `Moving folder: ${params.folderId} to ${params.destinationFolderId}`,
-    );
-
-    const response = await client.sendRequest(
-      MessageActions.FOLDERS_MOVE,
-      params,
-    );
-
-    if (!response.success) {
-      const error = nativeErrorToJsonRpc(response.error);
-      return {
-        content: [{ type: "text", text: JSON.stringify(error) }],
-        isError: true,
-      };
-    }
-
-    return {
-      content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }],
-    };
-  } catch (error) {
-    logger.error("Error in handleFoldersMove:", error);
-    const jsonRpcError = nativeErrorToJsonRpc(error);
-    return {
-      content: [{ type: "text", text: JSON.stringify(jsonRpcError) }],
-      isError: true,
-    };
-  }
+  return executeToolHandler(args, foldersMoveSchema, MessageActions.FOLDERS_MOVE, "handleFoldersMove");
 }
 
 /**
@@ -287,36 +107,7 @@ export async function handleFoldersMove(
 export async function handleFoldersMarkRead(
   args: unknown,
 ): Promise<ToolCallResult> {
-  try {
-    const params = foldersMarkReadSchema.parse(args);
-    const client = getNativeClient();
-
-    logger.info(`Marking all messages as read in folder: ${params.folderId}`);
-
-    const response = await client.sendRequest(
-      MessageActions.FOLDERS_MARK_READ,
-      params,
-    );
-
-    if (!response.success) {
-      const error = nativeErrorToJsonRpc(response.error);
-      return {
-        content: [{ type: "text", text: JSON.stringify(error) }],
-        isError: true,
-      };
-    }
-
-    return {
-      content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }],
-    };
-  } catch (error) {
-    logger.error("Error in handleFoldersMarkRead:", error);
-    const jsonRpcError = nativeErrorToJsonRpc(error);
-    return {
-      content: [{ type: "text", text: JSON.stringify(jsonRpcError) }],
-      isError: true,
-    };
-  }
+  return executeToolHandler(args, foldersMarkReadSchema, MessageActions.FOLDERS_MARK_READ, "handleFoldersMarkRead");
 }
 
 // =============================================================================
