@@ -47,7 +47,7 @@ async function main(): Promise<void> {
     });
 
     // Handle graceful shutdown
-    const shutdown = async (signal: string) => {
+    const shutdown = async (signal: string): Promise<void> => {
       logger.info(`Received ${signal}, shutting down gracefully`);
       try {
         await stopWebSocketBridge();
