@@ -115,7 +115,7 @@ npm run build
    - Open Thunderbird
    - Go to Tools > Add-ons and Themes
    - Click the gear icon > Install Add-on From File
-   - Select `dist/thunderbird-mcp-1.3.0.xpi`
+   - Select `dist/thunderbird-mcp-1.3.1.xpi`
 
 ### Option 2: Docker Setup
 
@@ -468,4 +468,4 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 ---
 
-**Status**: Beta (Active Development) | **Version**: 1.3.0 | **Tools**: 56 | **Last Updated**: 2026-02-27
+**Status**: Beta (Active Development) | **Version**: 1.3.1 | **Tools**: 56 | **Last Updated**: 2026-02-27

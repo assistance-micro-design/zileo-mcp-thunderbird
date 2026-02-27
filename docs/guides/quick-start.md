@@ -23,7 +23,7 @@ docker compose up -d
 1. Open Thunderbird
 2. Go to **Tools** > **Add-ons and Themes**
 3. Click gear icon > **Install Add-on From File**
-4. Select `dist/thunderbird-mcp-1.3.0.xpi`
+4. Select `dist/thunderbird-mcp-1.3.1.xpi`
 
 ### Step 4: Configure Claude Desktop
 

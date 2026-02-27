@@ -5,6 +5,17 @@ All notable changes to the Thunderbird MCP Server project will be documented in 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.1] - 2026-02-27
+
+### Security
+- Add isLocalAddress() IP check to /auth/token endpoint (SEC-REVIEW-002)
+- Patch MCP SDK vulnerability GHSA-345p-7cg4-v4c7 via npm audit fix
+- Bind standalone bridge to 127.0.0.1 by default (SEC-REVIEW-002)
+- Add periodic cleanup of rate limiter Map to prevent memory leak (SEC-REVIEW-003)
+- Add input validation in extension handler.js (SEC-REVIEW-005)
+
+---
+
 ## [1.3.0] - 2026-02-27
 
 ### Security (Phase 6 - Review Findings)
