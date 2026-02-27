@@ -16,26 +16,26 @@ import { nativeErrorToJsonRpc } from "../utils/errors.js";
 // =============================================================================
 
 const contactsSearchSchema = z.object({
-  query: z.string().min(1),
-  addressBookId: z.string().optional(),
+  query: z.string().min(1).max(500),
+  addressBookId: z.string().max(200).optional(),
   limit: z.number().int().positive().max(500).optional().default(50),
 });
 
 const contactsListSchema = z.object({
-  addressBookId: z.string(),
+  addressBookId: z.string().max(200),
   limit: z.number().int().positive().max(500).optional().default(100),
   offset: z.number().int().min(0).optional().default(0),
 });
 
 const contactsGetSchema = z.object({
-  contactId: z.string(),
+  contactId: z.string().max(200),
 });
 
 const contactsCreateSchema = z
   .object({
-    addressBookId: z.string(),
-    properties: z.record(z.string()).optional(),
-    vCard: z.string().optional(),
+    addressBookId: z.string().max(200),
+    properties: z.record(z.string().max(5000)).optional(),
+    vCard: z.string().max(50000).optional(),
   })
   .refine((data) => data.properties || data.vCard, {
     message: "Either properties or vCard must be provided",
@@ -43,16 +43,16 @@ const contactsCreateSchema = z
 
 const contactsUpdateSchema = z
   .object({
-    contactId: z.string(),
-    properties: z.record(z.string()).optional(),
-    vCard: z.string().optional(),
+    contactId: z.string().max(200),
+    properties: z.record(z.string().max(5000)).optional(),
+    vCard: z.string().max(50000).optional(),
   })
   .refine((data) => data.properties || data.vCard, {
     message: "Either properties or vCard must be provided",
   });
 
 const contactsDeleteSchema = z.object({
-  contactId: z.string(),
+  contactId: z.string().max(200),
 });
 
 const addressBooksListSchema = z.object({});
@@ -62,7 +62,7 @@ const addressBooksCreateSchema = z.object({
 });
 
 const addressBooksDeleteSchema = z.object({
-  addressBookId: z.string(),
+  addressBookId: z.string().max(200),
 });
 
 // =============================================================================

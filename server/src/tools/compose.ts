@@ -21,18 +21,19 @@ import type { ToolCallResult } from "../types/mcp.js";
 export const composeBeginNewSchema = z.object({
   to: z
     .array(z.string().email())
+    .max(200)
     .optional()
     .describe("Recipient email addresses"),
-  cc: z.array(z.string().email()).optional().describe("CC email addresses"),
-  bcc: z.array(z.string().email()).optional().describe("BCC email addresses"),
-  subject: z.string().optional().describe("Email subject"),
-  body: z.string().optional().describe("Email body content"),
+  cc: z.array(z.string().email()).max(200).optional().describe("CC email addresses"),
+  bcc: z.array(z.string().email()).max(200).optional().describe("BCC email addresses"),
+  subject: z.string().max(1000).optional().describe("Email subject"),
+  body: z.string().max(500000).optional().describe("Email body content"),
   isPlainText: z
     .boolean()
     .optional()
     .default(false)
     .describe("If true, body is plain text; otherwise HTML"),
-  identityId: z.string().optional().describe("Identity ID to use for sending"),
+  identityId: z.string().max(200).optional().describe("Identity ID to use for sending"),
 });
 
 /**
@@ -72,12 +73,13 @@ export const composeSetDetailsSchema = z.object({
   tabId: z.number().describe("ID of the compose tab"),
   to: z
     .array(z.string().email())
+    .max(200)
     .optional()
     .describe("New recipient addresses"),
-  cc: z.array(z.string().email()).optional().describe("New CC addresses"),
-  bcc: z.array(z.string().email()).optional().describe("New BCC addresses"),
-  subject: z.string().optional().describe("New subject line"),
-  body: z.string().optional().describe("New body content"),
+  cc: z.array(z.string().email()).max(200).optional().describe("New CC addresses"),
+  bcc: z.array(z.string().email()).max(200).optional().describe("New BCC addresses"),
+  subject: z.string().max(1000).optional().describe("New subject line"),
+  body: z.string().max(500000).optional().describe("New body content"),
 });
 
 /**

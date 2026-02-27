@@ -18,69 +18,69 @@ import { nativeErrorToJsonRpc } from "../utils/errors.js";
 const calendarsListSchema = z.object({});
 
 const calendarsGetSchema = z.object({
-  calendarId: z.string(),
+  calendarId: z.string().max(200),
 });
 
 const eventsSearchSchema = z.object({
   query: z.string().optional(),
-  calendarId: z.string().optional(),
-  dateFrom: z.string(),
-  dateTo: z.string(),
+  calendarId: z.string().max(200).optional(),
+  dateFrom: z.string().datetime({ offset: true }),
+  dateTo: z.string().datetime({ offset: true }),
   limit: z.number().int().positive().max(500).optional().default(100),
 });
 
 const eventsListSchema = z.object({
-  calendarId: z.string(),
-  dateFrom: z.string(),
-  dateTo: z.string(),
+  calendarId: z.string().max(200),
+  dateFrom: z.string().datetime({ offset: true }),
+  dateTo: z.string().datetime({ offset: true }),
   limit: z.number().int().positive().max(500).optional().default(100),
 });
 
 const eventsGetSchema = z.object({
-  eventId: z.string(),
-  calendarId: z.string(),
+  eventId: z.string().max(200),
+  calendarId: z.string().max(200),
 });
 
 const eventsCreateSchema = z.object({
-  calendarId: z.string(),
+  calendarId: z.string().max(200),
   title: z.string().min(1).max(500),
-  start: z.string(),
-  end: z.string(),
+  start: z.string().datetime({ offset: true }),
+  end: z.string().datetime({ offset: true }),
   location: z.string().max(500).optional(),
-  description: z.string().optional(),
+  description: z.string().max(10000).optional(),
   attendees: z.array(z.string().email()).optional(),
   recurrence: z
     .object({
       frequency: z.enum(["daily", "weekly", "monthly", "yearly"]),
       interval: z.number().int().positive().optional(),
-      until: z.string().optional(),
+      until: z.string().datetime({ offset: true }).optional(),
       count: z.number().int().positive().optional(),
     })
     .optional(),
 });
 
 const eventsUpdateSchema = z.object({
-  eventId: z.string(),
-  calendarId: z.string(),
+  eventId: z.string().max(200),
+  calendarId: z.string().max(200),
   title: z.string().min(1).max(500).optional(),
-  start: z.string().optional(),
-  end: z.string().optional(),
+  start: z.string().datetime({ offset: true }).optional(),
+  end: z.string().datetime({ offset: true }).optional(),
   location: z.string().max(500).optional(),
-  description: z.string().optional(),
+  description: z.string().max(10000).optional(),
   attendees: z.array(z.string().email()).optional(),
   scope: z.enum(["this", "all", "future"]).optional().default("this"),
 });
 
 const eventsMoveSchema = z.object({
-  eventId: z.string(),
-  calendarId: z.string(),
-  newStart: z.string(),
-  newEnd: z.string(),
+  eventId: z.string().max(200),
+  calendarId: z.string().max(200),
+  newStart: z.string().datetime({ offset: true }),
+  newEnd: z.string().datetime({ offset: true }),
 });
 
 const eventsDeleteSchema = z.object({
-  eventId: z.string(),
-  calendarId: z.string(),
+  eventId: z.string().max(200),
+  calendarId: z.string().max(200),
   scope: z.enum(["this", "all", "future"]).optional().default("this"),
 });
 

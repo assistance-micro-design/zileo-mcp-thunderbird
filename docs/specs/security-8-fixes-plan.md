@@ -30,8 +30,8 @@ Fixes rapides (independants, ~1-2 lignes chacun):  [DONE]
   Fix 5: Set maxPayload on WebSocket servers        [DONE]
   Fix 7: Move sensitive logging to DEBUG            [DONE]
 
-Schema hardening:
-  Fix 8: Add .max() and .datetime() to Zod schemas
+Schema hardening:                                    [DONE]
+  Fix 8: Add .max() and .datetime() to Zod schemas   [DONE]
 
 Bridge security:
   Fix 6: Origin validation on WebSocket upgrade

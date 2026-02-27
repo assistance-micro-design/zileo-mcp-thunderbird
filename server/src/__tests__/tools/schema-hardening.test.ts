@@ -1,0 +1,749 @@
+/**
+ * Tests for Fix 8: Schema Hardening (SEC-INPUT-001, SEC-INPUT-002)
+ * Validates that Zod schemas enforce .max() on strings and .datetime() on date fields.
+ *
+ * Strategy: handlers catch all errors and return { isError: true, content: [...] }.
+ * When Zod validation rejects input, the error text contains Zod-specific keywords
+ * like "too_big" or "invalid_string". When it passes validation but the bridge
+ * is not initialized, the error text contains "WebSocket bridge not initialized".
+ * We test that overlength/invalid inputs produce Zod validation errors specifically.
+ */
+
+import { describe, it, expect } from "vitest";
+import type { ToolCallResult } from "../../types/mcp.js";
+
+/**
+ * Generate a string of a given length
+ */
+function strOfLen(len: number): string {
+  return "a".repeat(len);
+}
+
+/**
+ * Extract the error text from a handler result
+ */
+function getErrorText(result: ToolCallResult): string {
+  const firstContent = result.content[0];
+  if ("text" in firstContent) {
+    return firstContent.text;
+  }
+  return "";
+}
+
+/**
+ * Assert that the result is a Zod validation error (not a runtime/bridge error)
+ */
+function expectZodValidationError(result: ToolCallResult): void {
+  expect(result.isError).toBe(true);
+  const text = getErrorText(result);
+  // Zod errors produce messages with issue codes like "too_big", "invalid_string"
+  // or human-readable messages like "String must contain at most" or "Invalid datetime"
+  const isZodError =
+    text.includes("too_big") ||
+    text.includes("too_small") ||
+    text.includes("invalid_string") ||
+    text.includes("invalid_type") ||
+    text.includes("String must contain at most") ||
+    text.includes("Invalid datetime") ||
+    text.includes("Invalid") ||
+    text.includes("Array must contain at most");
+  expect(isZodError).toBe(true);
+}
+
+// =============================================================================
+// messages.ts schema tests
+// =============================================================================
+
+describe("messages.ts schema hardening", () => {
+  describe("messageSearchSchema max constraints", () => {
+    it("should reject subject exceeding 1000 chars with Zod validation error", async () => {
+      const { handleMessagesSearch } = await import(
+        "../../tools/messages.js"
+      );
+      const result = await handleMessagesSearch({
+        subject: strOfLen(1001),
+      });
+      expectZodValidationError(result);
+    });
+
+    it("should reject from exceeding 500 chars with Zod validation error", async () => {
+      const { handleMessagesSearch } = await import(
+        "../../tools/messages.js"
+      );
+      const result = await handleMessagesSearch({
+        from: strOfLen(501),
+      });
+      expectZodValidationError(result);
+    });
+
+    it("should reject to exceeding 500 chars with Zod validation error", async () => {
+      const { handleMessagesSearch } = await import(
+        "../../tools/messages.js"
+      );
+      const result = await handleMessagesSearch({
+        to: strOfLen(501),
+      });
+      expectZodValidationError(result);
+    });
+
+    it("should reject body exceeding 10000 chars with Zod validation error", async () => {
+      const { handleMessagesSearch } = await import(
+        "../../tools/messages.js"
+      );
+      const result = await handleMessagesSearch({
+        body: strOfLen(10001),
+      });
+      expectZodValidationError(result);
+    });
+
+    it("should reject folderId exceeding 500 chars with Zod validation error", async () => {
+      const { handleMessagesSearch } = await import(
+        "../../tools/messages.js"
+      );
+      const result = await handleMessagesSearch({
+        folderId: strOfLen(501),
+      });
+      expectZodValidationError(result);
+    });
+
+    it("should reject accountId exceeding 200 chars with Zod validation error", async () => {
+      const { handleMessagesSearch } = await import(
+        "../../tools/messages.js"
+      );
+      const result = await handleMessagesSearch({
+        accountId: strOfLen(201),
+      });
+      expectZodValidationError(result);
+    });
+  });
+
+  describe("messageSearchSchema datetime constraints", () => {
+    it("should reject invalid dateFrom format with Zod validation error", async () => {
+      const { handleMessagesSearch } = await import(
+        "../../tools/messages.js"
+      );
+      const result = await handleMessagesSearch({
+        dateFrom: "not-a-date",
+      });
+      expectZodValidationError(result);
+    });
+
+    it("should reject invalid dateTo format with Zod validation error", async () => {
+      const { handleMessagesSearch } = await import(
+        "../../tools/messages.js"
+      );
+      const result = await handleMessagesSearch({
+        dateTo: "2024/01/01",
+      });
+      expectZodValidationError(result);
+    });
+
+    it("should accept valid ISO 8601 datetime with Z suffix", async () => {
+      const { handleMessagesSearch } = await import(
+        "../../tools/messages.js"
+      );
+      const result = await handleMessagesSearch({
+        dateFrom: "2024-01-01T00:00:00Z",
+      });
+      // If error, it should NOT be a Zod validation error about datetime
+      if (result.isError) {
+        const text = getErrorText(result);
+        expect(text).not.toContain("Invalid datetime");
+        expect(text).not.toContain("invalid_string");
+      }
+    });
+
+    it("should accept valid ISO 8601 datetime with offset", async () => {
+      const { handleMessagesSearch } = await import(
+        "../../tools/messages.js"
+      );
+      const result = await handleMessagesSearch({
+        dateFrom: "2024-01-01T00:00:00+02:00",
+      });
+      if (result.isError) {
+        const text = getErrorText(result);
+        expect(text).not.toContain("Invalid datetime");
+        expect(text).not.toContain("invalid_string");
+      }
+    });
+  });
+
+  describe("messagesListSchema max constraints", () => {
+    it("should reject folderId exceeding 500 chars with Zod validation error", async () => {
+      const { handleMessagesList } = await import(
+        "../../tools/messages.js"
+      );
+      const result = await handleMessagesList({
+        folderId: strOfLen(501),
+      });
+      expectZodValidationError(result);
+    });
+  });
+
+  describe("messagesListUnreadSchema max constraints", () => {
+    it("should reject accountId exceeding 200 chars with Zod validation error", async () => {
+      const { handleMessagesListUnread } = await import(
+        "../../tools/messages.js"
+      );
+      const result = await handleMessagesListUnread({
+        accountId: strOfLen(201),
+      });
+      expectZodValidationError(result);
+    });
+  });
+
+  describe("messagesMoveSchema max constraints", () => {
+    it("should reject destinationFolderId exceeding 500 chars", async () => {
+      const { handleMessagesMove } = await import(
+        "../../tools/messages.js"
+      );
+      const result = await handleMessagesMove({
+        messageIds: [1],
+        destinationFolderId: strOfLen(501),
+      });
+      expectZodValidationError(result);
+    });
+  });
+
+  describe("messagesListRecentSchema max constraints", () => {
+    it("should reject accountId exceeding 200 chars", async () => {
+      const { handleMessagesListRecent } = await import(
+        "../../tools/messages.js"
+      );
+      const result = await handleMessagesListRecent({
+        accountId: strOfLen(201),
+      });
+      expectZodValidationError(result);
+    });
+  });
+});
+
+// =============================================================================
+// contacts.ts schema tests
+// =============================================================================
+
+describe("contacts.ts schema hardening", () => {
+  describe("contactsSearchSchema constraints", () => {
+    it("should reject query exceeding 500 chars", async () => {
+      const { handleContactsSearch } = await import(
+        "../../tools/contacts.js"
+      );
+      const result = await handleContactsSearch({
+        query: strOfLen(501),
+      });
+      expectZodValidationError(result);
+    });
+
+    it("should reject addressBookId exceeding 200 chars", async () => {
+      const { handleContactsSearch } = await import(
+        "../../tools/contacts.js"
+      );
+      const result = await handleContactsSearch({
+        query: "test",
+        addressBookId: strOfLen(201),
+      });
+      expectZodValidationError(result);
+    });
+  });
+
+  describe("contactsGetSchema constraints", () => {
+    it("should reject contactId exceeding 200 chars", async () => {
+      const { handleContactsGet } = await import(
+        "../../tools/contacts.js"
+      );
+      const result = await handleContactsGet({
+        contactId: strOfLen(201),
+      });
+      expectZodValidationError(result);
+    });
+  });
+
+  describe("contactsCreateSchema constraints", () => {
+    it("should reject vCard exceeding 50000 chars", async () => {
+      const { handleContactsCreate } = await import(
+        "../../tools/contacts.js"
+      );
+      const result = await handleContactsCreate({
+        addressBookId: "book1",
+        vCard: strOfLen(50001),
+      });
+      expectZodValidationError(result);
+    });
+
+    it("should reject property values exceeding 5000 chars", async () => {
+      const { handleContactsCreate } = await import(
+        "../../tools/contacts.js"
+      );
+      const result = await handleContactsCreate({
+        addressBookId: "book1",
+        properties: { DisplayName: strOfLen(5001) },
+      });
+      expectZodValidationError(result);
+    });
+
+    it("should reject addressBookId exceeding 200 chars", async () => {
+      const { handleContactsCreate } = await import(
+        "../../tools/contacts.js"
+      );
+      const result = await handleContactsCreate({
+        addressBookId: strOfLen(201),
+        properties: { DisplayName: "Test" },
+      });
+      expectZodValidationError(result);
+    });
+  });
+
+  describe("contactsDeleteSchema constraints", () => {
+    it("should reject contactId exceeding 200 chars", async () => {
+      const { handleContactsDelete } = await import(
+        "../../tools/contacts.js"
+      );
+      const result = await handleContactsDelete({
+        contactId: strOfLen(201),
+      });
+      expectZodValidationError(result);
+    });
+  });
+
+  describe("addressBooksDeleteSchema constraints", () => {
+    it("should reject addressBookId exceeding 200 chars", async () => {
+      const { handleAddressBooksDelete } = await import(
+        "../../tools/contacts.js"
+      );
+      const result = await handleAddressBooksDelete({
+        addressBookId: strOfLen(201),
+      });
+      expectZodValidationError(result);
+    });
+  });
+});
+
+// =============================================================================
+// calendar.ts schema tests
+// =============================================================================
+
+describe("calendar.ts schema hardening", () => {
+  describe("eventsSearchSchema datetime constraints", () => {
+    it("should reject invalid dateFrom (not ISO datetime)", async () => {
+      const { handleEventsSearch } = await import(
+        "../../tools/calendar.js"
+      );
+      const result = await handleEventsSearch({
+        dateFrom: "not-a-date",
+        dateTo: "2024-12-31T23:59:59Z",
+      });
+      expectZodValidationError(result);
+    });
+
+    it("should reject invalid dateTo (not ISO datetime)", async () => {
+      const { handleEventsSearch } = await import(
+        "../../tools/calendar.js"
+      );
+      const result = await handleEventsSearch({
+        dateFrom: "2024-01-01T00:00:00Z",
+        dateTo: "next-week",
+      });
+      expectZodValidationError(result);
+    });
+  });
+
+  describe("eventsSearchSchema max constraints", () => {
+    it("should reject calendarId exceeding 200 chars", async () => {
+      const { handleEventsSearch } = await import(
+        "../../tools/calendar.js"
+      );
+      const result = await handleEventsSearch({
+        calendarId: strOfLen(201),
+        dateFrom: "2024-01-01T00:00:00Z",
+        dateTo: "2024-12-31T23:59:59Z",
+      });
+      expectZodValidationError(result);
+    });
+  });
+
+  describe("eventsCreateSchema datetime constraints", () => {
+    it("should reject invalid start datetime", async () => {
+      const { handleEventsCreate } = await import(
+        "../../tools/calendar.js"
+      );
+      const result = await handleEventsCreate({
+        calendarId: "cal1",
+        title: "Test",
+        start: "tomorrow",
+        end: "2024-01-02T10:00:00Z",
+      });
+      expectZodValidationError(result);
+    });
+
+    it("should reject invalid end datetime", async () => {
+      const { handleEventsCreate } = await import(
+        "../../tools/calendar.js"
+      );
+      const result = await handleEventsCreate({
+        calendarId: "cal1",
+        title: "Test",
+        start: "2024-01-01T09:00:00Z",
+        end: "next-day",
+      });
+      expectZodValidationError(result);
+    });
+
+    it("should accept valid ISO datetime with offset", async () => {
+      const { handleEventsCreate } = await import(
+        "../../tools/calendar.js"
+      );
+      const result = await handleEventsCreate({
+        calendarId: "cal1",
+        title: "Test",
+        start: "2024-01-01T09:00:00+02:00",
+        end: "2024-01-01T10:00:00+02:00",
+      });
+      if (result.isError) {
+        const text = getErrorText(result);
+        expect(text).not.toContain("Invalid datetime");
+        expect(text).not.toContain("invalid_string");
+      }
+    });
+  });
+
+  describe("eventsCreateSchema max constraints", () => {
+    it("should reject description exceeding 10000 chars", async () => {
+      const { handleEventsCreate } = await import(
+        "../../tools/calendar.js"
+      );
+      const result = await handleEventsCreate({
+        calendarId: "cal1",
+        title: "Test",
+        start: "2024-01-01T09:00:00Z",
+        end: "2024-01-01T10:00:00Z",
+        description: strOfLen(10001),
+      });
+      expectZodValidationError(result);
+    });
+
+    it("should reject calendarId exceeding 200 chars", async () => {
+      const { handleEventsCreate } = await import(
+        "../../tools/calendar.js"
+      );
+      const result = await handleEventsCreate({
+        calendarId: strOfLen(201),
+        title: "Test",
+        start: "2024-01-01T09:00:00Z",
+        end: "2024-01-01T10:00:00Z",
+      });
+      expectZodValidationError(result);
+    });
+  });
+
+  describe("eventsGetSchema max constraints", () => {
+    it("should reject eventId exceeding 200 chars", async () => {
+      const { handleEventsGet } = await import(
+        "../../tools/calendar.js"
+      );
+      const result = await handleEventsGet({
+        eventId: strOfLen(201),
+        calendarId: "cal1",
+      });
+      expectZodValidationError(result);
+    });
+
+    it("should reject calendarId exceeding 200 chars", async () => {
+      const { handleEventsGet } = await import(
+        "../../tools/calendar.js"
+      );
+      const result = await handleEventsGet({
+        eventId: "evt1",
+        calendarId: strOfLen(201),
+      });
+      expectZodValidationError(result);
+    });
+  });
+
+  describe("eventsMoveSchema datetime constraints", () => {
+    it("should reject invalid newStart datetime", async () => {
+      const { handleEventsMove } = await import(
+        "../../tools/calendar.js"
+      );
+      const result = await handleEventsMove({
+        eventId: "evt1",
+        calendarId: "cal1",
+        newStart: "invalid-date",
+        newEnd: "2024-01-02T10:00:00Z",
+      });
+      expectZodValidationError(result);
+    });
+
+    it("should reject invalid newEnd datetime", async () => {
+      const { handleEventsMove } = await import(
+        "../../tools/calendar.js"
+      );
+      const result = await handleEventsMove({
+        eventId: "evt1",
+        calendarId: "cal1",
+        newStart: "2024-01-01T09:00:00Z",
+        newEnd: "invalid-date",
+      });
+      expectZodValidationError(result);
+    });
+  });
+
+  describe("eventsDeleteSchema max constraints", () => {
+    it("should reject eventId exceeding 200 chars", async () => {
+      const { handleEventsDelete } = await import(
+        "../../tools/calendar.js"
+      );
+      const result = await handleEventsDelete({
+        eventId: strOfLen(201),
+        calendarId: "cal1",
+      });
+      expectZodValidationError(result);
+    });
+  });
+});
+
+// =============================================================================
+// compose.ts schema tests
+// =============================================================================
+
+describe("compose.ts schema hardening", () => {
+  describe("composeBeginNewSchema max constraints", () => {
+    it("should reject subject exceeding 1000 chars", async () => {
+      const { handleComposeBeginNew } = await import(
+        "../../tools/compose.js"
+      );
+      const result = await handleComposeBeginNew({
+        subject: strOfLen(1001),
+      });
+      expectZodValidationError(result);
+    });
+
+    it("should reject body exceeding 500000 chars", async () => {
+      const { handleComposeBeginNew } = await import(
+        "../../tools/compose.js"
+      );
+      const result = await handleComposeBeginNew({
+        body: strOfLen(500001),
+      });
+      expectZodValidationError(result);
+    });
+
+    it("should reject identityId exceeding 200 chars", async () => {
+      const { handleComposeBeginNew } = await import(
+        "../../tools/compose.js"
+      );
+      const result = await handleComposeBeginNew({
+        identityId: strOfLen(201),
+      });
+      expectZodValidationError(result);
+    });
+
+    it("should reject to array exceeding 200 entries", async () => {
+      const { handleComposeBeginNew } = await import(
+        "../../tools/compose.js"
+      );
+      const emails = Array.from(
+        { length: 201 },
+        (_, i) => `user${i}@example.com`,
+      );
+      const result = await handleComposeBeginNew({
+        to: emails,
+      });
+      expectZodValidationError(result);
+    });
+
+    it("should reject cc array exceeding 200 entries", async () => {
+      const { handleComposeBeginNew } = await import(
+        "../../tools/compose.js"
+      );
+      const emails = Array.from(
+        { length: 201 },
+        (_, i) => `cc${i}@example.com`,
+      );
+      const result = await handleComposeBeginNew({
+        cc: emails,
+      });
+      expectZodValidationError(result);
+    });
+
+    it("should reject bcc array exceeding 200 entries", async () => {
+      const { handleComposeBeginNew } = await import(
+        "../../tools/compose.js"
+      );
+      const emails = Array.from(
+        { length: 201 },
+        (_, i) => `bcc${i}@example.com`,
+      );
+      const result = await handleComposeBeginNew({
+        bcc: emails,
+      });
+      expectZodValidationError(result);
+    });
+  });
+
+  describe("composeSetDetailsSchema max constraints", () => {
+    it("should reject subject exceeding 1000 chars", async () => {
+      const { handleComposeSetDetails } = await import(
+        "../../tools/compose.js"
+      );
+      const result = await handleComposeSetDetails({
+        tabId: 1,
+        subject: strOfLen(1001),
+      });
+      expectZodValidationError(result);
+    });
+
+    it("should reject body exceeding 500000 chars", async () => {
+      const { handleComposeSetDetails } = await import(
+        "../../tools/compose.js"
+      );
+      const result = await handleComposeSetDetails({
+        tabId: 1,
+        body: strOfLen(500001),
+      });
+      expectZodValidationError(result);
+    });
+  });
+});
+
+// =============================================================================
+// tasks.ts schema tests
+// =============================================================================
+
+describe("tasks.ts schema hardening", () => {
+  describe("tasksListSchema datetime constraints", () => {
+    it("should reject invalid dueBefore format", async () => {
+      const { handleTasksList } = await import("../../tools/tasks.js");
+      const result = await handleTasksList({
+        dueBefore: "not-a-date",
+      });
+      expectZodValidationError(result);
+    });
+
+    it("should reject invalid dueAfter format", async () => {
+      const { handleTasksList } = await import("../../tools/tasks.js");
+      const result = await handleTasksList({
+        dueAfter: "2024/01/01",
+      });
+      expectZodValidationError(result);
+    });
+
+    it("should accept valid ISO datetime with offset for dueBefore", async () => {
+      const { handleTasksList } = await import("../../tools/tasks.js");
+      const result = await handleTasksList({
+        dueBefore: "2024-12-31T23:59:59+01:00",
+      });
+      if (result.isError) {
+        const text = getErrorText(result);
+        expect(text).not.toContain("Invalid datetime");
+        expect(text).not.toContain("invalid_string");
+      }
+    });
+  });
+
+  describe("tasksListSchema max constraints", () => {
+    it("should reject calendarId exceeding 200 chars", async () => {
+      const { handleTasksList } = await import("../../tools/tasks.js");
+      const result = await handleTasksList({
+        calendarId: strOfLen(201),
+      });
+      expectZodValidationError(result);
+    });
+  });
+
+  describe("tasksCreateSchema datetime constraints", () => {
+    it("should reject invalid dueDate format", async () => {
+      const { handleTasksCreate } = await import("../../tools/tasks.js");
+      const result = await handleTasksCreate({
+        calendarId: "cal1",
+        title: "Test task",
+        dueDate: "next friday",
+      });
+      expectZodValidationError(result);
+    });
+  });
+
+  describe("tasksCreateSchema max constraints", () => {
+    it("should reject description exceeding 10000 chars", async () => {
+      const { handleTasksCreate } = await import("../../tools/tasks.js");
+      const result = await handleTasksCreate({
+        calendarId: "cal1",
+        title: "Test task",
+        description: strOfLen(10001),
+      });
+      expectZodValidationError(result);
+    });
+
+    it("should reject calendarId exceeding 200 chars", async () => {
+      const { handleTasksCreate } = await import("../../tools/tasks.js");
+      const result = await handleTasksCreate({
+        calendarId: strOfLen(201),
+        title: "Test task",
+      });
+      expectZodValidationError(result);
+    });
+  });
+
+  describe("tasksGetSchema max constraints", () => {
+    it("should reject taskId exceeding 200 chars", async () => {
+      const { handleTasksGet } = await import("../../tools/tasks.js");
+      const result = await handleTasksGet({
+        taskId: strOfLen(201),
+        calendarId: "cal1",
+      });
+      expectZodValidationError(result);
+    });
+
+    it("should reject calendarId exceeding 200 chars", async () => {
+      const { handleTasksGet } = await import("../../tools/tasks.js");
+      const result = await handleTasksGet({
+        taskId: "task1",
+        calendarId: strOfLen(201),
+      });
+      expectZodValidationError(result);
+    });
+  });
+
+  describe("tasksDeleteSchema max constraints", () => {
+    it("should reject taskId exceeding 200 chars", async () => {
+      const { handleTasksDelete } = await import("../../tools/tasks.js");
+      const result = await handleTasksDelete({
+        taskId: strOfLen(201),
+        calendarId: "cal1",
+      });
+      expectZodValidationError(result);
+    });
+  });
+
+  describe("tasksCompleteSchema max constraints", () => {
+    it("should reject taskId exceeding 200 chars", async () => {
+      const { handleTasksComplete } = await import("../../tools/tasks.js");
+      const result = await handleTasksComplete({
+        taskId: strOfLen(201),
+        calendarId: "cal1",
+      });
+      expectZodValidationError(result);
+    });
+  });
+
+  describe("tasksUpdateSchema constraints", () => {
+    it("should reject invalid dueDate format", async () => {
+      const { handleTasksUpdate } = await import("../../tools/tasks.js");
+      const result = await handleTasksUpdate({
+        taskId: "task1",
+        calendarId: "cal1",
+        dueDate: "invalid",
+      });
+      expectZodValidationError(result);
+    });
+
+    it("should reject description exceeding 10000 chars", async () => {
+      const { handleTasksUpdate } = await import("../../tools/tasks.js");
+      const result = await handleTasksUpdate({
+        taskId: "task1",
+        calendarId: "cal1",
+        description: strOfLen(10001),
+      });
+      expectZodValidationError(result);
+    });
+  });
+});

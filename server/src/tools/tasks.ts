@@ -16,44 +16,44 @@ import { nativeErrorToJsonRpc } from "../utils/errors.js";
 // =============================================================================
 
 const tasksListSchema = z.object({
-  calendarId: z.string().optional(),
+  calendarId: z.string().max(200).optional(),
   completed: z.boolean().optional(),
-  dueBefore: z.string().optional(),
-  dueAfter: z.string().optional(),
+  dueBefore: z.string().datetime({ offset: true }).optional(),
+  dueAfter: z.string().datetime({ offset: true }).optional(),
   limit: z.number().int().positive().max(500).optional().default(100),
 });
 
 const tasksGetSchema = z.object({
-  taskId: z.string(),
-  calendarId: z.string(),
+  taskId: z.string().max(200),
+  calendarId: z.string().max(200),
 });
 
 const tasksCreateSchema = z.object({
-  calendarId: z.string(),
+  calendarId: z.string().max(200),
   title: z.string().min(1).max(500),
-  dueDate: z.string().optional(),
+  dueDate: z.string().datetime({ offset: true }).optional(),
   priority: z.number().int().min(0).max(9).optional(),
-  description: z.string().optional(),
+  description: z.string().max(10000).optional(),
 });
 
 const tasksUpdateSchema = z.object({
-  taskId: z.string(),
-  calendarId: z.string(),
+  taskId: z.string().max(200),
+  calendarId: z.string().max(200),
   title: z.string().min(1).max(500).optional(),
-  dueDate: z.string().optional(),
+  dueDate: z.string().datetime({ offset: true }).optional(),
   priority: z.number().int().min(0).max(9).optional(),
-  description: z.string().optional(),
+  description: z.string().max(10000).optional(),
   completed: z.boolean().optional(),
 });
 
 const tasksDeleteSchema = z.object({
-  taskId: z.string(),
-  calendarId: z.string(),
+  taskId: z.string().max(200),
+  calendarId: z.string().max(200),
 });
 
 const tasksCompleteSchema = z.object({
-  taskId: z.string(),
-  calendarId: z.string(),
+  taskId: z.string().max(200),
+  calendarId: z.string().max(200),
 });
 
 // =============================================================================

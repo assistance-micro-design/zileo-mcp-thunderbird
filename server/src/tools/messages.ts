@@ -16,28 +16,28 @@ import { nativeErrorToJsonRpc } from "../utils/errors.js";
 // =============================================================================
 
 const messageSearchSchema = z.object({
-  subject: z.string().optional(),
-  from: z.string().optional(),
-  to: z.string().optional(),
-  body: z.string().optional(),
+  subject: z.string().max(1000).optional(),
+  from: z.string().max(500).optional(),
+  to: z.string().max(500).optional(),
+  body: z.string().max(10000).optional(),
   tags: z.array(z.string()).optional(),
   unread: z.boolean().optional(),
   flagged: z.boolean().optional(),
-  dateFrom: z.string().optional(),
-  dateTo: z.string().optional(),
-  folderId: z.string().optional(),
-  accountId: z.string().optional(),
+  dateFrom: z.string().datetime({ offset: true }).optional(),
+  dateTo: z.string().datetime({ offset: true }).optional(),
+  folderId: z.string().max(500).optional(),
+  accountId: z.string().max(200).optional(),
   limit: z.number().int().positive().max(1000).optional().default(50),
 });
 
 const messagesListSchema = z.object({
-  folderId: z.string(),
+  folderId: z.string().max(500),
   limit: z.number().int().positive().max(1000).optional().default(100),
   offset: z.number().int().min(0).optional().default(0),
 });
 
 const messagesListUnreadSchema = z.object({
-  accountId: z.string().optional(),
+  accountId: z.string().max(200).optional(),
   limit: z.number().int().positive().max(1000).optional().default(50),
 });
 
@@ -48,12 +48,12 @@ const messagesGetSchema = z.object({
 
 const messagesMoveSchema = z.object({
   messageIds: z.array(z.number().int()).min(1),
-  destinationFolderId: z.string(),
+  destinationFolderId: z.string().max(500),
 });
 
 const messagesCopySchema = z.object({
   messageIds: z.array(z.number().int()).min(1),
-  destinationFolderId: z.string(),
+  destinationFolderId: z.string().max(500),
 });
 
 const messagesDeleteSchema = z.object({
@@ -74,7 +74,7 @@ const messagesArchiveSchema = z.object({
 });
 
 const messagesListRecentSchema = z.object({
-  accountId: z.string().optional(),
+  accountId: z.string().max(200).optional(),
   limit: z.number().int().positive().max(100).optional().default(20),
   hoursAgo: z.number().int().positive().max(168).optional().default(24), // max 7 days
 });
