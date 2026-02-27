@@ -5,11 +5,9 @@
  */
 
 import { z } from "zod";
-import { getNativeClient } from "../websocket/client-adapter.js";
 import { MessageActions } from "../types/native-messaging.js";
 import type { McpTool, ToolCallResult } from "../types/mcp.js";
-import logger from "../utils/logger.js";
-import { nativeErrorToJsonRpc } from "../utils/errors.js";
+import { executeToolHandler } from "./tool-handler.js";
 
 // =============================================================================
 // Schemas
@@ -29,115 +27,37 @@ const identitiesListSchema = z.object({
 // Tool Handlers
 // =============================================================================
 
-/**
- * List all accounts
- */
 export async function handleAccountsList(
   args: unknown,
 ): Promise<ToolCallResult> {
-  try {
-    accountsListSchema.parse(args);
-    const client = getNativeClient();
-
-    logger.info("Listing accounts");
-
-    const response = await client.sendRequest(MessageActions.ACCOUNTS_LIST, {});
-
-    if (!response.success) {
-      const error = nativeErrorToJsonRpc(response.error);
-      return {
-        content: [{ type: "text", text: JSON.stringify(error) }],
-        isError: true,
-      };
-    }
-
-    return {
-      content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }],
-    };
-  } catch (error) {
-    logger.error("Error in handleAccountsList:", error);
-    const jsonRpcError = nativeErrorToJsonRpc(error);
-    return {
-      content: [{ type: "text", text: JSON.stringify(jsonRpcError) }],
-      isError: true,
-    };
-  }
+  return executeToolHandler(
+    args,
+    accountsListSchema,
+    MessageActions.ACCOUNTS_LIST,
+    "handleAccountsList",
+  );
 }
 
-/**
- * Get account details
- */
 export async function handleAccountsGet(
   args: unknown,
 ): Promise<ToolCallResult> {
-  try {
-    const params = accountsGetSchema.parse(args);
-    const client = getNativeClient();
-
-    logger.info(`Getting account: ${params.accountId}`);
-
-    const response = await client.sendRequest(
-      MessageActions.ACCOUNTS_GET,
-      params,
-    );
-
-    if (!response.success) {
-      const error = nativeErrorToJsonRpc(response.error);
-      return {
-        content: [{ type: "text", text: JSON.stringify(error) }],
-        isError: true,
-      };
-    }
-
-    return {
-      content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }],
-    };
-  } catch (error) {
-    logger.error("Error in handleAccountsGet:", error);
-    const jsonRpcError = nativeErrorToJsonRpc(error);
-    return {
-      content: [{ type: "text", text: JSON.stringify(jsonRpcError) }],
-      isError: true,
-    };
-  }
+  return executeToolHandler(
+    args,
+    accountsGetSchema,
+    MessageActions.ACCOUNTS_GET,
+    "handleAccountsGet",
+  );
 }
 
-/**
- * List identities for an account
- */
 export async function handleIdentitiesList(
   args: unknown,
 ): Promise<ToolCallResult> {
-  try {
-    const params = identitiesListSchema.parse(args);
-    const client = getNativeClient();
-
-    logger.info(`Listing identities for account: ${params.accountId}`);
-
-    const response = await client.sendRequest(
-      MessageActions.IDENTITIES_LIST,
-      params,
-    );
-
-    if (!response.success) {
-      const error = nativeErrorToJsonRpc(response.error);
-      return {
-        content: [{ type: "text", text: JSON.stringify(error) }],
-        isError: true,
-      };
-    }
-
-    return {
-      content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }],
-    };
-  } catch (error) {
-    logger.error("Error in handleIdentitiesList:", error);
-    const jsonRpcError = nativeErrorToJsonRpc(error);
-    return {
-      content: [{ type: "text", text: JSON.stringify(jsonRpcError) }],
-      isError: true,
-    };
-  }
+  return executeToolHandler(
+    args,
+    identitiesListSchema,
+    MessageActions.IDENTITIES_LIST,
+    "handleIdentitiesList",
+  );
 }
 
 // =============================================================================

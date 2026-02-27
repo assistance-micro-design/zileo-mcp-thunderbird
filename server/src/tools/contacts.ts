@@ -5,11 +5,9 @@
  */
 
 import { z } from "zod";
-import { getNativeClient } from "../websocket/client-adapter.js";
+import { executeToolHandler } from "./tool-handler.js";
 import { MessageActions } from "../types/native-messaging.js";
 import type { McpTool, ToolCallResult } from "../types/mcp.js";
-import logger from "../utils/logger.js";
-import { nativeErrorToJsonRpc } from "../utils/errors.js";
 
 // =============================================================================
 // Schemas
@@ -75,36 +73,12 @@ const addressBooksDeleteSchema = z.object({
 export async function handleContactsSearch(
   args: unknown,
 ): Promise<ToolCallResult> {
-  try {
-    const params = contactsSearchSchema.parse(args);
-    const client = getNativeClient();
-
-    logger.debug("Searching contacts");
-
-    const response = await client.sendRequest(
-      MessageActions.CONTACTS_SEARCH,
-      params,
-    );
-
-    if (!response.success) {
-      const error = nativeErrorToJsonRpc(response.error);
-      return {
-        content: [{ type: "text", text: JSON.stringify(error) }],
-        isError: true,
-      };
-    }
-
-    return {
-      content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }],
-    };
-  } catch (error) {
-    logger.error("Error in handleContactsSearch:", error);
-    const jsonRpcError = nativeErrorToJsonRpc(error);
-    return {
-      content: [{ type: "text", text: JSON.stringify(jsonRpcError) }],
-      isError: true,
-    };
-  }
+  return executeToolHandler(
+    args,
+    contactsSearchSchema,
+    MessageActions.CONTACTS_SEARCH,
+    "handleContactsSearch",
+  );
 }
 
 /**
@@ -113,36 +87,12 @@ export async function handleContactsSearch(
 export async function handleContactsList(
   args: unknown,
 ): Promise<ToolCallResult> {
-  try {
-    const params = contactsListSchema.parse(args);
-    const client = getNativeClient();
-
-    logger.info(`Listing contacts in address book: ${params.addressBookId}`);
-
-    const response = await client.sendRequest(
-      MessageActions.CONTACTS_LIST,
-      params,
-    );
-
-    if (!response.success) {
-      const error = nativeErrorToJsonRpc(response.error);
-      return {
-        content: [{ type: "text", text: JSON.stringify(error) }],
-        isError: true,
-      };
-    }
-
-    return {
-      content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }],
-    };
-  } catch (error) {
-    logger.error("Error in handleContactsList:", error);
-    const jsonRpcError = nativeErrorToJsonRpc(error);
-    return {
-      content: [{ type: "text", text: JSON.stringify(jsonRpcError) }],
-      isError: true,
-    };
-  }
+  return executeToolHandler(
+    args,
+    contactsListSchema,
+    MessageActions.CONTACTS_LIST,
+    "handleContactsList",
+  );
 }
 
 /**
@@ -151,36 +101,12 @@ export async function handleContactsList(
 export async function handleContactsGet(
   args: unknown,
 ): Promise<ToolCallResult> {
-  try {
-    const params = contactsGetSchema.parse(args);
-    const client = getNativeClient();
-
-    logger.info(`Getting contact: ${params.contactId}`);
-
-    const response = await client.sendRequest(
-      MessageActions.CONTACTS_GET,
-      params,
-    );
-
-    if (!response.success) {
-      const error = nativeErrorToJsonRpc(response.error);
-      return {
-        content: [{ type: "text", text: JSON.stringify(error) }],
-        isError: true,
-      };
-    }
-
-    return {
-      content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }],
-    };
-  } catch (error) {
-    logger.error("Error in handleContactsGet:", error);
-    const jsonRpcError = nativeErrorToJsonRpc(error);
-    return {
-      content: [{ type: "text", text: JSON.stringify(jsonRpcError) }],
-      isError: true,
-    };
-  }
+  return executeToolHandler(
+    args,
+    contactsGetSchema,
+    MessageActions.CONTACTS_GET,
+    "handleContactsGet",
+  );
 }
 
 /**
@@ -189,36 +115,12 @@ export async function handleContactsGet(
 export async function handleContactsCreate(
   args: unknown,
 ): Promise<ToolCallResult> {
-  try {
-    const params = contactsCreateSchema.parse(args);
-    const client = getNativeClient();
-
-    logger.info(`Creating contact in address book: ${params.addressBookId}`);
-
-    const response = await client.sendRequest(
-      MessageActions.CONTACTS_CREATE,
-      params,
-    );
-
-    if (!response.success) {
-      const error = nativeErrorToJsonRpc(response.error);
-      return {
-        content: [{ type: "text", text: JSON.stringify(error) }],
-        isError: true,
-      };
-    }
-
-    return {
-      content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }],
-    };
-  } catch (error) {
-    logger.error("Error in handleContactsCreate:", error);
-    const jsonRpcError = nativeErrorToJsonRpc(error);
-    return {
-      content: [{ type: "text", text: JSON.stringify(jsonRpcError) }],
-      isError: true,
-    };
-  }
+  return executeToolHandler(
+    args,
+    contactsCreateSchema,
+    MessageActions.CONTACTS_CREATE,
+    "handleContactsCreate",
+  );
 }
 
 /**
@@ -227,36 +129,12 @@ export async function handleContactsCreate(
 export async function handleContactsUpdate(
   args: unknown,
 ): Promise<ToolCallResult> {
-  try {
-    const params = contactsUpdateSchema.parse(args);
-    const client = getNativeClient();
-
-    logger.info(`Updating contact: ${params.contactId}`);
-
-    const response = await client.sendRequest(
-      MessageActions.CONTACTS_UPDATE,
-      params,
-    );
-
-    if (!response.success) {
-      const error = nativeErrorToJsonRpc(response.error);
-      return {
-        content: [{ type: "text", text: JSON.stringify(error) }],
-        isError: true,
-      };
-    }
-
-    return {
-      content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }],
-    };
-  } catch (error) {
-    logger.error("Error in handleContactsUpdate:", error);
-    const jsonRpcError = nativeErrorToJsonRpc(error);
-    return {
-      content: [{ type: "text", text: JSON.stringify(jsonRpcError) }],
-      isError: true,
-    };
-  }
+  return executeToolHandler(
+    args,
+    contactsUpdateSchema,
+    MessageActions.CONTACTS_UPDATE,
+    "handleContactsUpdate",
+  );
 }
 
 /**
@@ -265,36 +143,12 @@ export async function handleContactsUpdate(
 export async function handleContactsDelete(
   args: unknown,
 ): Promise<ToolCallResult> {
-  try {
-    const params = contactsDeleteSchema.parse(args);
-    const client = getNativeClient();
-
-    logger.info(`Deleting contact: ${params.contactId}`);
-
-    const response = await client.sendRequest(
-      MessageActions.CONTACTS_DELETE,
-      params,
-    );
-
-    if (!response.success) {
-      const error = nativeErrorToJsonRpc(response.error);
-      return {
-        content: [{ type: "text", text: JSON.stringify(error) }],
-        isError: true,
-      };
-    }
-
-    return {
-      content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }],
-    };
-  } catch (error) {
-    logger.error("Error in handleContactsDelete:", error);
-    const jsonRpcError = nativeErrorToJsonRpc(error);
-    return {
-      content: [{ type: "text", text: JSON.stringify(jsonRpcError) }],
-      isError: true,
-    };
-  }
+  return executeToolHandler(
+    args,
+    contactsDeleteSchema,
+    MessageActions.CONTACTS_DELETE,
+    "handleContactsDelete",
+  );
 }
 
 /**
@@ -303,36 +157,12 @@ export async function handleContactsDelete(
 export async function handleAddressBooksList(
   args: unknown,
 ): Promise<ToolCallResult> {
-  try {
-    addressBooksListSchema.parse(args);
-    const client = getNativeClient();
-
-    logger.info("Listing address books");
-
-    const response = await client.sendRequest(
-      MessageActions.ADDRESSBOOKS_LIST,
-      {},
-    );
-
-    if (!response.success) {
-      const error = nativeErrorToJsonRpc(response.error);
-      return {
-        content: [{ type: "text", text: JSON.stringify(error) }],
-        isError: true,
-      };
-    }
-
-    return {
-      content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }],
-    };
-  } catch (error) {
-    logger.error("Error in handleAddressBooksList:", error);
-    const jsonRpcError = nativeErrorToJsonRpc(error);
-    return {
-      content: [{ type: "text", text: JSON.stringify(jsonRpcError) }],
-      isError: true,
-    };
-  }
+  return executeToolHandler(
+    args,
+    addressBooksListSchema,
+    MessageActions.ADDRESSBOOKS_LIST,
+    "handleAddressBooksList",
+  );
 }
 
 /**
@@ -341,36 +171,12 @@ export async function handleAddressBooksList(
 export async function handleAddressBooksCreate(
   args: unknown,
 ): Promise<ToolCallResult> {
-  try {
-    const params = addressBooksCreateSchema.parse(args);
-    const client = getNativeClient();
-
-    logger.info("Creating address book");
-
-    const response = await client.sendRequest(
-      MessageActions.ADDRESSBOOKS_CREATE,
-      params,
-    );
-
-    if (!response.success) {
-      const error = nativeErrorToJsonRpc(response.error);
-      return {
-        content: [{ type: "text", text: JSON.stringify(error) }],
-        isError: true,
-      };
-    }
-
-    return {
-      content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }],
-    };
-  } catch (error) {
-    logger.error("Error in handleAddressBooksCreate:", error);
-    const jsonRpcError = nativeErrorToJsonRpc(error);
-    return {
-      content: [{ type: "text", text: JSON.stringify(jsonRpcError) }],
-      isError: true,
-    };
-  }
+  return executeToolHandler(
+    args,
+    addressBooksCreateSchema,
+    MessageActions.ADDRESSBOOKS_CREATE,
+    "handleAddressBooksCreate",
+  );
 }
 
 /**
@@ -379,36 +185,12 @@ export async function handleAddressBooksCreate(
 export async function handleAddressBooksDelete(
   args: unknown,
 ): Promise<ToolCallResult> {
-  try {
-    const params = addressBooksDeleteSchema.parse(args);
-    const client = getNativeClient();
-
-    logger.info(`Deleting address book: ${params.addressBookId}`);
-
-    const response = await client.sendRequest(
-      MessageActions.ADDRESSBOOKS_DELETE,
-      params,
-    );
-
-    if (!response.success) {
-      const error = nativeErrorToJsonRpc(response.error);
-      return {
-        content: [{ type: "text", text: JSON.stringify(error) }],
-        isError: true,
-      };
-    }
-
-    return {
-      content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }],
-    };
-  } catch (error) {
-    logger.error("Error in handleAddressBooksDelete:", error);
-    const jsonRpcError = nativeErrorToJsonRpc(error);
-    return {
-      content: [{ type: "text", text: JSON.stringify(jsonRpcError) }],
-      isError: true,
-    };
-  }
+  return executeToolHandler(
+    args,
+    addressBooksDeleteSchema,
+    MessageActions.ADDRESSBOOKS_DELETE,
+    "handleAddressBooksDelete",
+  );
 }
 
 // =============================================================================

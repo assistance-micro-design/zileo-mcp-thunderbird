@@ -5,11 +5,9 @@
  */
 
 import { z } from "zod";
-import { getNativeClient } from "../websocket/client-adapter.js";
 import { MessageActions } from "../types/native-messaging.js";
 import type { McpTool, ToolCallResult } from "../types/mcp.js";
-import logger from "../utils/logger.js";
-import { nativeErrorToJsonRpc } from "../utils/errors.js";
+import { executeToolHandler } from "./tool-handler.js";
 
 // =============================================================================
 // Schemas
@@ -64,69 +62,14 @@ const tasksCompleteSchema = z.object({
  * List tasks
  */
 export async function handleTasksList(args: unknown): Promise<ToolCallResult> {
-  try {
-    const params = tasksListSchema.parse(args);
-    const client = getNativeClient();
-
-    logger.info("Listing tasks");
-
-    const response = await client.sendRequest(
-      MessageActions.TASKS_LIST,
-      params,
-    );
-
-    if (!response.success) {
-      const error = nativeErrorToJsonRpc(response.error);
-      return {
-        content: [{ type: "text", text: JSON.stringify(error) }],
-        isError: true,
-      };
-    }
-
-    return {
-      content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }],
-    };
-  } catch (error) {
-    logger.error("Error in handleTasksList:", error);
-    const jsonRpcError = nativeErrorToJsonRpc(error);
-    return {
-      content: [{ type: "text", text: JSON.stringify(jsonRpcError) }],
-      isError: true,
-    };
-  }
+  return executeToolHandler(args, tasksListSchema, MessageActions.TASKS_LIST, "handleTasksList");
 }
 
 /**
  * Get task details
  */
 export async function handleTasksGet(args: unknown): Promise<ToolCallResult> {
-  try {
-    const params = tasksGetSchema.parse(args);
-    const client = getNativeClient();
-
-    logger.info(`Getting task: ${params.taskId}`);
-
-    const response = await client.sendRequest(MessageActions.TASKS_GET, params);
-
-    if (!response.success) {
-      const error = nativeErrorToJsonRpc(response.error);
-      return {
-        content: [{ type: "text", text: JSON.stringify(error) }],
-        isError: true,
-      };
-    }
-
-    return {
-      content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }],
-    };
-  } catch (error) {
-    logger.error("Error in handleTasksGet:", error);
-    const jsonRpcError = nativeErrorToJsonRpc(error);
-    return {
-      content: [{ type: "text", text: JSON.stringify(jsonRpcError) }],
-      isError: true,
-    };
-  }
+  return executeToolHandler(args, tasksGetSchema, MessageActions.TASKS_GET, "handleTasksGet");
 }
 
 /**
@@ -135,36 +78,7 @@ export async function handleTasksGet(args: unknown): Promise<ToolCallResult> {
 export async function handleTasksCreate(
   args: unknown,
 ): Promise<ToolCallResult> {
-  try {
-    const params = tasksCreateSchema.parse(args);
-    const client = getNativeClient();
-
-    logger.info(`Creating task in calendar: ${params.calendarId}`);
-
-    const response = await client.sendRequest(
-      MessageActions.TASKS_CREATE,
-      params,
-    );
-
-    if (!response.success) {
-      const error = nativeErrorToJsonRpc(response.error);
-      return {
-        content: [{ type: "text", text: JSON.stringify(error) }],
-        isError: true,
-      };
-    }
-
-    return {
-      content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }],
-    };
-  } catch (error) {
-    logger.error("Error in handleTasksCreate:", error);
-    const jsonRpcError = nativeErrorToJsonRpc(error);
-    return {
-      content: [{ type: "text", text: JSON.stringify(jsonRpcError) }],
-      isError: true,
-    };
-  }
+  return executeToolHandler(args, tasksCreateSchema, MessageActions.TASKS_CREATE, "handleTasksCreate");
 }
 
 /**
@@ -173,36 +87,7 @@ export async function handleTasksCreate(
 export async function handleTasksUpdate(
   args: unknown,
 ): Promise<ToolCallResult> {
-  try {
-    const params = tasksUpdateSchema.parse(args);
-    const client = getNativeClient();
-
-    logger.info(`Updating task: ${params.taskId}`);
-
-    const response = await client.sendRequest(
-      MessageActions.TASKS_UPDATE,
-      params,
-    );
-
-    if (!response.success) {
-      const error = nativeErrorToJsonRpc(response.error);
-      return {
-        content: [{ type: "text", text: JSON.stringify(error) }],
-        isError: true,
-      };
-    }
-
-    return {
-      content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }],
-    };
-  } catch (error) {
-    logger.error("Error in handleTasksUpdate:", error);
-    const jsonRpcError = nativeErrorToJsonRpc(error);
-    return {
-      content: [{ type: "text", text: JSON.stringify(jsonRpcError) }],
-      isError: true,
-    };
-  }
+  return executeToolHandler(args, tasksUpdateSchema, MessageActions.TASKS_UPDATE, "handleTasksUpdate");
 }
 
 /**
@@ -211,36 +96,7 @@ export async function handleTasksUpdate(
 export async function handleTasksDelete(
   args: unknown,
 ): Promise<ToolCallResult> {
-  try {
-    const params = tasksDeleteSchema.parse(args);
-    const client = getNativeClient();
-
-    logger.info(`Deleting task: ${params.taskId}`);
-
-    const response = await client.sendRequest(
-      MessageActions.TASKS_DELETE,
-      params,
-    );
-
-    if (!response.success) {
-      const error = nativeErrorToJsonRpc(response.error);
-      return {
-        content: [{ type: "text", text: JSON.stringify(error) }],
-        isError: true,
-      };
-    }
-
-    return {
-      content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }],
-    };
-  } catch (error) {
-    logger.error("Error in handleTasksDelete:", error);
-    const jsonRpcError = nativeErrorToJsonRpc(error);
-    return {
-      content: [{ type: "text", text: JSON.stringify(jsonRpcError) }],
-      isError: true,
-    };
-  }
+  return executeToolHandler(args, tasksDeleteSchema, MessageActions.TASKS_DELETE, "handleTasksDelete");
 }
 
 /**
@@ -249,36 +105,7 @@ export async function handleTasksDelete(
 export async function handleTasksComplete(
   args: unknown,
 ): Promise<ToolCallResult> {
-  try {
-    const params = tasksCompleteSchema.parse(args);
-    const client = getNativeClient();
-
-    logger.info(`Completing task: ${params.taskId}`);
-
-    const response = await client.sendRequest(
-      MessageActions.TASKS_COMPLETE,
-      params,
-    );
-
-    if (!response.success) {
-      const error = nativeErrorToJsonRpc(response.error);
-      return {
-        content: [{ type: "text", text: JSON.stringify(error) }],
-        isError: true,
-      };
-    }
-
-    return {
-      content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }],
-    };
-  } catch (error) {
-    logger.error("Error in handleTasksComplete:", error);
-    const jsonRpcError = nativeErrorToJsonRpc(error);
-    return {
-      content: [{ type: "text", text: JSON.stringify(jsonRpcError) }],
-      isError: true,
-    };
-  }
+  return executeToolHandler(args, tasksCompleteSchema, MessageActions.TASKS_COMPLETE, "handleTasksComplete");
 }
 
 // =============================================================================

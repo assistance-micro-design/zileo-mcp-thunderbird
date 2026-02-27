@@ -86,12 +86,12 @@ import {
   handleComposeSend,
 } from "./compose.js";
 
+import type { McpTool, ToolCallResult } from "../types/mcp.js";
+
 /**
  * Tool handler function type
- * Using 'any' for SDK compatibility - the SDK defines its own return types
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type ToolHandler = (args: unknown) => Promise<any>;
+export type ToolHandler = (args: unknown) => Promise<ToolCallResult>;
 
 /**
  * Tool handler map
@@ -172,10 +172,8 @@ export const toolHandlers: Record<string, ToolHandler> = {
 
 /**
  * All tool definitions
- * Using 'any' for SDK compatibility
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const allTools: any[] = [
+export const allTools: McpTool[] = [
   ...messageTools,
   ...folderTools,
   ...contactTools,

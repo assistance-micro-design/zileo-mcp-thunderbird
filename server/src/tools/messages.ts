@@ -10,6 +10,7 @@ import { MessageActions } from "../types/native-messaging.js";
 import type { McpTool, ToolCallResult } from "../types/mcp.js";
 import logger from "../utils/logger.js";
 import { nativeErrorToJsonRpc } from "../utils/errors.js";
+import { executeToolHandler } from "./tool-handler.js";
 
 // =============================================================================
 // Schemas
@@ -83,123 +84,51 @@ const messagesListRecentSchema = z.object({
 // Tool Handlers
 // =============================================================================
 
-/**
- * Search messages with advanced filters
- */
 export async function handleMessagesSearch(
   args: unknown,
 ): Promise<ToolCallResult> {
-  try {
-    const params = messageSearchSchema.parse(args);
-    const client = getNativeClient();
-
-    logger.debug(`Searching messages with filters: ${JSON.stringify({ folderId: params.folderId, accountId: params.accountId, limit: params.limit, unread: params.unread, flagged: params.flagged })}`);
-
-    const response = await client.sendRequest(
-      MessageActions.MESSAGES_SEARCH,
-      params,
-    );
-
-    if (!response.success) {
-      const error = nativeErrorToJsonRpc(response.error);
-      return {
-        content: [{ type: "text", text: JSON.stringify(error) }],
-        isError: true,
-      };
-    }
-
-    return {
-      content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }],
-    };
-  } catch (error) {
-    logger.error("Error in handleMessagesSearch:", error);
-    const jsonRpcError = nativeErrorToJsonRpc(error);
-    return {
-      content: [{ type: "text", text: JSON.stringify(jsonRpcError) }],
-      isError: true,
-    };
-  }
+  return executeToolHandler(
+    args,
+    messageSearchSchema,
+    MessageActions.MESSAGES_SEARCH,
+    "handleMessagesSearch",
+  );
 }
 
-/**
- * List messages in a folder
- */
 export async function handleMessagesList(
   args: unknown,
 ): Promise<ToolCallResult> {
-  try {
-    const params = messagesListSchema.parse(args);
-    const client = getNativeClient();
-
-    logger.info(`Listing messages in folder: ${params.folderId}`);
-
-    const response = await client.sendRequest(
-      MessageActions.MESSAGES_LIST,
-      params,
-    );
-
-    if (!response.success) {
-      const error = nativeErrorToJsonRpc(response.error);
-      return {
-        content: [{ type: "text", text: JSON.stringify(error) }],
-        isError: true,
-      };
-    }
-
-    return {
-      content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }],
-    };
-  } catch (error) {
-    logger.error("Error in handleMessagesList:", error);
-    const jsonRpcError = nativeErrorToJsonRpc(error);
-    return {
-      content: [{ type: "text", text: JSON.stringify(jsonRpcError) }],
-      isError: true,
-    };
-  }
+  return executeToolHandler(
+    args,
+    messagesListSchema,
+    MessageActions.MESSAGES_LIST,
+    "handleMessagesList",
+  );
 }
 
 /**
- * List unread messages
+ * List unread messages - uses MESSAGES_SEARCH with unread: true
  */
 export async function handleMessagesListUnread(
   args: unknown,
 ): Promise<ToolCallResult> {
-  try {
-    const params = messagesListUnreadSchema.parse(args);
-    const client = getNativeClient();
-
-    logger.info(`Listing unread messages`);
-
-    const response = await client.sendRequest(MessageActions.MESSAGES_SEARCH, {
-      unread: true,
-      accountId: params.accountId,
-      limit: params.limit,
-    });
-
-    if (!response.success) {
-      const error = nativeErrorToJsonRpc(response.error);
-      return {
-        content: [{ type: "text", text: JSON.stringify(error) }],
-        isError: true,
-      };
-    }
-
-    return {
-      content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }],
-    };
-  } catch (error) {
-    logger.error("Error in handleMessagesListUnread:", error);
-    const jsonRpcError = nativeErrorToJsonRpc(error);
-    return {
-      content: [{ type: "text", text: JSON.stringify(jsonRpcError) }],
-      isError: true,
-    };
-  }
+  return executeToolHandler(
+    args,
+    messagesListUnreadSchema,
+    MessageActions.MESSAGES_SEARCH,
+    "handleMessagesListUnread",
+    {
+      transformParams: (parsed) => ({
+        unread: true,
+        accountId: parsed.accountId,
+        limit: parsed.limit,
+      }),
+    },
+  );
 }
 
 /**
- * Get a specific message
+ * Get a specific message - custom handler for dynamic action selection
  */
 export async function handleMessagesGet(
   args: unknown,
@@ -244,205 +173,63 @@ export async function handleMessagesGet(
   }
 }
 
-/**
- * Move messages to another folder
- */
 export async function handleMessagesMove(
   args: unknown,
 ): Promise<ToolCallResult> {
-  try {
-    const params = messagesMoveSchema.parse(args);
-    const client = getNativeClient();
-
-    logger.info(
-      `Moving ${params.messageIds.length} messages to ${params.destinationFolderId}`,
-    );
-
-    const response = await client.sendRequest(
-      MessageActions.MESSAGES_MOVE,
-      params,
-    );
-
-    if (!response.success) {
-      const error = nativeErrorToJsonRpc(response.error);
-      return {
-        content: [{ type: "text", text: JSON.stringify(error) }],
-        isError: true,
-      };
-    }
-
-    return {
-      content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }],
-    };
-  } catch (error) {
-    logger.error("Error in handleMessagesMove:", error);
-    const jsonRpcError = nativeErrorToJsonRpc(error);
-    return {
-      content: [{ type: "text", text: JSON.stringify(jsonRpcError) }],
-      isError: true,
-    };
-  }
+  return executeToolHandler(
+    args,
+    messagesMoveSchema,
+    MessageActions.MESSAGES_MOVE,
+    "handleMessagesMove",
+  );
 }
 
-/**
- * Copy messages to another folder
- */
 export async function handleMessagesCopy(
   args: unknown,
 ): Promise<ToolCallResult> {
-  try {
-    const params = messagesCopySchema.parse(args);
-    const client = getNativeClient();
-
-    logger.info(
-      `Copying ${params.messageIds.length} messages to ${params.destinationFolderId}`,
-    );
-
-    const response = await client.sendRequest(
-      MessageActions.MESSAGES_COPY,
-      params,
-    );
-
-    if (!response.success) {
-      const error = nativeErrorToJsonRpc(response.error);
-      return {
-        content: [{ type: "text", text: JSON.stringify(error) }],
-        isError: true,
-      };
-    }
-
-    return {
-      content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }],
-    };
-  } catch (error) {
-    logger.error("Error in handleMessagesCopy:", error);
-    const jsonRpcError = nativeErrorToJsonRpc(error);
-    return {
-      content: [{ type: "text", text: JSON.stringify(jsonRpcError) }],
-      isError: true,
-    };
-  }
+  return executeToolHandler(
+    args,
+    messagesCopySchema,
+    MessageActions.MESSAGES_COPY,
+    "handleMessagesCopy",
+  );
 }
 
-/**
- * Delete messages
- */
 export async function handleMessagesDelete(
   args: unknown,
 ): Promise<ToolCallResult> {
-  try {
-    const params = messagesDeleteSchema.parse(args);
-    const client = getNativeClient();
-
-    logger.info(
-      `Deleting ${params.messageIds.length} messages (permanent: ${params.permanent})`,
-    );
-
-    const response = await client.sendRequest(
-      MessageActions.MESSAGES_DELETE,
-      params,
-    );
-
-    if (!response.success) {
-      const error = nativeErrorToJsonRpc(response.error);
-      return {
-        content: [{ type: "text", text: JSON.stringify(error) }],
-        isError: true,
-      };
-    }
-
-    return {
-      content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }],
-    };
-  } catch (error) {
-    logger.error("Error in handleMessagesDelete:", error);
-    const jsonRpcError = nativeErrorToJsonRpc(error);
-    return {
-      content: [{ type: "text", text: JSON.stringify(jsonRpcError) }],
-      isError: true,
-    };
-  }
+  return executeToolHandler(
+    args,
+    messagesDeleteSchema,
+    MessageActions.MESSAGES_DELETE,
+    "handleMessagesDelete",
+  );
 }
 
-/**
- * Update message properties
- */
 export async function handleMessagesUpdate(
   args: unknown,
 ): Promise<ToolCallResult> {
-  try {
-    const params = messagesUpdateSchema.parse(args);
-    const client = getNativeClient();
-
-    logger.info(`Updating message: ${params.messageId}`);
-
-    const response = await client.sendRequest(
-      MessageActions.MESSAGES_UPDATE,
-      params,
-    );
-
-    if (!response.success) {
-      const error = nativeErrorToJsonRpc(response.error);
-      return {
-        content: [{ type: "text", text: JSON.stringify(error) }],
-        isError: true,
-      };
-    }
-
-    return {
-      content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }],
-    };
-  } catch (error) {
-    logger.error("Error in handleMessagesUpdate:", error);
-    const jsonRpcError = nativeErrorToJsonRpc(error);
-    return {
-      content: [{ type: "text", text: JSON.stringify(jsonRpcError) }],
-      isError: true,
-    };
-  }
+  return executeToolHandler(
+    args,
+    messagesUpdateSchema,
+    MessageActions.MESSAGES_UPDATE,
+    "handleMessagesUpdate",
+  );
 }
 
-/**
- * Archive messages
- */
 export async function handleMessagesArchive(
   args: unknown,
 ): Promise<ToolCallResult> {
-  try {
-    const params = messagesArchiveSchema.parse(args);
-    const client = getNativeClient();
-
-    logger.info(`Archiving ${params.messageIds.length} messages`);
-
-    const response = await client.sendRequest(
-      MessageActions.MESSAGES_ARCHIVE,
-      params,
-    );
-
-    if (!response.success) {
-      const error = nativeErrorToJsonRpc(response.error);
-      return {
-        content: [{ type: "text", text: JSON.stringify(error) }],
-        isError: true,
-      };
-    }
-
-    return {
-      content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }],
-    };
-  } catch (error) {
-    logger.error("Error in handleMessagesArchive:", error);
-    const jsonRpcError = nativeErrorToJsonRpc(error);
-    return {
-      content: [{ type: "text", text: JSON.stringify(jsonRpcError) }],
-      isError: true,
-    };
-  }
+  return executeToolHandler(
+    args,
+    messagesArchiveSchema,
+    MessageActions.MESSAGES_ARCHIVE,
+    "handleMessagesArchive",
+  );
 }
 
 /**
- * List recent messages across ALL folders
- * Calculates date range automatically based on hoursAgo parameter
+ * List recent messages - custom handler for date range computation
  */
 export async function handleMessagesListRecent(
   args: unknown,

@@ -5,11 +5,9 @@
  */
 
 import { z } from "zod";
-import { getNativeClient } from "../websocket/client-adapter.js";
 import { MessageActions } from "../types/native-messaging.js";
 import type { McpTool, ToolCallResult } from "../types/mcp.js";
-import logger from "../utils/logger.js";
-import { nativeErrorToJsonRpc } from "../utils/errors.js";
+import { executeToolHandler } from "./tool-handler.js";
 
 // =============================================================================
 // Schemas
@@ -53,145 +51,40 @@ const tagsDeleteSchema = z.object({
 // Tool Handlers
 // =============================================================================
 
-/**
- * List all tags
- */
 export async function handleTagsList(args: unknown): Promise<ToolCallResult> {
-  try {
-    tagsListSchema.parse(args);
-    const client = getNativeClient();
-
-    logger.info("Listing tags");
-
-    const response = await client.sendRequest(MessageActions.TAGS_LIST, {});
-
-    if (!response.success) {
-      const error = nativeErrorToJsonRpc(response.error);
-      return {
-        content: [{ type: "text", text: JSON.stringify(error) }],
-        isError: true,
-      };
-    }
-
-    return {
-      content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }],
-    };
-  } catch (error) {
-    logger.error("Error in handleTagsList:", error);
-    const jsonRpcError = nativeErrorToJsonRpc(error);
-    return {
-      content: [{ type: "text", text: JSON.stringify(jsonRpcError) }],
-      isError: true,
-    };
-  }
+  return executeToolHandler(
+    args,
+    tagsListSchema,
+    MessageActions.TAGS_LIST,
+    "handleTagsList",
+  );
 }
 
-/**
- * Create a new tag
- */
 export async function handleTagsCreate(args: unknown): Promise<ToolCallResult> {
-  try {
-    const params = tagsCreateSchema.parse(args);
-    const client = getNativeClient();
-
-    logger.info(`Creating tag: ${params.tag} (${params.key})`);
-
-    const response = await client.sendRequest(
-      MessageActions.TAGS_CREATE,
-      params,
-    );
-
-    if (!response.success) {
-      const error = nativeErrorToJsonRpc(response.error);
-      return {
-        content: [{ type: "text", text: JSON.stringify(error) }],
-        isError: true,
-      };
-    }
-
-    return {
-      content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }],
-    };
-  } catch (error) {
-    logger.error("Error in handleTagsCreate:", error);
-    const jsonRpcError = nativeErrorToJsonRpc(error);
-    return {
-      content: [{ type: "text", text: JSON.stringify(jsonRpcError) }],
-      isError: true,
-    };
-  }
+  return executeToolHandler(
+    args,
+    tagsCreateSchema,
+    MessageActions.TAGS_CREATE,
+    "handleTagsCreate",
+  );
 }
 
-/**
- * Update an existing tag
- */
 export async function handleTagsUpdate(args: unknown): Promise<ToolCallResult> {
-  try {
-    const params = tagsUpdateSchema.parse(args);
-    const client = getNativeClient();
-
-    logger.info(`Updating tag: ${params.key}`);
-
-    const response = await client.sendRequest(
-      MessageActions.TAGS_UPDATE,
-      params,
-    );
-
-    if (!response.success) {
-      const error = nativeErrorToJsonRpc(response.error);
-      return {
-        content: [{ type: "text", text: JSON.stringify(error) }],
-        isError: true,
-      };
-    }
-
-    return {
-      content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }],
-    };
-  } catch (error) {
-    logger.error("Error in handleTagsUpdate:", error);
-    const jsonRpcError = nativeErrorToJsonRpc(error);
-    return {
-      content: [{ type: "text", text: JSON.stringify(jsonRpcError) }],
-      isError: true,
-    };
-  }
+  return executeToolHandler(
+    args,
+    tagsUpdateSchema,
+    MessageActions.TAGS_UPDATE,
+    "handleTagsUpdate",
+  );
 }
 
-/**
- * Delete a tag
- */
 export async function handleTagsDelete(args: unknown): Promise<ToolCallResult> {
-  try {
-    const params = tagsDeleteSchema.parse(args);
-    const client = getNativeClient();
-
-    logger.info(`Deleting tag: ${params.key}`);
-
-    const response = await client.sendRequest(
-      MessageActions.TAGS_DELETE,
-      params,
-    );
-
-    if (!response.success) {
-      const error = nativeErrorToJsonRpc(response.error);
-      return {
-        content: [{ type: "text", text: JSON.stringify(error) }],
-        isError: true,
-      };
-    }
-
-    return {
-      content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }],
-    };
-  } catch (error) {
-    logger.error("Error in handleTagsDelete:", error);
-    const jsonRpcError = nativeErrorToJsonRpc(error);
-    return {
-      content: [{ type: "text", text: JSON.stringify(jsonRpcError) }],
-      isError: true,
-    };
-  }
+  return executeToolHandler(
+    args,
+    tagsDeleteSchema,
+    MessageActions.TAGS_DELETE,
+    "handleTagsDelete",
+  );
 }
 
 // =============================================================================
