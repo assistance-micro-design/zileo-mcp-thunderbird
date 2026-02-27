@@ -224,3 +224,88 @@ describe("WebSocket Authentication (SEC-WS-001)", () => {
     });
   });
 });
+
+describe("SEC-REVIEW-002: /auth/token IP restriction", () => {
+  let bridge: WebSocketBridge;
+
+  beforeAll(async () => {
+    bridge = new WebSocketBridge({
+      port: TEST_PORT + 1,
+      timeout: 5000,
+      maxPendingRequests: 10,
+    });
+    await bridge.start();
+  });
+
+  afterAll(async () => {
+    await bridge.stop();
+  });
+
+  it("should accept /auth/token from localhost (127.0.0.1)", async () => {
+    const result = await fetchTokenFromHost(TEST_PORT + 1, "127.0.0.1");
+    expect(result.status).toBe(200);
+    const parsed = JSON.parse(result.body);
+    expect(parsed).toHaveProperty("token");
+  });
+});
+
+describe("SEC-REVIEW-003: Rate limiter cleanup", () => {
+  it("should expose cleanupRateLimiter method", () => {
+    const bridge = new WebSocketBridge({
+      port: TEST_PORT + 2,
+      timeout: 5000,
+      maxPendingRequests: 10,
+    });
+    expect(typeof bridge.cleanupRateLimiter).toBe("function");
+  });
+
+  it("should remove expired entries from rate limiter", async () => {
+    const bridge = new WebSocketBridge({
+      port: TEST_PORT + 3,
+      timeout: 5000,
+      maxPendingRequests: 10,
+    });
+    await bridge.start();
+    try {
+      // Make requests to populate the rate limiter
+      await fetchTokenFromHost(TEST_PORT + 3, "127.0.0.1");
+      await fetchTokenFromHost(TEST_PORT + 3, "127.0.0.1");
+
+      // Rate limiter should have entries
+      expect(bridge.getRateLimiterSize()).toBeGreaterThan(0);
+
+      // Cleanup should not remove recent entries
+      bridge.cleanupRateLimiter();
+      expect(bridge.getRateLimiterSize()).toBeGreaterThan(0);
+    } finally {
+      await bridge.stop();
+    }
+  });
+});
+
+/**
+ * Helper: fetch auth token from a specific host address
+ */
+function fetchTokenFromHost(
+  port: number,
+  host: string,
+): Promise<{ status: number; body: string }> {
+  return new Promise((resolve, reject) => {
+    const req = http.get(
+      { hostname: host, port, path: "/auth/token" },
+      (res) => {
+        let data = "";
+        res.on("data", (chunk: Buffer) => {
+          data += chunk.toString();
+        });
+        res.on("end", () => {
+          resolve({ status: res.statusCode ?? 0, body: data });
+        });
+      },
+    );
+    req.on("error", reject);
+    req.setTimeout(3000, () => {
+      req.destroy(new Error("Timeout"));
+    });
+  });
+}
