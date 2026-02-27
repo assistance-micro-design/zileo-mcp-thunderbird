@@ -2,17 +2,18 @@
 
 Model Context Protocol (MCP) server for Thunderbird email client integration. This project enables AI assistants to interact with Thunderbird through a standardized protocol.
 
-> ⚠️ **WARNING - USE AT YOUR OWN RISK**
+> **WARNING - USE AT YOUR OWN RISK**
 >
 > This project is **under active development**. The MCP protocol and this implementation may change without notice.
 >
 > **Important considerations:**
 >
-> - 🔴 **Irreversible Actions**: This tool can perform **destructive operations** on your emails, contacts, calendar events, and tasks (delete, move, modify). These actions **cannot be undone**.
-> - 🔴 **AI Autonomy**: When used with AI assistants, the AI may execute actions based on its interpretation of your requests. Always verify before confirming destructive operations.
-> - 🔴 **No Warranty**: This software is provided "AS IS" without warranty of any kind. See the [LICENSE](LICENSE) for details.
-> - 🟡 **Backup Recommended**: Consider backing up your Thunderbird profile before use.
-> - 🟡 **Test Environment**: Consider testing in a separate Thunderbird profile first.
+> - **Irreversible Actions**: This tool can perform **destructive operations** on your emails, contacts, calendar events, and tasks (delete, move, modify). These actions **cannot be undone**.
+> - **AI Autonomy**: When used with AI assistants, the AI may execute actions based on its interpretation of your requests. Always verify before confirming destructive operations.
+> - **No Warranty**: This software is provided "AS IS" without warranty of any kind. See the [LICENSE](LICENSE) for details.
+> - **Docker Recommended**: The Docker deployment is the recommended setup. It provides process isolation, reproducible builds, and simplified dependency management.
+> - **Backup Recommended**: Back up your Thunderbird profile before first use.
+> - **Test Environment**: Test in a separate Thunderbird profile before using with production data.
 >
 > **By using this software, you accept full responsibility for any data loss or unintended modifications.**
 
@@ -90,36 +91,9 @@ This is a monorepo containing two main components:
 - Thunderbird 128.x or higher
 - npm package manager
 
-### Option 1: Standard Setup
+### Option 1: Docker Setup (Recommended)
 
-1. Clone the repository:
-
-```bash
-git clone https://github.com/assistance-micro-design/thunderbird-mcp.git
-cd thunderbird-mcp
-```
-
-2. Install dependencies:
-
-```bash
-npm install
-```
-
-3. Build the project:
-
-```bash
-npm run build
-```
-
-4. Install the Thunderbird extension:
-   - Open Thunderbird
-   - Go to Tools > Add-ons and Themes
-   - Click the gear icon > Install Add-on From File
-   - Select `dist/thunderbird-mcp-1.3.1.xpi`
-
-### Option 2: Docker Setup
-
-The Docker deployment uses a multi-client architecture where the container runs a standalone WebSocket bridge, and MCP instances connect to it via `docker exec`.
+The Docker deployment provides process isolation and a multi-client architecture where the container runs a standalone WebSocket bridge, and MCP clients connect via `docker exec`.
 
 1. Clone and build:
 
@@ -135,7 +109,11 @@ docker compose build
 docker compose up -d
 ```
 
-3. Install the Thunderbird extension (same as above)
+3. Install the Thunderbird extension:
+   - Open Thunderbird
+   - Go to Tools > Add-ons and Themes
+   - Click the gear icon > Install Add-on From File
+   - Select `dist/thunderbird-mcp-1.3.1.xpi`
 
 4. Verify the bridge is running:
 
@@ -158,6 +136,23 @@ curl http://localhost:9876/health
 │   Thunderbird Extension    docker exec (MCP)        │
 └─────────────────────────────────────────────────────┘
 ```
+
+### Option 2: Standard Setup (without Docker)
+
+1. Clone the repository:
+
+```bash
+git clone https://github.com/assistance-micro-design/thunderbird-mcp.git
+cd thunderbird-mcp
+```
+
+2. Install dependencies and build:
+
+```bash
+npm install && npm run build
+```
+
+3. Install the Thunderbird extension (same procedure as Option 1)
 
 ## Configuration
 
