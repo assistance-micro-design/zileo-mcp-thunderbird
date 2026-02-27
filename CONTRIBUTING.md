@@ -38,14 +38,13 @@ Thank you for your interest in contributing to Thunderbird-MCP.
 
 ## Code Standards
 
-See `.claude/rules/code-standards.md` for detailed requirements:
-
-- No `any` types - use proper TypeScript types
-- No `console.log/error` - use the logger utility
-- No `@ts-ignore` or `@ts-expect-error`
-- All functions must have explicit types
-- Use zod for input validation
-- Follow MCP protocol conventions
+- No `any` types - use proper TypeScript types or `unknown` with type guards
+- No `console.log/error` - use the logger utility (`import logger from '../utils/logger.js'`)
+- No `@ts-ignore` or `@ts-expect-error` - fix the underlying type error
+- All functions must have explicit parameter and return types
+- Use Zod schemas for input validation on all tool handlers
+- Use `executeToolHandler()` from `tools/tool-handler.ts` for standard handlers
+- Follow MCP protocol conventions (snake_case tool names with `thunderbird_` prefix)
 
 ### Logging
 

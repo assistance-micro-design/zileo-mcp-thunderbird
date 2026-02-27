@@ -37,7 +37,7 @@ Model Context Protocol (MCP) server for Thunderbird email client integration. Th
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                        CLIENT MCP                               │
-│              (Claude, GPT, Assistant IA, etc.)                  │
+│        (Claude Desktop, Zileo Chat, MCP client)                 │
 └─────────────────────┬───────────────────────────────────────────┘
                       │ JSON-RPC 2.0 (stdio)
                       ▼
@@ -161,9 +161,11 @@ curl http://localhost:9876/health
 
 ## Configuration
 
-### MCP Server Configuration (Standard)
+### MCP Client Configuration (Standard)
 
-Add to your MCP client configuration (e.g., Claude Desktop `~/.config/Claude/claude_desktop_config.json`):
+Add the following to your MCP client configuration.
+
+**Claude Desktop** (`~/.config/Claude/claude_desktop_config.json`):
 
 ```json
 {
@@ -180,9 +182,27 @@ Add to your MCP client configuration (e.g., Claude Desktop `~/.config/Claude/cla
 }
 ```
 
-### MCP Server Configuration (Docker)
+**Zileo Chat** (Settings > MCP Servers):
 
-For Docker deployment, the container runs a standalone WebSocket bridge. MCP instances connect via `docker exec`:
+```json
+{
+  "name": "thunderbird",
+  "command": "node",
+  "args": ["/path/to/thunderbird-mcp/server/dist/index.js"],
+  "env": {
+    "THUNDERBIRD_PORT": "9876",
+    "LOG_LEVEL": "info"
+  }
+}
+```
+
+Any MCP-compatible client can connect using the same `command` and `args` pattern.
+
+### MCP Client Configuration (Docker)
+
+For Docker deployment, the container runs a standalone WebSocket bridge. MCP clients connect via `docker exec`:
+
+**Claude Desktop:**
 
 ```json
 {
@@ -198,7 +218,20 @@ For Docker deployment, the container runs a standalone WebSocket bridge. MCP ins
 }
 ```
 
-The MCP server automatically detects the running bridge and connects as a client. Multiple MCP instances can share the same bridge simultaneously.
+**Zileo Chat** (Settings > MCP Servers):
+
+```json
+{
+  "name": "thunderbird",
+  "command": "docker",
+  "args": ["exec", "-i", "thunderbird-mcp-server", "node", "dist/index.js"],
+  "env": {
+    "LOG_LEVEL": "info"
+  }
+}
+```
+
+The MCP server automatically detects the running bridge and connects as a client. Multiple MCP clients can share the same bridge simultaneously.
 
 **Important:** The container must be running (`docker compose up -d`) before using `docker exec`.
 
@@ -391,7 +424,6 @@ thunderbird-mcp/
 ├── docs/                     # Documentation
 │   ├── api/                  # API reference
 │   └── architecture/         # Architecture docs
-├── CAHIER_DES_CHARGES.md     # Project specifications
 └── package.json              # Root monorepo config
 ```
 
@@ -415,7 +447,7 @@ npm run lint
 
 ## Documentation
 
-- [Cahier des Charges](./CAHIER_DES_CHARGES.md) - Project specifications (French)
+- [Cahier des Charges](./docs/cahier-des-charges.md) - Project specifications (French)
 - [API Documentation](./docs/api/) - Tool and resource reference
 - [Architecture](./docs/architecture/) - System design and diagrams
 
