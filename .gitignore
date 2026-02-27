@@ -20,3 +20,6 @@ coverage/
 # Generated docs (specs, reviews)
 docs/specs/
 docs/reviews/
+
+# Design assets
+Charte-graphique/
