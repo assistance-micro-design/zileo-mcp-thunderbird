@@ -130,9 +130,8 @@ export function nativeErrorToJsonRpc(nativeError: unknown): JsonRpcError {
     }
   }
 
-  // Default to internal error
+  // Default to internal error (no leak of full error object or stack trace)
   return createInternalError(
     nativeError instanceof Error ? nativeError.message : "Unknown error",
-    nativeError,
   );
 }

@@ -884,16 +884,18 @@ if (process.env.NODE_ENV !== "production") {
 
 - `error`: Errors that require attention
 - `warn`: Unexpected but recoverable situations
-- `info`: Important lifecycle events
-- `debug`: Detailed debugging information
+- `info`: Important lifecycle events (non-sensitive: IDs, counts, folder names)
+- `debug`: Detailed debugging information (may include user data: search queries, email subjects, contact names)
 
 **Logged Events**:
 
 - Server startup/shutdown
-- Tool calls with parameters (sanitized)
+- Tool calls with parameters (sensitive params at DEBUG level only)
 - Native Messaging requests/responses
-- Errors with stack traces
+- Errors with sanitized messages (no stack traces leaked to clients)
 - Performance metrics
+
+**Security Note**: User-provided data (search queries, email subjects/body, contact names) is logged at `debug` level only. The default `info` level logs only non-sensitive metadata (IDs, counts, operation names).
 
 ## Performance Optimization
 

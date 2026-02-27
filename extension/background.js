@@ -138,7 +138,9 @@ async function processRequest(request) {
   } catch (error) {
     console.error("[MCP] Request failed:", request.action, error);
 
-    // Send error response
+    console.warn("[MCP] Request error:", error.stack);
+
+    // Send error response (no stack trace leaked to clients)
     sendMessage({
       id: request.id,
       type: "response",
@@ -146,7 +148,6 @@ async function processRequest(request) {
       error: {
         code: -32603,
         message: error.message || "Internal error",
-        data: { stack: error.stack },
       },
       timestamp: new Date().toISOString(),
     });

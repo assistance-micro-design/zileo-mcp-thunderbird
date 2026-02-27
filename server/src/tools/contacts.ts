@@ -79,7 +79,7 @@ export async function handleContactsSearch(
     const params = contactsSearchSchema.parse(args);
     const client = getNativeClient();
 
-    logger.info(`Searching contacts: ${params.query}`);
+    logger.debug(`Searching contacts: ${params.query}`);
 
     const response = await client.sendRequest(
       MessageActions.CONTACTS_SEARCH,

@@ -93,7 +93,7 @@ export async function handleMessagesSearch(
     const params = messageSearchSchema.parse(args);
     const client = getNativeClient();
 
-    logger.info(`Searching messages with filters: ${JSON.stringify(params)}`);
+    logger.debug(`Searching messages with filters: ${JSON.stringify(params)}`);
 
     const response = await client.sendRequest(
       MessageActions.MESSAGES_SEARCH,

@@ -40,6 +40,12 @@ interface PendingRequest {
 }
 
 /**
+ * Maximum WebSocket payload size (5 MiB)
+ * Messages exceeding this limit are rejected with close code 1009
+ */
+const MAX_WS_PAYLOAD = 5 * 1024 * 1024;
+
+/**
  * WebSocket Bridge Options
  */
 export interface WebSocketBridgeOptions {
@@ -99,13 +105,13 @@ export class WebSocketBridge extends EventEmitter {
         });
 
         // WebSocket server for Thunderbird extension (single client)
-        this.wssThunderbird = new WebSocketServer({ noServer: true });
+        this.wssThunderbird = new WebSocketServer({ noServer: true, maxPayload: MAX_WS_PAYLOAD });
         this.wssThunderbird.on("connection", (ws: WebSocket) => {
           this.handleThunderbirdConnection(ws);
         });
 
         // WebSocket server for MCP clients (multiple clients)
-        this.wssMcp = new WebSocketServer({ noServer: true });
+        this.wssMcp = new WebSocketServer({ noServer: true, maxPayload: MAX_WS_PAYLOAD });
         this.wssMcp.on("connection", (ws: WebSocket) => {
           this.handleMcpConnection(ws);
         });

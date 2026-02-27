@@ -563,6 +563,8 @@ async function processRequest(request) {
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
+    console.warn("[MCP] Request error:", error.stack);
+
     sendMessage({
       id: request.id,
       type: "response",
@@ -570,7 +572,6 @@ async function processRequest(request) {
       error: {
         code: -32603,
         message: error.message,
-        data: { stack: error.stack },
       },
       timestamp: new Date().toISOString(),
     });
@@ -688,11 +689,13 @@ LOG_LEVEL=info           # Logging level
 - Request ID validation and correlation
 - Timeout enforcement prevents resource exhaustion
 - Pending request limit (100 max)
+- Maximum WebSocket payload size: 5 MiB (close code 1009 on exceeded)
 
 **Error Handling**:
 
-- Stack traces sanitized in production
-- Sensitive data never logged
+- Stack traces never sent to clients (logged locally only)
+- `nativeErrorToJsonRpc` returns message string only, no full error objects
+- Sensitive user data (search queries, email content) logged at DEBUG level only
 - Error codes follow JSON-RPC standard
 
 ### Attack Surface
@@ -711,6 +714,7 @@ LOG_LEVEL=info           # Logging level
 - Timeout and pending request limits
 - Localhost-only binding prevents remote attacks
 - Extension permission model
+- WebSocket maxPayload (5 MiB) prevents memory exhaustion
 
 ## Troubleshooting
 

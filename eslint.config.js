@@ -47,6 +47,7 @@ export default tseslint.config(
       "**/*.mjs",
       "**/*.sys.mjs",
       "extension/**",
+      "server/vitest.config.ts",
     ],
   },
 );

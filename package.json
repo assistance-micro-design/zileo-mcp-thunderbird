@@ -1,6 +1,6 @@
 {
   "name": "thunderbird-mcp",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "MCP Server for Thunderbird email client",
   "type": "module",
   "private": true,
