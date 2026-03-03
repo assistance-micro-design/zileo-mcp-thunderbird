@@ -6,9 +6,12 @@
 import { describe, it, expect } from "vitest";
 import {
   TOOL_TIERS,
+  NATIVE_ACTION_TO_MCP_TOOL,
+  SYSTEM_ACTIONS,
   getDefaultPermissions,
   isToolAllowed,
   getToolTier,
+  resolveActionToMcpTool,
 } from "../../tools/tool-permissions.js";
 import { allTools } from "../../tools/index.js";
 
@@ -139,6 +142,180 @@ describe("tool-permissions", () => {
           toolName in permissions,
           `Missing permission for "${toolName}"`,
         ).toBe(true);
+      }
+    });
+  });
+
+  describe("NATIVE_ACTION_TO_MCP_TOOL", () => {
+    it("should map all entries to tools that exist in TOOL_TIERS", () => {
+      for (const [action, mcpTool] of Object.entries(
+        NATIVE_ACTION_TO_MCP_TOOL,
+      )) {
+        expect(
+          TOOL_TIERS[mcpTool],
+          `Action "${action}" maps to "${mcpTool}" which is not in TOOL_TIERS`,
+        ).toBeDefined();
+      }
+    });
+  });
+
+  describe("resolveActionToMcpTool", () => {
+    it("should return undefined for system actions", () => {
+      expect(resolveActionToMcpTool("ping")).toBeUndefined();
+      expect(resolveActionToMcpTool("getVersion")).toBeUndefined();
+    });
+
+    it("should resolve sub-actions to their parent MCP tool", () => {
+      expect(resolveActionToMcpTool("messages.getFull")).toBe(
+        "thunderbird_messages_get",
+      );
+      expect(resolveActionToMcpTool("messages.getRaw")).toBe(
+        "thunderbird_messages_get",
+      );
+      expect(resolveActionToMcpTool("messages.listAttachments")).toBe(
+        "thunderbird_messages_get",
+      );
+    });
+
+    it("should resolve camelCase actions to snake_case MCP tool names", () => {
+      expect(resolveActionToMcpTool("compose.beginNew")).toBe(
+        "thunderbird_compose_begin_new",
+      );
+      expect(resolveActionToMcpTool("compose.beginReply")).toBe(
+        "thunderbird_compose_begin_reply",
+      );
+      expect(resolveActionToMcpTool("compose.beginForward")).toBe(
+        "thunderbird_compose_begin_forward",
+      );
+      expect(resolveActionToMcpTool("compose.getDetails")).toBe(
+        "thunderbird_compose_get_details",
+      );
+      expect(resolveActionToMcpTool("compose.setDetails")).toBe(
+        "thunderbird_compose_set_details",
+      );
+      expect(resolveActionToMcpTool("compose.saveDraft")).toBe(
+        "thunderbird_compose_save_draft",
+      );
+      expect(resolveActionToMcpTool("compose.saveTemplate")).toBe(
+        "thunderbird_compose_save_template",
+      );
+    });
+
+    it("should resolve addressBooks camelCase actions", () => {
+      expect(resolveActionToMcpTool("addressBooks.list")).toBe(
+        "thunderbird_addressbooks_list",
+      );
+      expect(resolveActionToMcpTool("addressBooks.create")).toBe(
+        "thunderbird_addressbooks_create",
+      );
+      expect(resolveActionToMcpTool("addressBooks.delete")).toBe(
+        "thunderbird_addressbooks_delete",
+      );
+    });
+
+    it("should resolve folders.markAsRead correctly", () => {
+      expect(resolveActionToMcpTool("folders.markAsRead")).toBe(
+        "thunderbird_folders_mark_read",
+      );
+    });
+
+    it("should use default conversion for simple actions", () => {
+      expect(resolveActionToMcpTool("messages.list")).toBe(
+        "thunderbird_messages_list",
+      );
+      expect(resolveActionToMcpTool("messages.get")).toBe(
+        "thunderbird_messages_get",
+      );
+      expect(resolveActionToMcpTool("folders.list")).toBe(
+        "thunderbird_folders_list",
+      );
+      expect(resolveActionToMcpTool("contacts.search")).toBe(
+        "thunderbird_contacts_search",
+      );
+      expect(resolveActionToMcpTool("calendars.list")).toBe(
+        "thunderbird_calendars_list",
+      );
+      expect(resolveActionToMcpTool("tasks.create")).toBe(
+        "thunderbird_tasks_create",
+      );
+      expect(resolveActionToMcpTool("compose.send")).toBe(
+        "thunderbird_compose_send",
+      );
+    });
+
+    it("should resolve all native actions to valid TOOL_TIERS entries", () => {
+      // All non-system actions from MessageActions should resolve to a known tool
+      const allActions = [
+        "messages.search",
+        "messages.list",
+        "messages.get",
+        "messages.getFull",
+        "messages.getRaw",
+        "messages.update",
+        "messages.move",
+        "messages.copy",
+        "messages.delete",
+        "messages.archive",
+        "messages.listAttachments",
+        "folders.list",
+        "folders.get",
+        "folders.create",
+        "folders.rename",
+        "folders.delete",
+        "folders.move",
+        "folders.markAsRead",
+        "tags.list",
+        "tags.create",
+        "tags.update",
+        "tags.delete",
+        "accounts.list",
+        "accounts.get",
+        "identities.list",
+        "addressBooks.list",
+        "addressBooks.get",
+        "addressBooks.create",
+        "addressBooks.delete",
+        "contacts.list",
+        "contacts.search",
+        "contacts.get",
+        "contacts.create",
+        "contacts.update",
+        "contacts.delete",
+        "calendars.list",
+        "calendars.get",
+        "events.list",
+        "events.search",
+        "events.get",
+        "events.create",
+        "events.update",
+        "events.move",
+        "events.delete",
+        "tasks.list",
+        "tasks.get",
+        "tasks.create",
+        "tasks.update",
+        "tasks.delete",
+        "tasks.complete",
+        "compose.beginNew",
+        "compose.beginReply",
+        "compose.beginForward",
+        "compose.getDetails",
+        "compose.setDetails",
+        "compose.saveDraft",
+        "compose.saveTemplate",
+        "compose.send",
+      ];
+
+      for (const action of allActions) {
+        const mcpTool = resolveActionToMcpTool(action);
+        expect(
+          mcpTool,
+          `Action "${action}" resolved to undefined (not a system action)`,
+        ).toBeDefined();
+        expect(
+          TOOL_TIERS[mcpTool!],
+          `Action "${action}" resolved to "${mcpTool}" which is not in TOOL_TIERS`,
+        ).toBeDefined();
       }
     });
   });

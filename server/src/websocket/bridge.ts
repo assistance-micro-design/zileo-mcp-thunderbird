@@ -9,7 +9,11 @@ import { WebSocketServer, WebSocket } from "ws";
 import { EventEmitter } from "events";
 import { createServer, Server as HttpServer, IncomingMessage } from "http";
 import logger from "../utils/logger.js";
-import { isToolAllowed, getToolTier } from "../tools/tool-permissions.js";
+import {
+  isToolAllowed,
+  getToolTier,
+  resolveActionToMcpTool,
+} from "../tools/tool-permissions.js";
 import {
   WebSocketBridgeClient,
   tryConnectToExistingBridge,
@@ -573,10 +577,11 @@ export class WebSocketBridge extends EventEmitter {
     }
 
     // SEC-REVIEW-009: Enforce tool permissions at the bridge level.
-    // Convert native action format (e.g. "calendars.list") to MCP tool name
-    // (e.g. "thunderbird_calendars_list") for permission lookup.
+    // Resolve native action (e.g. "messages.getFull", "compose.beginForward")
+    // to the correct MCP tool name for permission lookup.
+    // System actions (ping, getVersion) return undefined and bypass checks.
     const mcpToolName = request.action
-      ? `thunderbird_${request.action.replace(/\./g, "_")}`
+      ? resolveActionToMcpTool(request.action)
       : undefined;
     if (mcpToolName && !isToolAllowed(mcpToolName, this.toolPermissions)) {
       const tier = getToolTier(mcpToolName) || "unknown";

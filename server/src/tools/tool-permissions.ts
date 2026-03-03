@@ -92,6 +92,54 @@ export const TOOL_TIERS: Record<string, ToolTier> = {
 };
 
 /**
+ * Maps native WebSocket action names to their parent MCP tool names.
+ * Some native actions (e.g. "messages.getFull") are sub-actions of a single MCP tool
+ * (e.g. "thunderbird_messages_get"), and some use camelCase that doesn't match
+ * the snake_case MCP tool names (e.g. "compose.beginForward" → "thunderbird_compose_begin_forward").
+ *
+ * Actions not listed here use the default conversion: thunderbird_{action with . replaced by _}
+ * System actions (ping, getVersion) are allowed unconditionally by the bridge.
+ */
+export const NATIVE_ACTION_TO_MCP_TOOL: Record<string, string> = {
+  // Sub-actions of thunderbird_messages_get
+  "messages.getFull": "thunderbird_messages_get",
+  "messages.getRaw": "thunderbird_messages_get",
+  "messages.listAttachments": "thunderbird_messages_get",
+
+  // camelCase → snake_case mismatches
+  "folders.markAsRead": "thunderbird_folders_mark_read",
+  "addressBooks.list": "thunderbird_addressbooks_list",
+  "addressBooks.get": "thunderbird_addressbooks_list",
+  "addressBooks.create": "thunderbird_addressbooks_create",
+  "addressBooks.delete": "thunderbird_addressbooks_delete",
+  "compose.beginNew": "thunderbird_compose_begin_new",
+  "compose.beginReply": "thunderbird_compose_begin_reply",
+  "compose.beginForward": "thunderbird_compose_begin_forward",
+  "compose.getDetails": "thunderbird_compose_get_details",
+  "compose.setDetails": "thunderbird_compose_set_details",
+  "compose.saveDraft": "thunderbird_compose_save_draft",
+  "compose.saveTemplate": "thunderbird_compose_save_template",
+};
+
+/** System actions that bypass permission checks (not MCP tools). */
+export const SYSTEM_ACTIONS = new Set(["ping", "getVersion"]);
+
+/**
+ * Resolves a native WebSocket action to its MCP tool name for permission lookup.
+ * @param action - The native action (e.g. "messages.getFull", "compose.beginForward")
+ * @returns The MCP tool name, or undefined for system actions
+ */
+export function resolveActionToMcpTool(action: string): string | undefined {
+  if (SYSTEM_ACTIONS.has(action)) {
+    return undefined;
+  }
+  return (
+    NATIVE_ACTION_TO_MCP_TOOL[action] ??
+    `thunderbird_${action.replace(/\./g, "_")}`
+  );
+}
+
+/**
  * Returns the tier for a tool, or undefined if the tool is not classified.
  * @param toolName - The MCP tool name
  * @returns The tier or undefined
