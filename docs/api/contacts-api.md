@@ -26,7 +26,7 @@ Performs a search for contacts matching the query string against name, email, an
 | --------------- | ------ | -------- | ----------------------------------------------------- |
 | `query`         | string | Yes      | Search term to match against contact fields           |
 | `addressBookId` | string | No       | Specific address book to search within (omit for all) |
-| `limit`         | number | No       | Maximum number of results to return (default: 50)     |
+| `limit`         | number | No       | Maximum number of results to return (default: 50, max: 500) |
 
 #### Response Format
 
@@ -102,7 +102,7 @@ Retrieves a paginated list of contacts from an address book.
 | Name            | Type   | Required | Description                                                    |
 | --------------- | ------ | -------- | -------------------------------------------------------------- |
 | `addressBookId` | string | Yes      | ID of the address book to list contacts from                   |
-| `limit`         | number | No       | Maximum number of contacts to return (default: 100, max: 1000) |
+| `limit`         | number | No       | Maximum number of contacts to return (default: 100, max: 500) |
 | `offset`        | number | No       | Number of contacts to skip for pagination (default: 0)         |
 
 #### Response Format

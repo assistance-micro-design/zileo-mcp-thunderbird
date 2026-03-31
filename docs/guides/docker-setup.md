@@ -113,6 +113,23 @@ Configure Claude Desktop (`~/.config/Claude/claude_desktop_config.json`):
 
 **Important:** The container must be running (`docker compose up -d`) before Claude Desktop starts.
 
+### Zileo Chat Configuration
+
+In Zileo Chat (Settings > MCP Servers), configure each field:
+
+```
+Name:    thunderbird
+Command: docker
+Args:    exec
+         -i
+         thunderbird-mcp-server
+         node
+         dist/index.js
+Env:     LOG_LEVEL=info
+```
+
+> **Important:** The container must be running (`docker compose up -d`) before starting Zileo Chat.
+
 ### How It Works
 
 1. Claude Desktop spawns `docker exec -i thunderbird-mcp-server node dist/index.js`

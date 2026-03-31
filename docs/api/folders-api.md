@@ -228,7 +228,7 @@ Changes the display name of a folder without affecting its contents or hierarchy
 | Name       | Type   | Required | Description                |
 | ---------- | ------ | -------- | -------------------------- |
 | `folderId` | string | Yes      | ID of the folder to rename |
-| `newName`  | string | Yes      | New name for the folder    |
+| `newName`  | string | Yes      | New name for the folder (1-255 chars, no path separators) |
 
 #### Response Format
 
@@ -463,7 +463,7 @@ All folder operations may return these error codes:
 
 ### Bulk Operations
 
-- Use `thunderbird_folders_mark_read` with `includeSubFolders` for efficient bulk updates
+- Use `thunderbird_folders_mark_read` for efficient bulk updates on a folder
 - Consider folder size when performing operations on large folders
 - Test folder operations on small folders before applying to large hierarchies
 

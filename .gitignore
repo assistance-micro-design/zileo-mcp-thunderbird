@@ -17,9 +17,11 @@ coverage/
 .mcp.json
 .serena/
 
-# Generated docs (specs, reviews)
+# Internal/private docs
 docs/specs/
 docs/reviews/
+docs/skills/
+docs/cahier-des-charges.md
 
 # Design assets
 Charte-graphique/

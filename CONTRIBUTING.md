@@ -2,6 +2,8 @@
 
 Thank you for your interest in contributing to Thunderbird-MCP.
 
+Please read our [Code of Conduct](CODE_OF_CONDUCT.md) before participating.
+
 ## Getting Started
 
 ### Prerequisites
@@ -119,7 +121,7 @@ docs: update installation instructions
 4. Add corresponding extension API if needed
 5. Update documentation
 
-See `docs/thunderbird-mcp-tools.md` for existing tool patterns.
+See [docs/api/](docs/api/) for existing tool patterns and API reference.
 
 ## Reporting Issues
 

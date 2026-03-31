@@ -9,12 +9,43 @@
 
 ## Reporting a Vulnerability
 
-If you discover a security vulnerability, please report it responsibly:
+**Do NOT create public GitHub issues for security vulnerabilities.**
 
-1. **Do NOT open a public issue** for security vulnerabilities
-2. Send details to the maintainers via private channels
-3. Include steps to reproduce the vulnerability
-4. Allow reasonable time for a fix before public disclosure
+Please report vulnerabilities via:
+- [GitHub Security Advisories](https://github.com/assistance-micro-design/thunderbird-mcp/security/advisories/new)
+
+We will respond within 7 days and work with you to understand and resolve the issue.
+
+### Guidelines
+
+1. Include steps to reproduce the vulnerability
+2. Allow reasonable time for a fix before public disclosure
+3. We will acknowledge security researchers who report valid vulnerabilities (with your permission)
+
+## Scope
+
+### In Scope
+
+Security issues in Thunderbird MCP code:
+
+| Area | Examples |
+|------|----------|
+| **MCP Server** | Command injection, unauthorized tool execution, input validation bypass |
+| **WebSocket Bridge** | Authentication bypass, origin validation bypass, payload attacks |
+| **Tool Authorization** | Tier system bypass, permission escalation |
+| **Extension** | Handler injection, storage manipulation |
+| **Docker Deployment** | Container escape, port exposure, privilege escalation |
+
+### Out of Scope
+
+Report these to the respective maintainers:
+
+| Area | Report To |
+|------|-----------|
+| Thunderbird core | [Thunderbird Security](https://www.thunderbird.net/en-US/security/) |
+| MCP SDK | [MCP SDK Security](https://github.com/modelcontextprotocol/typescript-sdk/security) |
+| Node.js runtime | [Node.js Security](https://nodejs.org/en/security) |
+| Docker engine | [Docker Security](https://www.docker.com/security/) |
 
 ## Security Considerations
 

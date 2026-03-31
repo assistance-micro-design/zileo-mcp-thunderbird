@@ -23,7 +23,7 @@ docker compose up -d
 1. Open Thunderbird
 2. Go to **Tools** > **Add-ons and Themes**
 3. Click gear icon > **Install Add-on From File**
-4. Select `dist/thunderbird-mcp-1.3.1.xpi`
+4. Select `releases/thunderbird-mcp-1.3.1.xpi`
 
 ### Step 4: Configure Claude Desktop
 
@@ -45,7 +45,8 @@ Edit `~/.config/Claude/claude_desktop_config.json`:
 ```bash
 # Check bridge status
 curl http://localhost:9876/health
-# Should show: {"status":"ok","thunderbird":true,"mcpClients":0}
+# Initially shows: {"status":"ok","thunderbird":false,"mcpClients":0}
+# After extension connects: {"status":"ok","thunderbird":true,"mcpClients":0}
 ```
 
 Restart Claude Desktop and start using Thunderbird tools.

@@ -28,7 +28,7 @@ The Thunderbird extension is a **MailExtension (Manifest V3)** that:
 2. Locate the extension file:
 
    ```
-   dist/thunderbird-mcp-1.3.1.xpi
+   releases/thunderbird-mcp-1.3.1.xpi
    ```
 
 3. Open Thunderbird
@@ -105,25 +105,22 @@ The extension requires these permissions:
 
 | Permission            | Purpose                                  |
 | --------------------- | ---------------------------------------- |
-| `accountsRead`        | Read account information                 |
-| `addressBooks`        | Access contacts and address books        |
 | `messagesRead`        | Read email messages                      |
-| `messagesMove`        | Move and copy messages                   |
-| `messagesDelete`      | Delete messages                          |
-| `messagesUpdate`      | Update message flags and tags            |
-| `messagesImport`      | Import messages                          |
-| `messagesTags`        | Manage message tags                      |
-| `compose`             | Create and send emails                   |
-| `compose.send`        | Send composed emails                     |
-| `sensitiveDataUpload` | Access message content for AI processing |
+| `messagesMove`        | Move, copy, and delete messages          |
+| `messagesUpdate`      | Update message properties (flags)        |
+| `messagesTags`        | Create and manage tags                   |
+| `messagesTagsList`    | List available tags                      |
+| `accountsRead`        | Read account information                 |
+| `accountsFolders`     | Manage folder structure                  |
+| `addressBooks`        | Access contacts and address books        |
+| `alarms`              | Keep-alive mechanism (MV3)               |
+| `compose`             | Create and manage compose windows        |
+| `compose.save`        | Save drafts and templates                |
+| `storage`             | Extension state storage                  |
 
-### Experimental Permissions
+### Experimental APIs
 
-For calendar and tasks functionality:
-
-| Permission    | Purpose                          |
-| ------------- | -------------------------------- |
-| `experiments` | Access experimental calendar API |
+Calendar and tasks functionality uses `experiment_apis` in the manifest (not a permission). See [extension architecture](../architecture/extension.md) for details.
 
 ## Troubleshooting
 

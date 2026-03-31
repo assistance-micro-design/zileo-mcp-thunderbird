@@ -90,8 +90,6 @@ Topics covered:
 - Security considerations
 - Troubleshooting and debugging
 - Performance optimization
-- Comparison to Native Messaging
-
 Start here for: Understanding WebSocket bridge implementation and connection management.
 
 ## Architecture Overview Diagram
@@ -219,7 +217,6 @@ overview.md
 
 ### Specifications
 
-- [CAHIER_DES_CHARGES.md](../../CAHIER_DES_CHARGES.md) - Full project specification
 - [MCP Specification](https://modelcontextprotocol.io/specification/)
 - [JSON-RPC 2.0 Specification](https://www.jsonrpc.org/specification)
 - [WebSocket Protocol RFC 6455](https://tools.ietf.org/html/rfc6455)
@@ -240,13 +237,16 @@ Thunderbird-mcp/
 │   ├── api/                   API reference
 │   └── guides/                User guides
 ├── extension/                 Thunderbird extension code
+│   ├── manifest.json          Manifest configuration
 │   ├── background.js          WebSocket client
-│   └── native-messaging/      API handlers
+│   ├── api/                   API wrappers (7 modules)
+│   ├── native-messaging/      Request routing handler
+│   └── experiments/           Experimental APIs (calendar)
 ├── server/                    MCP server code
 │   ├── src/websocket/         WebSocket bridge
 │   ├── src/tools/             Tool handlers (56 tools)
-│   └── src/resources/         Resource handlers
-└── tests/                     Test suites
+│   ├── src/resources/         Resource handlers
+│   └── src/__tests__/         Test suites
 ```
 
 ## Contributing

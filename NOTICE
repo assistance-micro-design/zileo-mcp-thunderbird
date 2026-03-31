@@ -1,0 +1,17 @@
+Thunderbird MCP Server
+Copyright 2025-2026 Assistance Micro Design
+https://www.assistancemicrodesign.net/
+https://github.com/assistance-micro-design
+
+This product is licensed under the MIT License.
+See the LICENSE file for the full license text.
+
+This product includes software developed by:
+- Assistance Micro Design (https://www.assistancemicrodesign.net/)
+
+Built with Claude Code (https://claude.ai/code) by Anthropic.
+
+Third-party libraries and their licenses are documented in:
+- THIRD_PARTY_LICENSES.md (complete license inventory)
+- server/package.json (Node.js dependencies)
+- package.json (root monorepo dependencies)

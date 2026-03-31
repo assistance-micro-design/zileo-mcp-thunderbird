@@ -708,9 +708,9 @@ All parameters are validated using Zod schemas before execution:
 
 | Validation          | Rule                            | Error Code |
 | ------------------- | ------------------------------- | ---------- |
-| `messageId`         | Positive integer                | -32602     |
+| `messageId`         | Integer                         | -32602     |
 | `messageIds`        | Non-empty array of integers     | -32602     |
-| `limit`             | 1-1000                          | -32602     |
+| `limit`             | 1-1000 (1-100 for list_recent)  | -32602     |
 | `offset`            | >= 0                            | -32602     |
 | `format`            | enum ["headers", "full", "raw"] | -32602     |
 | `folderId`          | Non-empty string                | -32602     |
@@ -758,6 +758,6 @@ Internal message routing uses these action constants:
 
 ## Related APIs
 
-- [Folders API](/home/seb-hp/apps/Thunderbird-mcp/docs/api/folders-api.md) - Folder management operations
-- [Tags API](/home/seb-hp/apps/Thunderbird-mcp/docs/api/tags-api.md) - Tag creation and management
-- [Accounts API](/home/seb-hp/apps/Thunderbird-mcp/docs/api/accounts-api.md) - Account information
+- [Folders API](./folders-api.md) - Folder management operations
+- [Tags API](./tags-api.md) - Tag creation and management
+- [Accounts API](./accounts-api.md) - Account information

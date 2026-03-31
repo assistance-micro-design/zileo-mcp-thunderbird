@@ -71,6 +71,7 @@ sequenceDiagram
     "contacts",
     "tags",
     "accounts",
+    "compose",
     "calendar",
     "tasks"
   ]

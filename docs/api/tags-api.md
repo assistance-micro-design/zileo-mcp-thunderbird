@@ -175,7 +175,7 @@ Modifies the display name and/or color of an existing tag. At least one of `tag`
 
 | Name    | Type   | Required | Description                       |
 | ------- | ------ | -------- | --------------------------------- |
-| `key`   | string | Yes      | Key of the tag to update          |
+| `key`   | string | Yes      | Key of the tag to update (max 50 chars) |
 | `tag`   | string | No       | New display name (1-100 chars)    |
 | `color` | string | No       | New color in hex format (#RRGGBB) |
 
@@ -251,7 +251,7 @@ Permanently removes a tag. The tag is also removed from all messages that had it
 
 | Name  | Type   | Required | Description              |
 | ----- | ------ | -------- | ------------------------ |
-| `key` | string | Yes      | Key of the tag to delete |
+| `key` | string | Yes      | Key of the tag to delete (max 50 chars) |
 
 #### Response Format
 

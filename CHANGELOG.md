@@ -5,6 +5,18 @@ All notable changes to the Thunderbird MCP Server project will be documented in 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Planned
+
+- HTTP+SSE transport option for remote connections
+- Resource subscription support
+- Additional prompts for common email workflows
+- Automated test suite expansion
+- Performance optimizations for large mailboxes
+
+---
+
 ## [1.3.1] - 2026-02-27
 
 ### Security
@@ -189,7 +201,7 @@ Completes the 8-fix security plan (initial score: 72/100 B-, target: ~92/100):
 #### MCP Server
 
 - Initial release of the MCP server component
-- 47 MCP tools across 7 domains:
+- 56 MCP tools across 8 domains:
   - **Messages** (9 tools): search, list, list_unread, get, move, copy, delete, update, archive
   - **Folders** (7 tools): list, get, create, rename, delete, move, mark_read
   - **Contacts** (9 tools): search, list, get, create, update, delete, addressbooks_list, addressbooks_create, addressbooks_delete
@@ -237,12 +249,14 @@ Completes the 8-fix security plan (initial score: 72/100 B-, target: ~92/100):
 - The extension requires Thunderbird 128.0 or later
 - Native Messaging must be configured for the server to communicate with Thunderbird
 
-## [Unreleased]
+---
 
-### Planned
-
-- HTTP+SSE transport option for remote connections
-- Resource subscription support
-- Additional prompts for common email workflows
-- Automated test suite expansion
-- Performance optimizations for large mailboxes
+[Unreleased]: https://github.com/assistance-micro-design/thunderbird-mcp/compare/v1.3.1...HEAD
+[1.3.1]: https://github.com/assistance-micro-design/thunderbird-mcp/releases/tag/v1.3.1
+[1.3.0]: https://github.com/assistance-micro-design/thunderbird-mcp/releases/tag/v1.3.0
+[1.2.2]: https://github.com/assistance-micro-design/thunderbird-mcp/releases/tag/v1.2.2
+[1.2.0]: https://github.com/assistance-micro-design/thunderbird-mcp/releases/tag/v1.2.0
+[1.1.2]: https://github.com/assistance-micro-design/thunderbird-mcp/releases/tag/v1.1.2
+[1.1.1]: https://github.com/assistance-micro-design/thunderbird-mcp/releases/tag/v1.1.1
+[1.1.0]: https://github.com/assistance-micro-design/thunderbird-mcp/releases/tag/v1.1.0
+[1.0.0]: https://github.com/assistance-micro-design/thunderbird-mcp/releases/tag/v1.0.0

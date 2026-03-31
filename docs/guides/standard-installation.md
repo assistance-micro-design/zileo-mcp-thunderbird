@@ -39,14 +39,14 @@ This installs dependencies for both the server and extension.
 npm run build
 ```
 
-This compiles TypeScript and packages the extension.
+This compiles the TypeScript server code.
 
 ### Step 4: Install Thunderbird Extension
 
 1. Open Thunderbird
 2. Navigate to **Tools** > **Add-ons and Themes**
 3. Click the gear icon > **Install Add-on From File**
-4. Select `dist/thunderbird-mcp-1.3.1.xpi`
+4. Select `releases/thunderbird-mcp-1.3.1.xpi`
 5. Click **Add** when prompted
 6. Restart Thunderbird if requested
 

@@ -1,6 +1,15 @@
 # Thunderbird MCP Server
 
-Model Context Protocol (MCP) server for Thunderbird email client integration. This project enables AI assistants to interact with Thunderbird through a standardized protocol.
+[![Version](https://img.shields.io/badge/version-1.3.1-orange)](https://github.com/assistance-micro-design/thunderbird-mcp)
+[![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+[![Status](https://img.shields.io/badge/status-beta-yellow)](https://github.com/assistance-micro-design/thunderbird-mcp)
+[![MCP Tools](https://img.shields.io/badge/MCP_tools-56-green)](https://github.com/assistance-micro-design/thunderbird-mcp)
+
+> Model Context Protocol (MCP) server for Thunderbird email client integration. This project enables AI assistants to interact with Thunderbird through a standardized protocol.
+
+**Developed by** [Assistance Micro Design](https://www.assistancemicrodesign.net/)
+
+**Built with** [Claude Code](https://claude.ai/code) by Anthropic
 
 > **WARNING - USE AT YOUR OWN RISK**
 >
@@ -113,13 +122,14 @@ docker compose up -d
    - Open Thunderbird
    - Go to Tools > Add-ons and Themes
    - Click the gear icon > Install Add-on From File
-   - Select `dist/thunderbird-mcp-1.3.1.xpi`
+   - Select `releases/thunderbird-mcp-1.3.1.xpi`
 
 4. Verify the bridge is running:
 
 ```bash
 curl http://localhost:9876/health
-# Returns: {"status":"ok","thunderbird":true,"mcpClients":0}
+# Initially: {"status":"ok","thunderbird":false,"mcpClients":0}
+# After extension connects: {"status":"ok","thunderbird":true,"mcpClients":0}
 ```
 
 **Architecture:**
@@ -179,16 +189,12 @@ Add the following to your MCP client configuration.
 
 **Zileo Chat** (Settings > MCP Servers):
 
-```json
-{
-  "name": "thunderbird",
-  "command": "node",
-  "args": ["/path/to/thunderbird-mcp/server/dist/index.js"],
-  "env": {
-    "THUNDERBIRD_PORT": "9876",
-    "LOG_LEVEL": "info"
-  }
-}
+```
+Name:    thunderbird
+Command: node
+Args:    /path/to/thunderbird-mcp/server/dist/index.js
+Env:     THUNDERBIRD_PORT=9876
+         LOG_LEVEL=info
 ```
 
 Any MCP-compatible client can connect using the same `command` and `args` pattern.
@@ -215,20 +221,20 @@ For Docker deployment, the container runs a standalone WebSocket bridge. MCP cli
 
 **Zileo Chat** (Settings > MCP Servers):
 
-```json
-{
-  "name": "thunderbird",
-  "command": "docker",
-  "args": ["exec", "-i", "thunderbird-mcp-server", "node", "dist/index.js"],
-  "env": {
-    "LOG_LEVEL": "info"
-  }
-}
+```
+Name:    thunderbird
+Command: docker
+Args:    exec
+         -i
+         thunderbird-mcp-server
+         node
+         dist/index.js
+Env:     LOG_LEVEL=info
 ```
 
-The MCP server automatically detects the running bridge and connects as a client. Multiple MCP clients can share the same bridge simultaneously.
+> **Important:** The container must be running (`docker compose up -d`) before starting the MCP client.
 
-**Important:** The container must be running (`docker compose up -d`) before using `docker exec`.
+The MCP server automatically detects the running bridge and connects as a client. Multiple MCP clients can share the same bridge simultaneously.
 
 ### Environment Variables
 
@@ -442,9 +448,9 @@ npm run lint
 
 ## Documentation
 
-- [Cahier des Charges](./docs/cahier-des-charges.md) - Project specifications (French)
 - [API Documentation](./docs/api/) - Tool and resource reference
 - [Architecture](./docs/architecture/) - System design and diagrams
+- [Guides](./docs/guides/) - Installation and setup guides
 
 ## Security
 
@@ -487,12 +493,21 @@ MIT License - see [LICENSE](LICENSE) for details.
 - GitHub Issues: [Report bugs or request features](https://github.com/assistance-micro-design/thunderbird-mcp/issues)
 - Documentation: [docs/](./docs/)
 
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, code standards, and pull request guidelines.
+
+Please read our [Code of Conduct](CODE_OF_CONDUCT.md) before participating.
+
 ## Acknowledgments
 
-- Built with [Model Context Protocol SDK](https://github.com/modelcontextprotocol/typescript-sdk)
-- Thunderbird WebExtension APIs
+- Built with [Claude Code](https://claude.ai/code) by [Anthropic](https://anthropic.com)
+- Powered by [Model Context Protocol SDK](https://github.com/modelcontextprotocol/typescript-sdk)
+- Thunderbird [WebExtension APIs](https://webextension-api.thunderbird.net/)
 - [webext-experiments](https://github.com/thunderbird/webext-experiments) for calendar support
+
+Third-party licenses are documented in [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md).
 
 ---
 
-**Status**: Beta (Active Development) | **Version**: 1.3.1 | **Tools**: 56 | **Last Updated**: 2026-02-27
+[Assistance Micro Design](https://www.assistancemicrodesign.net/) | [GitHub](https://github.com/assistance-micro-design)

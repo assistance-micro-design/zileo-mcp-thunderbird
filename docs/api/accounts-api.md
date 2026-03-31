@@ -105,7 +105,7 @@ Retrieves complete account details including server configuration, folder struct
 
 | Name        | Type   | Required | Description                      |
 | ----------- | ------ | -------- | -------------------------------- |
-| `accountId` | string | Yes      | Unique identifier of the account |
+| `accountId` | string | Yes      | Unique identifier of the account (max 200 chars) |
 
 #### Response Format
 
@@ -190,7 +190,7 @@ Retrieves all configured identities for a specific account. Identities define th
 
 | Name        | Type   | Required | Description                       |
 | ----------- | ------ | -------- | --------------------------------- |
-| `accountId` | string | Yes      | Account ID to list identities for |
+| `accountId` | string | Yes      | Account ID to list identities for (max 200 chars) |
 
 #### Response Format
 
