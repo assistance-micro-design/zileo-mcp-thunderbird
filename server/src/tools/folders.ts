@@ -13,34 +13,41 @@ import type { McpTool, ToolCallResult } from "../types/mcp.js";
 // Schemas
 // =============================================================================
 
+/** List all folders, optionally filtered by account */
 const foldersListSchema = z.object({
   accountId: z.string().max(200).optional(),
   includeSubFolders: z.boolean().optional().default(true),
 });
 
+/** Get folder details by ID */
 const foldersGetSchema = z.object({
   folderId: z.string().max(500),
 });
 
+/** Create a new subfolder under a parent folder */
 const foldersCreateSchema = z.object({
   parentFolderId: z.string().max(500),
   name: z.string().min(1).max(255),
 });
 
+/** Rename an existing folder */
 const foldersRenameSchema = z.object({
   folderId: z.string().max(500),
   newName: z.string().min(1).max(255),
 });
 
+/** Delete a folder */
 const foldersDeleteSchema = z.object({
   folderId: z.string().max(500),
 });
 
+/** Move a folder to a new destination */
 const foldersMoveSchema = z.object({
   folderId: z.string().max(500),
   destinationFolderId: z.string().max(500),
 });
 
+/** Mark all messages in a folder as read */
 const foldersMarkReadSchema = z.object({
   folderId: z.string().max(500),
 });

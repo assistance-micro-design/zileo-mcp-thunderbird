@@ -16,6 +16,7 @@ import { executeToolHandler } from "./tool-handler.js";
 // Schemas
 // =============================================================================
 
+/** Search messages with advanced filters across folders and accounts */
 const messageSearchSchema = z.object({
   subject: z.string().max(1000).optional(),
   from: z.string().max(500).optional(),
@@ -31,37 +32,44 @@ const messageSearchSchema = z.object({
   limit: z.number().int().positive().max(1000).optional().default(50),
 });
 
+/** List messages in a folder with pagination */
 const messagesListSchema = z.object({
   folderId: z.string().max(500),
   limit: z.number().int().positive().max(1000).optional().default(100),
   offset: z.number().int().min(0).optional().default(0),
 });
 
+/** List all unread messages, optionally filtered by account */
 const messagesListUnreadSchema = z.object({
   accountId: z.string().max(200).optional(),
   limit: z.number().int().positive().max(1000).optional().default(50),
 });
 
+/** Get a specific message by ID with configurable detail level */
 const messagesGetSchema = z.object({
   messageId: z.number().int(),
   format: z.enum(["headers", "full", "raw"]).optional().default("headers"),
 });
 
+/** Move messages to another folder */
 const messagesMoveSchema = z.object({
   messageIds: z.array(z.number().int()).min(1),
   destinationFolderId: z.string().max(500),
 });
 
+/** Copy messages to another folder */
 const messagesCopySchema = z.object({
   messageIds: z.array(z.number().int()).min(1),
   destinationFolderId: z.string().max(500),
 });
 
+/** Delete messages (trash or permanent) */
 const messagesDeleteSchema = z.object({
   messageIds: z.array(z.number().int()).min(1),
   permanent: z.boolean().optional().default(false),
 });
 
+/** Update message properties (read, flagged, junk, tags) */
 const messagesUpdateSchema = z.object({
   messageId: z.number().int(),
   read: z.boolean().optional(),
@@ -70,10 +78,12 @@ const messagesUpdateSchema = z.object({
   tags: z.array(z.string()).optional(),
 });
 
+/** Archive messages */
 const messagesArchiveSchema = z.object({
   messageIds: z.array(z.number().int()).min(1),
 });
 
+/** List recent messages globally across all accounts */
 const messagesListRecentSchema = z.object({
   accountId: z.string().max(200).optional(),
   limit: z.number().int().positive().max(100).optional().default(20),

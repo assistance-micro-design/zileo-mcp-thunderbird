@@ -13,22 +13,26 @@ import type { McpTool, ToolCallResult } from "../types/mcp.js";
 // Schemas
 // =============================================================================
 
+/** Search contacts by query string across address books */
 const contactsSearchSchema = z.object({
   query: z.string().min(1).max(500),
   addressBookId: z.string().max(200).optional(),
   limit: z.number().int().positive().max(500).optional().default(50),
 });
 
+/** List contacts in an address book with pagination */
 const contactsListSchema = z.object({
   addressBookId: z.string().max(200),
   limit: z.number().int().positive().max(500).optional().default(100),
   offset: z.number().int().min(0).optional().default(0),
 });
 
+/** Get contact details by ID */
 const contactsGetSchema = z.object({
   contactId: z.string().max(200),
 });
 
+/** Create a new contact with properties or vCard data */
 const contactsCreateSchema = z
   .object({
     addressBookId: z.string().max(200),
@@ -39,6 +43,7 @@ const contactsCreateSchema = z
     message: "Either properties or vCard must be provided",
   });
 
+/** Update an existing contact's properties or vCard */
 const contactsUpdateSchema = z
   .object({
     contactId: z.string().max(200),
@@ -49,16 +54,20 @@ const contactsUpdateSchema = z
     message: "Either properties or vCard must be provided",
   });
 
+/** Delete a contact by ID */
 const contactsDeleteSchema = z.object({
   contactId: z.string().max(200),
 });
 
+/** List all address books */
 const addressBooksListSchema = z.object({});
 
+/** Create a new address book */
 const addressBooksCreateSchema = z.object({
   name: z.string().min(1).max(255),
 });
 
+/** Delete an address book by ID */
 const addressBooksDeleteSchema = z.object({
   addressBookId: z.string().max(200),
 });
