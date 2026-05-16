@@ -6,6 +6,10 @@ FROM node:20-alpine
 # Install development tools
 RUN apk add --no-cache git
 
+# Create non-root user (matches production Dockerfile uid 1001)
+RUN addgroup -g 1001 -S mcp && \
+    adduser -u 1001 -S mcp -G mcp
+
 WORKDIR /app
 
 # Copy package files
@@ -18,8 +22,8 @@ RUN npm ci --workspace=server
 # Copy source code
 COPY server/ ./server/
 
-# Create logs directory
-RUN mkdir -p /app/logs
+# Create logs directory with correct ownership
+RUN mkdir -p /app/logs && chown -R mcp:mcp /app
 
 # Environment variables
 ENV NODE_ENV=development
@@ -30,6 +34,9 @@ ENV THUNDERBIRD_PORT=9876
 EXPOSE 9876
 
 WORKDIR /app/server
+
+# Switch to non-root user for runtime
+USER mcp
 
 # Run with tsx for hot-reload
 CMD ["npx", "tsx", "watch", "src/index.ts"]

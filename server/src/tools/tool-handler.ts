@@ -4,6 +4,7 @@
  * @module tools/tool-handler
  */
 
+import { z } from "zod";
 import type { ZodType } from "zod";
 import { getNativeClient } from "../websocket/client-adapter.js";
 import { nativeErrorToJsonRpc } from "../utils/errors.js";
@@ -18,6 +19,11 @@ interface ExecuteToolHandlerOptions {
   transformParams?: (parsed: Record<string, unknown>) => Record<string, unknown>;
   /** Transform response data before returning to the client */
   transformResponse?: (data: unknown) => unknown;
+  /**
+   * Pick the bridge action dynamically based on parsed params.
+   * When provided, takes precedence over the static `action` argument.
+   */
+  resolveAction?: (parsed: Record<string, unknown>) => string;
 }
 
 /**
@@ -31,7 +37,7 @@ interface ExecuteToolHandlerOptions {
  *
  * @param args - Raw tool arguments from MCP client
  * @param schema - Zod schema for input validation
- * @param action - MessageActions action string
+ * @param action - MessageActions action string (default if no resolveAction)
  * @param handlerName - Handler function name (for logging)
  * @param options - Optional transform functions
  */
@@ -50,7 +56,11 @@ export async function executeToolHandler(
       ? options.transformParams(parsed)
       : parsed;
 
-    const response = await client.sendRequest(action, params);
+    const resolvedAction = options?.resolveAction
+      ? options.resolveAction(parsed)
+      : action;
+
+    const response = await client.sendRequest(resolvedAction, params);
 
     if (!response.success) {
       const error = nativeErrorToJsonRpc(response.error);
@@ -68,7 +78,15 @@ export async function executeToolHandler(
       content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
     };
   } catch (error) {
-    logger.error(`Error in ${handlerName}:`, error);
+    // Zod validation errors are client-input errors, not server errors:
+    // log at debug level to avoid stderr noise on legitimate client mistakes.
+    if (error instanceof z.ZodError) {
+      logger.debug(`Validation error in ${handlerName}`, {
+        issues: error.issues,
+      });
+    } else {
+      logger.error(`Error in ${handlerName}:`, error);
+    }
     const jsonRpcError = nativeErrorToJsonRpc(error);
     return {
       content: [{ type: "text", text: JSON.stringify(jsonRpcError) }],

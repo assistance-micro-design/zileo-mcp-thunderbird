@@ -26,6 +26,7 @@ import {
   resourceTemplates,
   getResourceHandler,
 } from "./resources/index.js";
+import { nativeErrorToJsonRpc } from "./utils/errors.js";
 import logger from "./utils/logger.js";
 
 /**
@@ -120,12 +121,10 @@ export class ThunderbirdMcpServer {
         return result;
       } catch (error) {
         logger.error(`Tool execution error: ${name}`, error);
+        const jsonRpcError = nativeErrorToJsonRpc(error);
         return {
           content: [
-            {
-              type: "text",
-              text: `Error: ${error instanceof Error ? error.message : "Unknown error"}`,
-            },
+            { type: "text", text: `Error: ${jsonRpcError.message}` },
           ],
           isError: true,
         };
@@ -165,12 +164,13 @@ export class ThunderbirdMcpServer {
           return { contents: [content] };
         } catch (error) {
           logger.error(`Resource read error: ${uri}`, error);
+          const jsonRpcError = nativeErrorToJsonRpc(error);
           return {
             contents: [
               {
                 uri,
                 mimeType: "text/plain",
-                text: `Error: ${error instanceof Error ? error.message : "Unknown error"}`,
+                text: `Error: ${jsonRpcError.message}`,
               },
             ],
           };

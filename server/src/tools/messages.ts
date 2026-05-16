@@ -5,11 +5,8 @@
  */
 
 import { z } from "zod";
-import { getNativeClient } from "../websocket/client-adapter.js";
 import { MessageActions } from "../types/native-messaging.js";
 import type { McpTool, ToolCallResult } from "../types/mcp.js";
-import logger from "../utils/logger.js";
-import { nativeErrorToJsonRpc } from "../utils/errors.js";
 import { executeToolHandler } from "./tool-handler.js";
 
 // =============================================================================
@@ -22,7 +19,7 @@ const messageSearchSchema = z.object({
   from: z.string().max(500).optional(),
   to: z.string().max(500).optional(),
   body: z.string().max(10000).optional(),
-  tags: z.array(z.string()).optional(),
+  tags: z.array(z.string().max(50)).max(100).optional(),
   unread: z.boolean().optional(),
   flagged: z.boolean().optional(),
   dateFrom: z.string().datetime({ offset: true }).optional(),
@@ -75,7 +72,7 @@ const messagesUpdateSchema = z.object({
   read: z.boolean().optional(),
   flagged: z.boolean().optional(),
   junk: z.boolean().optional(),
-  tags: z.array(z.string()).optional(),
+  tags: z.array(z.string().max(50)).max(100).optional(),
 });
 
 /** Archive messages */
@@ -138,49 +135,26 @@ export async function handleMessagesListUnread(
 }
 
 /**
- * Get a specific message - custom handler for dynamic action selection
+ * Get a specific message - action selected from `format` (headers|full|raw)
  */
 export async function handleMessagesGet(
   args: unknown,
 ): Promise<ToolCallResult> {
-  try {
-    const params = messagesGetSchema.parse(args);
-    const client = getNativeClient();
-
-    logger.info(
-      `Getting message: ${params.messageId} (format: ${params.format})`,
-    );
-
-    const action =
-      params.format === "raw"
-        ? MessageActions.MESSAGES_GET_RAW
-        : params.format === "full"
-          ? MessageActions.MESSAGES_GET_FULL
-          : MessageActions.MESSAGES_GET;
-
-    const response = await client.sendRequest(action, {
-      messageId: params.messageId,
-    });
-
-    if (!response.success) {
-      const error = nativeErrorToJsonRpc(response.error);
-      return {
-        content: [{ type: "text", text: JSON.stringify(error) }],
-        isError: true,
-      };
-    }
-
-    return {
-      content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }],
-    };
-  } catch (error) {
-    logger.error("Error in handleMessagesGet:", error);
-    const jsonRpcError = nativeErrorToJsonRpc(error);
-    return {
-      content: [{ type: "text", text: JSON.stringify(jsonRpcError) }],
-      isError: true,
-    };
-  }
+  return executeToolHandler(
+    args,
+    messagesGetSchema,
+    MessageActions.MESSAGES_GET,
+    "handleMessagesGet",
+    {
+      resolveAction: (parsed) =>
+        parsed.format === "raw"
+          ? MessageActions.MESSAGES_GET_RAW
+          : parsed.format === "full"
+            ? MessageActions.MESSAGES_GET_FULL
+            : MessageActions.MESSAGES_GET,
+      transformParams: (parsed) => ({ messageId: parsed.messageId }),
+    },
+  );
 }
 
 export async function handleMessagesMove(
@@ -239,53 +213,30 @@ export async function handleMessagesArchive(
 }
 
 /**
- * List recent messages - custom handler for date range computation
+ * List recent messages - translates `hoursAgo` into a date-bounded search
  */
 export async function handleMessagesListRecent(
   args: unknown,
 ): Promise<ToolCallResult> {
-  try {
-    const params = messagesListRecentSchema.parse(args);
-    const client = getNativeClient();
-
-    // Calculate date range
-    const now = new Date();
-    const dateFrom = new Date(now.getTime() - params.hoursAgo * 60 * 60 * 1000);
-
-    logger.info(`Listing recent messages from last ${params.hoursAgo} hours`);
-
-    // Use MESSAGES_SEARCH with date filter for global search
-    const searchParams = {
-      dateFrom: dateFrom.toISOString(),
-      dateTo: now.toISOString(),
-      accountId: params.accountId,
-      limit: params.limit,
-    };
-
-    const response = await client.sendRequest(
-      MessageActions.MESSAGES_SEARCH,
-      searchParams,
-    );
-
-    if (!response.success) {
-      const error = nativeErrorToJsonRpc(response.error);
-      return {
-        content: [{ type: "text", text: JSON.stringify(error) }],
-        isError: true,
-      };
-    }
-
-    return {
-      content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }],
-    };
-  } catch (error) {
-    logger.error("Error in handleMessagesListRecent:", error);
-    const jsonRpcError = nativeErrorToJsonRpc(error);
-    return {
-      content: [{ type: "text", text: JSON.stringify(jsonRpcError) }],
-      isError: true,
-    };
-  }
+  return executeToolHandler(
+    args,
+    messagesListRecentSchema,
+    MessageActions.MESSAGES_SEARCH,
+    "handleMessagesListRecent",
+    {
+      transformParams: (parsed) => {
+        const hoursAgo = parsed.hoursAgo as number;
+        const now = new Date();
+        const dateFrom = new Date(now.getTime() - hoursAgo * 60 * 60 * 1000);
+        return {
+          dateFrom: dateFrom.toISOString(),
+          dateTo: now.toISOString(),
+          accountId: parsed.accountId,
+          limit: parsed.limit,
+        };
+      },
+    },
+  );
 }
 
 // =============================================================================

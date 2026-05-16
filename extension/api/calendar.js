@@ -447,7 +447,9 @@ export const CalendarAPI = {
         const summary = props.find((p) => p[0] === "summary");
         return summary ? summary[3] : "";
       }
-    } catch (e) {}
+    } catch (_e) {
+      // ignore: jCal property absent or malformed
+    }
     return "";
   },
 
@@ -462,7 +464,9 @@ export const CalendarAPI = {
         const desc = props.find((p) => p[0] === "description");
         return desc ? desc[3] : "";
       }
-    } catch (e) {}
+    } catch (_e) {
+      // ignore: jCal property absent or malformed
+    }
     return "";
   },
 
@@ -477,7 +481,9 @@ export const CalendarAPI = {
         const loc = props.find((p) => p[0] === "location");
         return loc ? loc[3] : "";
       }
-    } catch (e) {}
+    } catch (_e) {
+      // ignore: jCal property absent or malformed
+    }
     return "";
   },
 
@@ -492,7 +498,9 @@ export const CalendarAPI = {
         const due = props.find((p) => p[0] === "due");
         return due ? due[3] : null;
       }
-    } catch (e) {}
+    } catch (_e) {
+      // ignore: jCal property absent or malformed
+    }
     return null;
   },
 
@@ -507,7 +515,9 @@ export const CalendarAPI = {
         const priority = props.find((p) => p[0] === "priority");
         return priority ? parseInt(priority[3]) : 0;
       }
-    } catch (e) {}
+    } catch (_e) {
+      // ignore: jCal property absent or malformed
+    }
     return 0;
   },
 
@@ -522,7 +532,9 @@ export const CalendarAPI = {
         const status = props.find((p) => p[0] === "status");
         return status ? status[3] === "COMPLETED" : false;
       }
-    } catch (e) {}
+    } catch (_e) {
+      // ignore: jCal property absent or malformed
+    }
     return false;
   },
 

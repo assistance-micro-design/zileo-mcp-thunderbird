@@ -5,12 +5,14 @@
 
 export const FoldersAPI = {
   /**
-   * List all folders
+   * List all folders.
+   * Always returns the full subfolder tree per account (subfolder filtering
+   * is not currently implemented; the second positional arg is reserved).
    * @param {string} accountId - Optional account ID to filter
-   * @param {boolean} includeSubFolders - Include subfolders recursively
+   * @param {boolean} _includeSubFolders - Reserved (currently unused)
    * @returns {Promise<Array>} Array of folders
    */
-  async list(accountId, includeSubFolders = true) {
+  async list(accountId, _includeSubFolders = true) {
     const accounts = await messenger.accounts.list();
     const allFolders = [];
 
