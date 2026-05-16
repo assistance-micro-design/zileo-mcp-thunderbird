@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **License changed from MIT to Apache License 2.0.** The Apache 2.0
+  license adds an explicit patent grant (Section 3) that the MIT license
+  lacks, aligning Thunderbird-MCP with the default license of the
+  Assistance Micro Design organization. All previous releases
+  (v1.0.0 through v1.3.1) remain published under MIT as released; this
+  change applies prospectively to new releases. See `LICENSE` for the
+  full text and `NOTICE` for required attribution under Apache 2.0
+  Section 4.
+
 ### Security
 
 - Bump `@modelcontextprotocol/sdk` from `^1.0.0` to `^1.29.0` and add transitive
@@ -62,6 +73,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Stale root launcher script `/thunderbird-mcp` (hard-coded path was incorrect).
 - Duplicated XPI release: `releases/thunderbird-mcp-1.3.1.xpi` + symlink
   consolidated into a single `releases/thunderbird-mcp-latest.xpi`.
+- `scripts/install.sh`, `scripts/package.sh`, and `native-host.json`:
+  vestiges of the abandoned Native Messaging architecture (project now
+  uses WebSocket via `bridge-standalone.ts` on port 9876). `install.sh`
+  would have installed an unused native messaging host with sudo;
+  `package.sh` targeted a stale `dist/` location and is superseded by
+  the upcoming GitHub Actions release workflow.
 
 ### Added
 

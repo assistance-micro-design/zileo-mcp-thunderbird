@@ -1,7 +1,0 @@
-{
-  "name": "thunderbird_mcp",
-  "description": "Thunderbird MCP Server Native Host",
-  "path": "/usr/local/bin/thunderbird-mcp",
-  "type": "stdio",
-  "allowed_extensions": ["thunderbird-mcp@assistance-micro-design.com"]
-}

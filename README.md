@@ -1,7 +1,7 @@
 # Thunderbird MCP Server
 
 [![Version](https://img.shields.io/badge/version-1.3.1-orange)](https://github.com/assistance-micro-design/thunderbird-mcp)
-[![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
 [![Status](https://img.shields.io/badge/status-beta-yellow)](https://github.com/assistance-micro-design/thunderbird-mcp)
 [![MCP Tools](https://img.shields.io/badge/MCP_tools-56-green)](https://github.com/assistance-micro-design/thunderbird-mcp)
 
@@ -11,20 +11,18 @@
 
 **Built with** [Claude Code](https://claude.ai/code) by Anthropic
 
-> **WARNING - USE AT YOUR OWN RISK**
->
-> This project is **under active development**. The MCP protocol and this implementation may change without notice.
->
-> **Important considerations:**
->
-> - **Irreversible Actions**: This tool can perform **destructive operations** on your emails, contacts, calendar events, and tasks (delete, move, modify). These actions **cannot be undone**.
-> - **AI Autonomy**: When used with AI assistants, the AI may execute actions based on its interpretation of your requests. Always verify before confirming destructive operations.
-> - **No Warranty**: This software is provided "AS IS" without warranty of any kind. See the [LICENSE](LICENSE) for details.
-> - **Docker Recommended**: The Docker deployment is the recommended setup. It provides process isolation, reproducible builds, and simplified dependency management.
-> - **Backup Recommended**: Back up your Thunderbird profile before first use.
-> - **Test Environment**: Test in a separate Thunderbird profile before using with production data.
->
-> **By using this software, you accept full responsibility for any data loss or unintended modifications.**
+## Beta Warning
+
+| Risk | Description |
+|------|-------------|
+| Data Loss | This tool can perform destructive operations (delete, move, modify) on emails, contacts, calendar events, and tasks. These actions cannot be undone. |
+| AI Autonomy | When used with AI assistants, the AI may execute actions based on its interpretation of your requests. Always verify destructive operations before confirming. |
+| Breaking Changes | The MCP protocol and this implementation may change without notice during the beta phase. |
+| No Warranty | This software is provided "AS IS" without warranty of any kind. See the [LICENSE](LICENSE) for details. |
+
+**Recommendation**: Back up your Thunderbird profile before first use. Test in a separate Thunderbird profile before connecting to production data. The Docker deployment is the recommended setup (process isolation, reproducible builds).
+
+**By using this software, you accept full responsibility for any data loss or unintended modifications.**
 
 ## Features
 
@@ -451,6 +449,8 @@ npm run lint
 - [API Documentation](./docs/api/) - Tool and resource reference
 - [Architecture](./docs/architecture/) - System design and diagrams
 - [Guides](./docs/guides/) - Installation and setup guides
+- [Tool Catalog](./docs/thunderbird-mcp-tools.md) - Full inventory of the 56 MCP tools
+- [WebExtension Experiments Contribution](./docs/contribution-webext-experiments.md) - Calendar experimental API integration notes
 
 ## Security
 
@@ -486,7 +486,14 @@ The calendar API uses experimental Thunderbird APIs:
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) for details.
+Apache License 2.0 - see [LICENSE](LICENSE) for the full text.
+
+```
+Copyright 2025-2026 Assistance Micro Design
+Licensed under the Apache License, Version 2.0
+```
+
+Third-party dependencies and their licenses are documented in [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md). See [NOTICE](NOTICE) for required attribution.
 
 ## Support
 

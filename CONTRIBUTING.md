@@ -91,17 +91,43 @@ thunderbird-mcp/
 └── docs/             # Documentation
 ```
 
+## Required Checks Before Opening a PR
+
+Run all four checks locally. The CI runs the same set on every PR:
+
+```bash
+npm run lint && npm run build && npm test && npm run typecheck
+```
+
+Each must exit 0. PRs with failing checks will not be merged.
+
+## What Contributors Must NOT Touch
+
+The following files and fields are reserved for maintainer-driven releases.
+PRs that modify them will be rejected unless explicitly coordinated:
+
+- `LICENSE` - license text is fixed (Apache 2.0)
+- `NOTICE` - attribution text under Apache 2.0 Section 4
+- `THIRD_PARTY_LICENSES.md` - regenerated via `scripts/generate-third-party-licenses.sh` at release time
+- `package.json` (`version` field) - bumped only by the maintainer at tag time
+- `server/package.json` (`version` field) - same
+- `extension/manifest.json` (`version` field) - same
+- `CHANGELOG.md` - only the `## [Unreleased]` section is open to PRs; named version sections are immutable history
+- Git tags - created exclusively by the maintainer
+
+When adding behavior or fixing a bug, **do** update the `## [Unreleased]`
+section of `CHANGELOG.md` under the appropriate Keep a Changelog category
+(`Added`, `Changed`, `Fixed`, `Deprecated`, `Removed`, `Security`).
+
 ## Pull Request Process
 
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/my-feature`)
 3. Make your changes
-4. Run validation:
-   ```bash
-   npm run lint && npm run build
-   ```
-5. Commit with a descriptive message
-6. Submit a pull request
+4. Run the four required checks above
+5. Update `## [Unreleased]` in `CHANGELOG.md` if the change is user-facing
+6. Commit with a Conventional Commits message
+7. Submit a pull request — the PR template will guide you through the checklist
 
 ### Commit Message Format
 
@@ -134,4 +160,4 @@ Use GitHub Issues with appropriate labels:
 
 ## License
 
-By contributing, you agree that your contributions will be licensed under the MIT License.
+By contributing, you agree that your contributions will be licensed under the Apache License 2.0, the same license as this project.

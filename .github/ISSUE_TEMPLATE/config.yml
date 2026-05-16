@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Report a security vulnerability
+    url: https://github.com/assistance-micro-design/thunderbird-mcp/security/advisories/new
+    about: Do NOT open a public issue for security vulnerabilities. Use GitHub Security Advisories for private disclosure.
+  - name: Assistance Micro Design
+    url: https://www.assistancemicrodesign.net/
+    about: Visit the organization website for general inquiries.

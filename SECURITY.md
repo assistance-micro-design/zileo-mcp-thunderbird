@@ -26,19 +26,20 @@ We will respond within 7 days and work with you to understand and resolve the is
 
 ### In Scope
 
-Security issues in Thunderbird MCP code:
+Security issues in Thunderbird-MCP code that we will triage and fix:
 
 | Area | Examples |
 |------|----------|
-| **MCP Server** | Command injection, unauthorized tool execution, input validation bypass |
-| **WebSocket Bridge** | Authentication bypass, origin validation bypass, payload attacks |
-| **Tool Authorization** | Tier system bypass, permission escalation |
-| **Extension** | Handler injection, storage manipulation |
-| **Docker Deployment** | Container escape, port exposure, privilege escalation |
+| MCP Server | Command injection, unauthorized tool execution, input validation bypass, tier system bypass |
+| WebSocket Bridge | Authentication bypass, origin validation bypass, payload attacks, token leakage |
+| Tool Authorization | Permission escalation across read/modify/destructive tiers |
+| Extension | Handler injection, storage manipulation, XSS in options UI |
+| Docker Deployment | Container escape, unintended port exposure, privilege escalation |
+| Logging | Sensitive data leakage in logs (email content, subjects, addresses) |
 
 ### Out of Scope
 
-Report these to the respective maintainers:
+Vulnerabilities in upstream components must be reported to their maintainers:
 
 | Area | Report To |
 |------|-----------|
@@ -47,7 +48,18 @@ Report these to the respective maintainers:
 | Node.js runtime | [Node.js Security](https://nodejs.org/en/security) |
 | Docker engine | [Docker Security](https://www.docker.com/security/) |
 
-## Security Considerations
+### Not Applicable
+
+The following are documented design decisions, not vulnerabilities:
+
+| Class | Why it is not in scope |
+|-------|------------------------|
+| Destructive operations exposed to AI | By design, gated behind the `destructive` permission tier disabled by default. Users opt in explicitly via the extension options page. |
+| Local network access without authentication | The bridge listens on `127.0.0.1` only. Reports requiring an attacker on `localhost` with shell access are out of scope (such an attacker already controls Thunderbird directly). |
+| MITM on non-localhost deployments | Out of the supported deployment model. Production usage must keep the bridge on localhost or behind an authenticated reverse proxy. |
+| Denial of service via legitimate API usage | Rate limiting is in place on `/auth/token`. Abuse of MCP tool calls by a permitted client is treated as a usage issue, not a CVE. |
+
+## Security Measures
 
 ### Destructive Operations
 

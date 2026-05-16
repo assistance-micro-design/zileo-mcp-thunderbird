@@ -29,4 +29,4 @@ We welcome contributions! Please see:
 
 ## License
 
-All contributions are made under the [MIT License](LICENSE).
+All contributions are made under the [Apache License 2.0](LICENSE).
