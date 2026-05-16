@@ -39,15 +39,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `thunderbird_folders_list` now actually honors `includeSubFolders`.
+  Previously the parameter was accepted, validated by Zod, and silently
+  ignored by `FoldersAPI.list` (extension/api/folders.js). When set to
+  `false`, the tool now returns only top-level folders per account
+  (direct children of the account root) instead of the full flat
+  descendant list. Default behavior (`true`) unchanged.
 - TypeScript build now emits `.tsbuildinfo` and ignores it via `.gitignore`;
   test script corrected (942731d).
 
 ### Removed
 
+- `scope` parameter dropped from `thunderbird_events_update` and
+  `thunderbird_events_delete` schemas and tool descriptions. The param
+  was accepted but never honored downstream — the experimental
+  `browser.calendar.items.{update,remove}` API exposes no `scope` and
+  per-occurrence handling requires iCal manipulation
+  (RECURRENCE-ID / recurrenceInfo.modifyException) that is not yet
+  wired up. See `docs/specs/2026-05-16_spec-silent-ignored-params.md`
+  for the design note covering future reimplementation.
 - Empty `server/src/schemas/` directory (no references in source).
 - Stale root launcher script `/thunderbird-mcp` (hard-coded path was incorrect).
 - Duplicated XPI release: `releases/thunderbird-mcp-1.3.1.xpi` + symlink
   consolidated into a single `releases/thunderbird-mcp-latest.xpi`.
+
+### Added
+
+- Contract coherence test (`server/src/__tests__/tools/contract-coherence.test.ts`):
+  asserts that every parameter declared in a tool's `inputSchema.properties`
+  is referenced by name in the extension code (handler or `api/*.js`).
+  Guards against the silent-ignored-param pattern that produced the three
+  fixes above. Server-side-consumed params (e.g. `format` dispatched via
+  `resolveAction`, `hoursAgo` resolved via `transformParams`) are listed
+  in an explicit allowlist with justifications.
 
 ### Documentation
 
