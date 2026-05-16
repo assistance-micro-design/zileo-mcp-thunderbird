@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
+    "ajv-formats": "^3.0.1",
     "winston": "^3.14.0",
     "ws": "^8.18.3",
     "zod": "^3.23.0"
