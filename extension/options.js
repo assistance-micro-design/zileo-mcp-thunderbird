@@ -292,7 +292,11 @@ function buildUI() {
 
     const header = document.createElement("div");
     header.className = "domain-header";
-    header.innerHTML = `${domainLabel} <span class="domain-count">${tools.length} tools</span>`;
+    header.textContent = domainLabel + " ";
+    const countSpan = document.createElement("span");
+    countSpan.className = "domain-count";
+    countSpan.textContent = `${tools.length} tools`;
+    header.appendChild(countSpan);
 
     const table = document.createElement("div");
     table.className = "tool-table";

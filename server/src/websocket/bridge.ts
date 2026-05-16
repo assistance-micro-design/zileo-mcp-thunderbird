@@ -213,6 +213,14 @@ export class WebSocketBridge extends EventEmitter {
    */
   private rateLimiterCleanupTimer: NodeJS.Timeout | null = null;
 
+  /**
+   * SEC-AUDIT-001: Per-MCP-client message counters for rate limiting.
+   * Tracks timestamps of recent messages per client to enforce max messages/minute.
+   */
+  private readonly mcpClientMessageLog: Map<WebSocket, number[]> = new Map();
+  private static readonly MCP_MSG_RATE_LIMIT = 120;
+  private static readonly MCP_MSG_RATE_WINDOW_MS = 60_000;
+
   constructor(options: WebSocketBridgeOptions) {
     super();
     this.options = {
@@ -516,10 +524,56 @@ export class WebSocketBridge extends EventEmitter {
   }
 
   /**
+   * SEC-AUDIT-001: Check per-client message rate limit.
+   * @returns true if the message is allowed, false if rate-limited
+   */
+  private checkMcpClientRateLimit(mcpClient: WebSocket): boolean {
+    const now = Date.now();
+    const windowStart = now - WebSocketBridge.MCP_MSG_RATE_WINDOW_MS;
+
+    let timestamps = this.mcpClientMessageLog.get(mcpClient);
+    if (!timestamps) {
+      timestamps = [];
+      this.mcpClientMessageLog.set(mcpClient, timestamps);
+    }
+
+    // Remove timestamps outside the window
+    const firstValid = timestamps.findIndex((t) => t > windowStart);
+    if (firstValid > 0) {
+      timestamps.splice(0, firstValid);
+    } else if (firstValid === -1) {
+      timestamps.length = 0;
+    }
+
+    if (timestamps.length >= WebSocketBridge.MCP_MSG_RATE_LIMIT) {
+      return false;
+    }
+
+    timestamps.push(now);
+    return true;
+  }
+
+  /**
    * Handle message from MCP client (relay requests to Thunderbird)
    */
   private handleMcpMessage(message: WsMessage, mcpClient: WebSocket): void {
     logger.debug(`Received from MCP client: ${message.type} (${message.id})`);
+
+    // SEC-AUDIT-001: Enforce per-client message rate limit
+    if (!this.checkMcpClientRateLimit(mcpClient)) {
+      logger.warn(
+        `MCP client rate-limited: exceeded ${WebSocketBridge.MCP_MSG_RATE_LIMIT} msg/min`,
+      );
+      const errorResponse: WsMessage = {
+        id: message.id,
+        type: "response",
+        success: false,
+        error: { code: -6, message: "Rate limit exceeded. Max 120 messages per minute." },
+        timestamp: new Date().toISOString(),
+      };
+      mcpClient.send(JSON.stringify(errorResponse));
+      return;
+    }
 
     switch (message.type) {
       case "request":
