@@ -7,9 +7,11 @@ dist/
 *.tgz
 coverage/
 .vscode/
+*.tsbuildinfo
 
 # Claude Code configuration
 .claude/
+CLAUDE.md
 .claude_old/
 .claude_exemple/
 
