@@ -5,6 +5,8 @@
  * @module tools/tool-permissions
  */
 
+import logger from "../utils/logger.js";
+
 /**
  * Tool risk tiers:
  * - read: Safe, read-only operations (list, get, search)
@@ -176,13 +178,22 @@ export function isToolAllowed(
 ): boolean {
   const tier = TOOL_TIERS[toolName];
   if (!tier) {
+    logger.warn(`Permission denied: unknown tool "${toolName}"`);
     return false;
   }
 
   if (toolName in permissions) {
-    return permissions[toolName];
+    const allowed = permissions[toolName];
+    if (!allowed) {
+      logger.info(`Permission denied by user override: ${toolName} (tier: ${tier})`);
+    }
+    return allowed;
   }
 
   // Default: read and modify allowed, destructive denied
-  return tier !== "destructive";
+  const allowed = tier !== "destructive";
+  if (!allowed) {
+    logger.info(`Permission denied by default policy: ${toolName} (tier: ${tier})`);
+  }
+  return allowed;
 }
