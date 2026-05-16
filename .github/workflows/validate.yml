@@ -33,3 +33,6 @@ jobs:
 
       - name: Test
         run: npm test
+
+      - name: Test Coverage
+        run: cd server && npx vitest run --coverage --reporter=default 2>/dev/null || true
