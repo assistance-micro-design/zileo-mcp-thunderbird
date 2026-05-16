@@ -332,7 +332,7 @@ Note: optional folderId is obtained from thunderbird_folders_list (full URI, not
   },
   {
     name: "thunderbird_messages_list",
-    description: `List messages in one specific folder with pagination. Returns id, subject, author, date, and read status for each message. Results are sorted by sortBy (date|subject|author, default: date) in sortOrder direction (asc|desc, default: desc), using Thunderbird's native sort (efficient on large folders).
+    description: `List messages in one specific folder with pagination. Returns id, subject, author, date, and read status for each message. Results are sorted by sortBy (date|subject|author, default: date) in sortOrder direction (asc|desc, default: desc); sorting is applied AFTER fetching and BEFORE pagination (offset/limit).
 
 Example:
   Input: { folderId: "imap://user@host/INBOX", limit: 10, offset: 0,

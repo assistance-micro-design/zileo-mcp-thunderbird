@@ -73,22 +73,20 @@ export const MessagesAPI = {
    */
   async list(folderId, limit = 50, offset = 0, sortBy = "date", sortOrder = "desc") {
     // messages.list() takes a folderId string directly, not a MailFolder object.
-    // Native sort: messenger.messages.list accepts { sortType, sortOrder }.
-    // sortType supports our 3 fields (date|subject|author) per Thunderbird docs.
-    const messageList = await messenger.messages.list(folderId, {
-      sortType: sortBy,
-      sortOrder: sortOrder === "asc" ? "ascending" : "descending",
-    });
-
-    const messages = messageList.messages || [];
-    const paginatedMessages = messages.slice(offset, offset + limit);
+    // Sort is applied client-side via _sortMessages — same strategy as search()
+    // and listUnread() — for predictable behavior across Thunderbird versions
+    // (the 2-arg listOptions signature is recent-only).
+    const messageList = await messenger.messages.list(folderId);
+    const raw = (messageList && messageList.messages) || [];
+    const sorted = this._sortMessages(raw, sortBy, sortOrder);
+    const paginatedMessages = sorted.slice(offset, offset + limit);
 
     return {
       messages: paginatedMessages,
-      total: messages.length,
+      total: sorted.length,
       limit,
       offset,
-      hasMore: offset + limit < messages.length,
+      hasMore: offset + limit < sorted.length,
     };
   },
 
