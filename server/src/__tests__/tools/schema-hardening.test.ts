@@ -216,6 +216,67 @@ describe("messages.ts schema hardening", () => {
       expectZodValidationError(result);
     });
   });
+
+  describe("sortBy / sortOrder enum constraints (cross-schema)", () => {
+    const sortByCases = [
+      {
+        name: "messageSearchSchema",
+        handlerPath: "handleMessagesSearch" as const,
+      },
+      {
+        name: "messagesListSchema",
+        handlerPath: "handleMessagesList" as const,
+        extraArgs: { folderId: "imap://user@host/INBOX" },
+      },
+      {
+        name: "messagesListUnreadSchema",
+        handlerPath: "handleMessagesListUnread" as const,
+      },
+      {
+        name: "messagesListRecentSchema",
+        handlerPath: "handleMessagesListRecent" as const,
+      },
+    ] as const;
+
+    for (const tc of sortByCases) {
+      it(`${tc.name}: rejects sortBy "random"`, async () => {
+        const handlers = await import("../../tools/messages.js");
+        const handler = handlers[tc.handlerPath];
+        const result = await handler({
+          ...("extraArgs" in tc ? tc.extraArgs : {}),
+          sortBy: "random",
+        });
+        expectZodValidationError(result);
+      });
+
+      it(`${tc.name}: rejects sortOrder "ascending" (long form)`, async () => {
+        const handlers = await import("../../tools/messages.js");
+        const handler = handlers[tc.handlerPath];
+        const result = await handler({
+          ...("extraArgs" in tc ? tc.extraArgs : {}),
+          sortOrder: "ascending",
+        });
+        expectZodValidationError(result);
+      });
+
+      it(`${tc.name}: accepts sortBy "author" and sortOrder "asc"`, async () => {
+        const handlers = await import("../../tools/messages.js");
+        const handler = handlers[tc.handlerPath];
+        const result = await handler({
+          ...("extraArgs" in tc ? tc.extraArgs : {}),
+          sortBy: "author",
+          sortOrder: "asc",
+        });
+        // Should pass Zod validation; runtime may fail because bridge is
+        // not initialized — that's a different error class.
+        if (result.isError) {
+          const text = getErrorText(result);
+          expect(text).not.toContain("invalid_enum_value");
+          expect(text).not.toContain("Invalid enum value");
+        }
+      });
+    }
+  });
 });
 
 // =============================================================================

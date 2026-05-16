@@ -13,6 +13,19 @@ import { executeToolHandler } from "./tool-handler.js";
 // Schemas
 // =============================================================================
 
+/**
+ * Shared sort options. Applied AFTER filtering, BEFORE truncation to `limit`.
+ * Without these, messenger.messages.query() returns results in an undocumented
+ * internal order — so `limit: 5` would be a lottery. Defaults match the
+ * intuitive "newest first" semantics implied by the tool descriptions.
+ */
+const sortByEnum = z
+  .enum(["date", "subject", "author"])
+  .optional()
+  .default("date");
+
+const sortOrderEnum = z.enum(["asc", "desc"]).optional().default("desc");
+
 /** Search messages with advanced filters across folders and accounts */
 const messageSearchSchema = z.object({
   subject: z.string().max(1000).optional(),
@@ -27,6 +40,8 @@ const messageSearchSchema = z.object({
   folderId: z.string().max(500).optional(),
   accountId: z.string().max(200).optional(),
   limit: z.number().int().positive().max(1000).optional().default(50),
+  sortBy: sortByEnum,
+  sortOrder: sortOrderEnum,
 });
 
 /** List messages in a folder with pagination */
@@ -34,12 +49,16 @@ const messagesListSchema = z.object({
   folderId: z.string().max(500),
   limit: z.number().int().positive().max(1000).optional().default(100),
   offset: z.number().int().min(0).optional().default(0),
+  sortBy: sortByEnum,
+  sortOrder: sortOrderEnum,
 });
 
 /** List all unread messages, optionally filtered by account */
 const messagesListUnreadSchema = z.object({
   accountId: z.string().max(200).optional(),
   limit: z.number().int().positive().max(1000).optional().default(50),
+  sortBy: sortByEnum,
+  sortOrder: sortOrderEnum,
 });
 
 /** Get a specific message by ID with configurable detail level */
@@ -85,6 +104,8 @@ const messagesListRecentSchema = z.object({
   accountId: z.string().max(200).optional(),
   limit: z.number().int().positive().max(100).optional().default(20),
   hoursAgo: z.number().int().positive().max(168).optional().default(24), // max 7 days
+  sortBy: sortByEnum,
+  sortOrder: sortOrderEnum,
 });
 
 // =============================================================================
@@ -129,6 +150,8 @@ export async function handleMessagesListUnread(
         unread: true,
         accountId: parsed.accountId,
         limit: parsed.limit,
+        sortBy: parsed.sortBy,
+        sortOrder: parsed.sortOrder,
       }),
     },
   );
@@ -233,6 +256,8 @@ export async function handleMessagesListRecent(
           dateTo: now.toISOString(),
           accountId: parsed.accountId,
           limit: parsed.limit,
+          sortBy: parsed.sortBy,
+          sortOrder: parsed.sortOrder,
         };
       },
     },
@@ -246,11 +271,11 @@ export async function handleMessagesListRecent(
 export const messageTools: McpTool[] = [
   {
     name: "thunderbird_messages_search",
-    description: `Search messages across ALL folders (or scoped to one folder/account) with advanced filters: subject, from/to, body, tags, read/flagged state, date range.
+    description: `Search messages across ALL folders (or scoped to one folder/account) with advanced filters: subject, from/to, body, tags, read/flagged state, date range. Results are sorted by sortBy (date|subject|author, default: date) in sortOrder direction (asc|desc, default: desc); sorting is applied AFTER filtering and BEFORE truncation to limit.
 
 Example:
   Input: { subject: "invoice", from: "billing@", dateFrom: "2026-01-15T00:00:00Z",
-           limit: 20 }
+           limit: 20, sortBy: "date", sortOrder: "desc" }
   Output: { messages: [{ id: 42, subject: "Invoice #1234",
            author: "billing@example.com", date: "2026-01-15T10:00:00Z",
            folderId: "imap://user@host/INBOX" }] }
@@ -289,15 +314,29 @@ Note: optional folderId is obtained from thunderbird_folders_list (full URI, not
           description: "Maximum results (default: 50, max: 1000)",
           default: 50,
         },
+        sortBy: {
+          type: "string",
+          enum: ["date", "subject", "author"],
+          description: "Field to sort by. Default: date.",
+          default: "date",
+        },
+        sortOrder: {
+          type: "string",
+          enum: ["asc", "desc"],
+          description:
+            "Sort direction. Default: desc (newest/Z-A first).",
+          default: "desc",
+        },
       },
     },
   },
   {
     name: "thunderbird_messages_list",
-    description: `List messages in one specific folder with pagination. Returns id, subject, author, date, and read status for each message.
+    description: `List messages in one specific folder with pagination. Returns id, subject, author, date, and read status for each message. Results are sorted by sortBy (date|subject|author, default: date) in sortOrder direction (asc|desc, default: desc), using Thunderbird's native sort (efficient on large folders).
 
 Example:
-  Input: { folderId: "imap://user@host/INBOX", limit: 10, offset: 0 }
+  Input: { folderId: "imap://user@host/INBOX", limit: 10, offset: 0,
+           sortBy: "date", sortOrder: "desc" }
   Output: { messages: [{ id: 42, subject: "Hello",
            author: "alice@example.com", date: "2026-01-15T10:00:00Z",
            read: false }], total: 247 }
@@ -321,16 +360,29 @@ Note: folderId is the full URI obtained from thunderbird_folders_list (not the l
           description: "Number of messages to skip (default: 0)",
           default: 0,
         },
+        sortBy: {
+          type: "string",
+          enum: ["date", "subject", "author"],
+          description: "Field to sort by. Default: date.",
+          default: "date",
+        },
+        sortOrder: {
+          type: "string",
+          enum: ["asc", "desc"],
+          description:
+            "Sort direction. Default: desc (newest/Z-A first).",
+          default: "desc",
+        },
       },
       required: ["folderId"],
     },
   },
   {
     name: "thunderbird_messages_list_unread",
-    description: `List unread messages across every account (or scoped to one). Implemented internally as a search with unread=true.
+    description: `List unread messages across every account (or scoped to one). Implemented internally as a search with unread=true. Results are sorted by sortBy (date|subject|author, default: date) in sortOrder direction (asc|desc, default: desc); sorting is applied AFTER collection across folders.
 
 Example:
-  Input: { accountId: "account1", limit: 50 }
+  Input: { accountId: "account1", limit: 50, sortBy: "date", sortOrder: "desc" }
   Output: { messages: [{ id: 42, subject: "Please review",
            author: "alice@example.com", date: "2026-01-15T10:00:00Z",
            folderId: "imap://user@host/INBOX", read: false }] }
@@ -347,6 +399,19 @@ Note: optional accountId is obtained from thunderbird_accounts_list. Omit to sca
           type: "number",
           description: "Maximum results (default: 50, max: 1000)",
           default: 50,
+        },
+        sortBy: {
+          type: "string",
+          enum: ["date", "subject", "author"],
+          description: "Field to sort by. Default: date.",
+          default: "date",
+        },
+        sortOrder: {
+          type: "string",
+          enum: ["asc", "desc"],
+          description:
+            "Sort direction. Default: desc (newest/Z-A first).",
+          default: "desc",
         },
       },
     },
@@ -505,10 +570,11 @@ Note: messageIds come from thunderbird_messages_list/_search/_list_recent. The d
   },
   {
     name: "thunderbird_messages_list_recent",
-    description: `List the most recent messages across ALL folders, optionally scoped to one account. Perfect for "show me my latest emails" without specifying a folder.
+    description: `List the most recent messages across ALL folders, optionally scoped to one account. Perfect for "show me my latest emails" without specifying a folder. Results are sorted by sortBy (date|subject|author, default: date) in sortOrder direction (asc|desc, default: desc).
 
 Example:
-  Input: { accountId: "account1", hoursAgo: 24, limit: 20 }
+  Input: { accountId: "account1", hoursAgo: 24, limit: 20,
+           sortBy: "date", sortOrder: "desc" }
   Output: { messages: [{ id: 42, subject: "Re: Meeting",
            author: "alice@example.com", date: "2026-01-15T10:00:00Z",
            folderId: "imap://user@host/INBOX", read: false }] }
@@ -531,6 +597,19 @@ Note: optional accountId comes from thunderbird_accounts_list. hoursAgo capped a
           description:
             "How many hours back to search (default: 24, max: 168 = 7 days)",
           default: 24,
+        },
+        sortBy: {
+          type: "string",
+          enum: ["date", "subject", "author"],
+          description: "Field to sort by. Default: date.",
+          default: "date",
+        },
+        sortOrder: {
+          type: "string",
+          enum: ["asc", "desc"],
+          description:
+            "Sort direction. Default: desc (newest/Z-A first).",
+          default: "desc",
         },
       },
     },

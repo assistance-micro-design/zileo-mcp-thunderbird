@@ -131,10 +131,17 @@ async function handleMessagesAPI(action, params) {
         params.folderId,
         params.limit,
         params.offset,
+        params.sortBy,
+        params.sortOrder,
       );
 
     case "list_unread":
-      return await MessagesAPI.listUnread(params.accountId, params.limit);
+      return await MessagesAPI.listUnread(
+        params.accountId,
+        params.limit,
+        params.sortBy,
+        params.sortOrder,
+      );
 
     case "get":
       return await MessagesAPI.get(params.messageId, "headers");

@@ -23,6 +23,8 @@ export const MessagesAPI = {
       folderId,
       accountId,
       limit = 50,
+      sortBy = "date",
+      sortOrder = "desc",
     } = params;
 
     const query = {};
@@ -41,24 +43,25 @@ export const MessagesAPI = {
     // When accountId is provided without an explicit folderId, scope the
     // search to that account by iterating its folders (messenger.messages.query
     // has no native accountId filter). folderId, if also supplied, wins.
+    let collected;
     if (accountId && !folderId) {
       const account = await messenger.accounts.get(accountId);
       const folders = await this._getAllFolders(account);
 
-      const allMessages = [];
+      collected = [];
       for (const folder of folders) {
         const messageList = await messenger.messages.query({
           ...query,
           folderId: folder.id,
         });
-        allMessages.push(...messageList.messages);
-        if (allMessages.length >= limit) break;
+        collected.push(...messageList.messages);
       }
-      return allMessages.slice(0, limit);
+    } else {
+      const messageList = await messenger.messages.query(query);
+      collected = messageList.messages;
     }
 
-    const messageList = await messenger.messages.query(query);
-    return messageList.messages.slice(0, limit);
+    return this._sortMessages(collected, sortBy, sortOrder).slice(0, limit);
   },
 
   /**
@@ -68,9 +71,14 @@ export const MessagesAPI = {
    * @param {number} offset - Offset for pagination
    * @returns {Promise<Object>} Message list with pagination info
    */
-  async list(folderId, limit = 50, offset = 0) {
-    // messages.list() takes a folderId string directly, not a MailFolder object
-    const messageList = await messenger.messages.list(folderId);
+  async list(folderId, limit = 50, offset = 0, sortBy = "date", sortOrder = "desc") {
+    // messages.list() takes a folderId string directly, not a MailFolder object.
+    // Native sort: messenger.messages.list accepts { sortType, sortOrder }.
+    // sortType supports our 3 fields (date|subject|author) per Thunderbird docs.
+    const messageList = await messenger.messages.list(folderId, {
+      sortType: sortBy,
+      sortOrder: sortOrder === "asc" ? "ascending" : "descending",
+    });
 
     const messages = messageList.messages || [];
     const paginatedMessages = messages.slice(offset, offset + limit);
@@ -90,27 +98,28 @@ export const MessagesAPI = {
    * @param {number} limit - Maximum messages to return
    * @returns {Promise<Array>} Array of unread messages
    */
-  async listUnread(accountId, limit = 100) {
+  async listUnread(accountId, limit = 100, sortBy = "date", sortOrder = "desc") {
     const query = { read: false };
 
+    let collected;
     if (accountId) {
       const account = await messenger.accounts.get(accountId);
       const folders = await this._getAllFolders(account);
 
-      const allMessages = [];
+      collected = [];
       for (const folder of folders) {
         const messageList = await messenger.messages.query({
           ...query,
           folderId: folder.id,
         });
-        allMessages.push(...messageList.messages);
+        collected.push(...messageList.messages);
       }
-
-      return allMessages.slice(0, limit);
     } else {
       const messageList = await messenger.messages.query(query);
-      return messageList.messages.slice(0, limit);
+      collected = messageList.messages;
     }
+
+    return this._sortMessages(collected, sortBy, sortOrder).slice(0, limit);
   },
 
   /**
@@ -220,6 +229,38 @@ export const MessagesAPI = {
    */
   async archive(messageIds) {
     await messenger.messages.archive(messageIds);
+  },
+
+  /**
+   * Helper: Sort messages in-place-safe, post-collection, pre-truncation.
+   * Falsy keys (undefined subject/author) sort last in both directions.
+   * @private
+   * @param {Array} messages - Messages to sort
+   * @param {"date"|"subject"|"author"} sortBy - Field to sort by
+   * @param {"asc"|"desc"} sortOrder - Sort direction
+   * @returns {Array} New sorted array
+   */
+  _sortMessages(messages, sortBy = "date", sortOrder = "desc") {
+    const getKey =
+      sortBy === "date"
+        ? (m) => (m.date ? new Date(m.date).getTime() : null)
+        : sortBy === "subject"
+          ? (m) => (m.subject ? m.subject.toLowerCase() : null)
+          : (m) => (m.author ? m.author.toLowerCase() : null);
+
+    const dir = sortOrder === "asc" ? 1 : -1;
+
+    return [...messages].sort((a, b) => {
+      const ka = getKey(a);
+      const kb = getKey(b);
+      // Falsy keys go last regardless of direction
+      if (ka === null && kb === null) return 0;
+      if (ka === null) return 1;
+      if (kb === null) return -1;
+      if (ka < kb) return -1 * dir;
+      if (ka > kb) return 1 * dir;
+      return 0;
+    });
   },
 
   /**

@@ -236,10 +236,14 @@ Liste les messages recents sur tous les comptes.
 
 **Parametres:**
 
-| Param     | Type   | Requis | Description                         |
-| --------- | ------ | ------ | ----------------------------------- |
-| hoursAgo  | number | Non    | Nombre d'heures (defaut: 24)        |
-| limit     | number | Non    | Nombre max de messages (defaut: 50) |
-| accountId | string | Non    | Filtrer par compte specifique       |
+| Param     | Type   | Requis | Description                                              |
+| --------- | ------ | ------ | -------------------------------------------------------- |
+| hoursAgo  | number | Non    | Nombre d'heures (defaut: 24)                             |
+| limit     | number | Non    | Nombre max de messages (defaut: 50)                      |
+| accountId | string | Non    | Filtrer par compte specifique                            |
+| sortBy    | enum   | Non    | Champ de tri: `date` (defaut), `subject`, `author`       |
+| sortOrder | enum   | Non    | Direction: `asc`, `desc` (defaut)                        |
 
 **Retour:** Liste des messages recents avec metadata
+
+**Note tri:** Tous les tools `messages_search`, `messages_list`, `messages_list_unread` et `messages_list_recent` acceptent egalement `sortBy` et `sortOrder` avec les memes valeurs et les memes defauts (`date` / `desc`). Le tri est applique APRES filtrage et AVANT troncature a `limit`.

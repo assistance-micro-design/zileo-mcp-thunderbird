@@ -114,7 +114,19 @@ const FUNCTION_SCOPED_CHECKS: ReadonlyArray<{
     tool: "thunderbird_messages_search",
     apiFile: "messages.js",
     bodyExtractor: /async search\(params\)\s*\{([\s\S]*?)\n\s{2}\}/,
-    requiredParams: ["flagged", "accountId"],
+    requiredParams: ["flagged", "accountId", "sortBy", "sortOrder"],
+  },
+  {
+    tool: "thunderbird_messages_list",
+    apiFile: "messages.js",
+    bodyExtractor: /async list\([^)]*\)\s*\{([\s\S]*?)\n\s{2}\}/,
+    requiredParams: ["sortBy", "sortOrder"],
+  },
+  {
+    tool: "thunderbird_messages_list_unread",
+    apiFile: "messages.js",
+    bodyExtractor: /async listUnread\([^)]*\)\s*\{([\s\S]*?)\n\s{2}\}/,
+    requiredParams: ["sortBy", "sortOrder"],
   },
 ];
 
