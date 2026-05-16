@@ -3,7 +3,7 @@
  * Validates the shared handler wrapper used by all standard tool handlers.
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { z } from "zod";
 
 // Mock the websocket client-adapter module
@@ -23,7 +23,6 @@ vi.mock("../../utils/logger.js", () => ({
 }));
 
 import { executeToolHandler } from "../../tools/tool-handler.js";
-import type { ToolCallResult } from "../../types/mcp.js";
 
 describe("executeToolHandler", () => {
   beforeEach(() => {

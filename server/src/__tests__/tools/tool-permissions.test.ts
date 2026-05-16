@@ -7,7 +7,6 @@ import { describe, it, expect } from "vitest";
 import {
   TOOL_TIERS,
   NATIVE_ACTION_TO_MCP_TOOL,
-  SYSTEM_ACTIONS,
   getDefaultPermissions,
   isToolAllowed,
   getToolTier,
