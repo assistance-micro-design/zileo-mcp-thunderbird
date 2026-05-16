@@ -57,6 +57,11 @@ const eventsCreateSchema = z.object({
     .optional(),
 });
 
+// `scope` was removed from this schema on 2026-05-16: it was accepted and
+// validated but never honored downstream. Per-occurrence overrides require
+// iCal manipulation (RECURRENCE-ID / recurrenceInfo.modifyException) — see
+// extension/experiments/calendar/ext-calendar-utils.sys.mjs and the design
+// note in docs/specs/2026-05-16_spec-silent-ignored-params.md.
 const eventsUpdateSchema = z.object({
   eventId: z.string().max(200),
   calendarId: z.string().max(200),
@@ -66,7 +71,6 @@ const eventsUpdateSchema = z.object({
   location: z.string().max(500).optional(),
   description: z.string().max(10000).optional(),
   attendees: z.array(z.string().email()).max(200).optional(),
-  scope: z.enum(["this", "all", "future"]).optional().default("this"),
 });
 
 const eventsMoveSchema = z.object({
@@ -76,10 +80,11 @@ const eventsMoveSchema = z.object({
   newEnd: z.string().datetime({ offset: true }),
 });
 
+// Same rationale as eventsUpdateSchema above: `scope` was removed because
+// per-occurrence deletion needs iCal manipulation that is not yet wired up.
 const eventsDeleteSchema = z.object({
   eventId: z.string().max(200),
   calendarId: z.string().max(200),
-  scope: z.enum(["this", "all", "future"]).optional().default("this"),
 });
 
 // =============================================================================
@@ -384,14 +389,14 @@ Note: calendarId comes from thunderbird_calendars_list. All dates ISO 8601 with 
   },
   {
     name: "thunderbird_events_update",
-    description: `(EXPERIMENTAL) Update fields of an existing event. For recurring events the scope chooses between updating this occurrence, all occurrences, or this and future.
+    description: `(EXPERIMENTAL) Update fields of an existing event (title, start/end, location, description, attendees). Updates the underlying calendar item in place.
 
 Example:
   Input: { eventId: "evt1", calendarId: "cal1", location: "Room 42",
-           scope: "this" }
+           start: "2026-01-15T10:00:00Z", end: "2026-01-15T11:00:00Z" }
   Output: { id: "evt1", success: true }
 
-Note: eventId comes from thunderbird_events_list or thunderbird_events_search. calendarId from thunderbird_calendars_list. Experimental API.`,
+Note: eventId comes from thunderbird_events_list or thunderbird_events_search. calendarId from thunderbird_calendars_list. For recurring events this updates the parent series; per-occurrence overrides are not yet supported. Experimental API.`,
     inputSchema: {
       type: "object",
       properties: {
@@ -415,13 +420,6 @@ Note: eventId comes from thunderbird_events_list or thunderbird_events_search. c
           type: "array",
           items: { type: "string" },
           description: "New attendee list (optional)",
-        },
-        scope: {
-          type: "string",
-          enum: ["this", "all", "future"],
-          description:
-            "For recurring events: this (single), all (all occurrences), future (this and future)",
-          default: "this",
         },
       },
       required: ["eventId", "calendarId"],
@@ -453,25 +451,18 @@ Note: eventId comes from thunderbird_events_list or thunderbird_events_search. c
   },
   {
     name: "thunderbird_events_delete",
-    description: `(EXPERIMENTAL) Delete an event. For recurring events the scope chooses between this occurrence, all occurrences, or this and future. Destructive: no undo.
+    description: `(EXPERIMENTAL) Delete an event. Destructive: no undo.
 
 Example:
-  Input: { eventId: "evt1", calendarId: "cal1", scope: "this" }
+  Input: { eventId: "evt1", calendarId: "cal1" }
   Output: { success: true }
 
-Note: eventId comes from thunderbird_events_list or thunderbird_events_search. calendarId from thunderbird_calendars_list. No undo. Experimental API.`,
+Note: eventId comes from thunderbird_events_list or thunderbird_events_search. calendarId from thunderbird_calendars_list. For recurring events this removes the entire series; per-occurrence deletion is not yet supported. No undo. Experimental API.`,
     inputSchema: {
       type: "object",
       properties: {
         eventId: { type: "string", description: "Event ID to delete" },
         calendarId: { type: "string", description: "Calendar ID" },
-        scope: {
-          type: "string",
-          enum: ["this", "all", "future"],
-          description:
-            "For recurring events: this (single), all (all occurrences), future (this and future)",
-          default: "this",
-        },
       },
       required: ["eventId", "calendarId"],
     },

@@ -5,31 +5,41 @@
 
 export const FoldersAPI = {
   /**
-   * List all folders.
-   * Always returns the full subfolder tree per account (subfolder filtering
-   * is not currently implemented; the second positional arg is reserved).
-   * @param {string} accountId - Optional account ID to filter
-   * @param {boolean} _includeSubFolders - Reserved (currently unused)
-   * @returns {Promise<Array>} Array of folders
+   * List folders for one account or all accounts.
+   *  - includeSubFolders=true  (default): all non-root folders per account, flat.
+   *  - includeSubFolders=false: only top-level folders (direct children of each account root).
+   * @param {string}  [accountId]         Optional account ID to filter on
+   * @param {boolean} [includeSubFolders] Default true
+   * @returns {Promise<Array>} Folders with accountId + accountName added
    */
-  async list(accountId, _includeSubFolders = true) {
+  async list(accountId, includeSubFolders = true) {
     const accounts = await messenger.accounts.list();
     const allFolders = [];
 
     for (const account of accounts) {
-      // Filter by accountId if provided
       if (accountId && account.id !== accountId) {
         continue;
       }
 
-      // Get folders using folders.query with accountId filter
-      const subFolders = await messenger.folders.query({
-        accountId: account.id,
-        isRoot: false,
-      });
+      let folders;
+      if (includeSubFolders) {
+        folders = await messenger.folders.query({
+          accountId: account.id,
+          isRoot: false,
+        });
+      } else {
+        const roots = await messenger.folders.query({
+          accountId: account.id,
+          isRoot: true,
+        });
+        const root = roots[0];
+        if (!root) {
+          continue;
+        }
+        folders = Array.isArray(root.subFolders) ? root.subFolders : [];
+      }
 
-      // Add account info to each folder for clarity
-      const foldersWithAccount = subFolders.map((folder) => ({
+      const foldersWithAccount = folders.map((folder) => ({
         ...folder,
         accountId: account.id,
         accountName: account.name,
