@@ -7,6 +7,55 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+
+- Bump `@modelcontextprotocol/sdk` from `^1.0.0` to `^1.29.0` and add transitive
+  overrides (`hono`, `@hono/node-server`, `fast-uri`, `ip-address`,
+  `express-rate-limit`) at the workspace root. `npm audit --omit=dev` now
+  reports 0 vulnerabilities (was 5).
+- Prevent XSS in extension Options UI; tighten MCP rate limiting (df4b20f).
+- Resolve native actions to correct MCP tool names for permission checks
+  (55dcf64).
+
+### Added
+
+- Permission denial logging with reason and tier (9f0c38f).
+- Resource handler test suite covering all 6 resources + 2 templates (8659bce).
+- Non-blocking coverage step in the CI validate workflow (b520830).
+
+### Changed
+
+- Rewrote all 56 MCP tool descriptions with a richer LLM-oriented format:
+  short action sentence, an `Example:` block (Input/Output), and a `Note:`
+  block citing the source tool for every external ID consumed
+  (`folderId`, `messageId`, `tagKey`, `tabId`, etc.). `inputSchema.properties`
+  unchanged — non-breaking for MCP clients.
+- Updated `.claude/rules/mcp.md` reference block to document the new format.
+- Synced `CLAUDE.md` and `.claude/registry/inventory.yml` with on-disk reality
+  (56 tools in 8 files, 100 TypeScript types in 6 files, 2 utility files).
+- JSDoc added on zod schemas for contacts/folders/messages (7acca08).
+- Extracted `executeToolHandler()` shared wrapper, eliminating ~1400 lines of
+  boilerplate across tool handlers (ebfa7ce).
+
+### Fixed
+
+- TypeScript build now emits `.tsbuildinfo` and ignores it via `.gitignore`;
+  test script corrected (942731d).
+
+### Removed
+
+- Empty `server/src/schemas/` directory (no references in source).
+- Stale root launcher script `/thunderbird-mcp` (hard-coded path was incorrect).
+- Duplicated XPI release: `releases/thunderbird-mcp-1.3.1.xpi` + symlink
+  consolidated into a single `releases/thunderbird-mcp-latest.xpi`.
+
+### Documentation
+
+- GitHub standards, CI workflow, README sync (9b81760).
+- Recommend Docker setup and clarify risk warnings (7a3a462).
+- Root files reorganized (685c1f4); 8 documentation inaccuracies corrected
+  during audit (219914a).
+
 ### Planned
 
 - HTTP+SSE transport option for remote connections

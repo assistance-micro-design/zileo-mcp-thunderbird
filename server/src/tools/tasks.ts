@@ -115,8 +115,15 @@ export async function handleTasksComplete(
 export const taskTools: McpTool[] = [
   {
     name: "thunderbird_tasks_list",
-    description:
-      "(EXPERIMENTAL) List tasks with optional filters (calendar, completion status, due dates)",
+    description: `(EXPERIMENTAL) List tasks (VTODO) across one or every calendar with optional filters: completion status and due-date range.
+
+Example:
+  Input: { calendarId: "cal1", completed: false,
+           dueBefore: "2026-01-31T23:59:59Z", limit: 100 }
+  Output: { tasks: [{ id: "task1", title: "Finish report",
+           dueDate: "2026-01-20T17:00:00Z", priority: 1, completed: false }] }
+
+Note: optional calendarId comes from thunderbird_calendars_list. Experimental API.`,
     inputSchema: {
       type: "object",
       properties: {
@@ -146,8 +153,15 @@ export const taskTools: McpTool[] = [
   },
   {
     name: "thunderbird_tasks_get",
-    description:
-      "(EXPERIMENTAL) Get detailed information about a specific task",
+    description: `(EXPERIMENTAL) Fetch one task with title, due date, priority (0=undefined, 1=high, 5=normal, 9=low), description, completion state.
+
+Example:
+  Input: { taskId: "task1", calendarId: "cal1" }
+  Output: { id: "task1", title: "Finish report",
+           dueDate: "2026-01-20T17:00:00Z", priority: 1,
+           description: "Q4 sales report", completed: false }
+
+Note: taskId comes from thunderbird_tasks_list. calendarId from thunderbird_calendars_list. Experimental API.`,
     inputSchema: {
       type: "object",
       properties: {
@@ -159,8 +173,15 @@ export const taskTools: McpTool[] = [
   },
   {
     name: "thunderbird_tasks_create",
-    description:
-      "(EXPERIMENTAL) Create a new task with optional due date and priority",
+    description: `(EXPERIMENTAL) Create a new task in a calendar with title, optional due date, priority (0-9), and description.
+
+Example:
+  Input: { calendarId: "cal1", title: "Finish report",
+           dueDate: "2026-01-20T17:00:00Z", priority: 1,
+           description: "Q4 sales report" }
+  Output: { id: "task-new", success: true }
+
+Note: calendarId comes from thunderbird_calendars_list. dueDate ISO 8601 with offset. Experimental API.`,
     inputSchema: {
       type: "object",
       properties: {
@@ -188,7 +209,14 @@ export const taskTools: McpTool[] = [
   },
   {
     name: "thunderbird_tasks_update",
-    description: "(EXPERIMENTAL) Update an existing task",
+    description: `(EXPERIMENTAL) Update one or more fields of an existing task: title, due date, priority, description, completed.
+
+Example:
+  Input: { taskId: "task1", calendarId: "cal1",
+           dueDate: "2026-01-22T17:00:00Z", priority: 5 }
+  Output: { id: "task1", success: true }
+
+Note: taskId comes from thunderbird_tasks_list. calendarId from thunderbird_calendars_list. Experimental API.`,
     inputSchema: {
       type: "object",
       properties: {
@@ -217,7 +245,13 @@ export const taskTools: McpTool[] = [
   },
   {
     name: "thunderbird_tasks_delete",
-    description: "(EXPERIMENTAL) Delete a task permanently",
+    description: `(EXPERIMENTAL) Delete a task permanently. Destructive: no undo, no trash.
+
+Example:
+  Input: { taskId: "task1", calendarId: "cal1" }
+  Output: { success: true }
+
+Note: taskId comes from thunderbird_tasks_list. calendarId from thunderbird_calendars_list. No undo. Experimental API.`,
     inputSchema: {
       type: "object",
       properties: {
@@ -229,7 +263,13 @@ export const taskTools: McpTool[] = [
   },
   {
     name: "thunderbird_tasks_complete",
-    description: "(EXPERIMENTAL) Mark a task as completed",
+    description: `(EXPERIMENTAL) Mark a task as completed. Shorthand for tasks_update with completed=true and PERCENT-COMPLETE=100.
+
+Example:
+  Input: { taskId: "task1", calendarId: "cal1" }
+  Output: { id: "task1", completed: true, success: true }
+
+Note: taskId comes from thunderbird_tasks_list. calendarId from thunderbird_calendars_list. To re-open a task use thunderbird_tasks_update with completed=false. Experimental API.`,
     inputSchema: {
       type: "object",
       properties: {

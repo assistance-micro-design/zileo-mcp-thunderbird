@@ -9,7 +9,9 @@ import { z } from "zod";
 // Mock the websocket client-adapter module
 const mockSendRequest = vi.fn();
 vi.mock("../../websocket/client-adapter.js", () => ({
-  getNativeClient: () => ({ sendRequest: mockSendRequest }),
+  getNativeClient: (): { sendRequest: typeof mockSendRequest } => ({
+    sendRequest: mockSendRequest,
+  }),
 }));
 
 // Mock logger to prevent output
@@ -25,7 +27,7 @@ vi.mock("../../utils/logger.js", () => ({
 import { executeToolHandler } from "../../tools/tool-handler.js";
 
 describe("executeToolHandler", () => {
-  beforeEach(() => {
+  beforeEach((): void => {
     vi.clearAllMocks();
   });
 

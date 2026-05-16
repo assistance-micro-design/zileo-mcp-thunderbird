@@ -209,8 +209,14 @@ export async function handleAddressBooksDelete(
 export const contactTools: McpTool[] = [
   {
     name: "thunderbird_contacts_search",
-    description:
-      "Search for contacts across address books by name, email, or other properties",
+    description: `Search contacts across address books by display name, email, company, or any other property. Free-text query is matched case-insensitively.
+
+Example:
+  Input: { query: "alice", addressBookId: "ab1", limit: 50 }
+  Output: { contacts: [{ id: "c1", displayName: "Alice Smith",
+           primaryEmail: "alice@example.com", addressBookId: "ab1" }] }
+
+Note: optional addressBookId comes from thunderbird_addressbooks_list. Omit to search every book.`,
     inputSchema: {
       type: "object",
       properties: {
@@ -233,7 +239,14 @@ export const contactTools: McpTool[] = [
   },
   {
     name: "thunderbird_contacts_list",
-    description: "List all contacts in a specific address book with pagination",
+    description: `List every contact in one address book with pagination. Returns ID, display name and primary email per contact.
+
+Example:
+  Input: { addressBookId: "ab1", limit: 100, offset: 0 }
+  Output: { contacts: [{ id: "c1", displayName: "Alice Smith",
+           primaryEmail: "alice@example.com" }], total: 312 }
+
+Note: addressBookId comes from thunderbird_addressbooks_list.`,
     inputSchema: {
       type: "object",
       properties: {
@@ -254,7 +267,15 @@ export const contactTools: McpTool[] = [
   },
   {
     name: "thunderbird_contacts_get",
-    description: "Get detailed information about a specific contact",
+    description: `Fetch one contact with all properties (name parts, emails, phones, addresses, custom fields) plus its vCard 4.0 representation.
+
+Example:
+  Input: { contactId: "c1" }
+  Output: { id: "c1", displayName: "Alice Smith",
+           primaryEmail: "alice@example.com", phone: "+33...",
+           vCard: "BEGIN:VCARD\\nVERSION:4.0\\n..." }
+
+Note: contactId comes from thunderbird_contacts_list or thunderbird_contacts_search.`,
     inputSchema: {
       type: "object",
       properties: {
@@ -265,7 +286,15 @@ export const contactTools: McpTool[] = [
   },
   {
     name: "thunderbird_contacts_create",
-    description: "Create a new contact using properties or vCard format",
+    description: `Create a new contact in an address book, either by passing a flat properties object or a full vCard 4.0 string. At least one of properties or vCard is required.
+
+Example:
+  Input: { addressBookId: "ab1",
+           properties: { DisplayName: "Alice Smith",
+           PrimaryEmail: "alice@example.com", FirstName: "Alice" } }
+  Output: { id: "c1", success: true }
+
+Note: addressBookId comes from thunderbird_addressbooks_list.`,
     inputSchema: {
       type: "object",
       properties: {
@@ -289,7 +318,14 @@ export const contactTools: McpTool[] = [
   },
   {
     name: "thunderbird_contacts_update",
-    description: "Update an existing contact using properties or vCard format",
+    description: `Update properties of an existing contact, or replace its vCard entirely. Partial property updates are supported.
+
+Example:
+  Input: { contactId: "c1",
+           properties: { PrimaryEmail: "alice@new.example.com" } }
+  Output: { id: "c1", success: true }
+
+Note: contactId comes from thunderbird_contacts_list or thunderbird_contacts_search. Passing vCard replaces ALL fields.`,
     inputSchema: {
       type: "object",
       properties: {
@@ -309,7 +345,13 @@ export const contactTools: McpTool[] = [
   },
   {
     name: "thunderbird_contacts_delete",
-    description: "Delete a contact permanently",
+    description: `Delete one contact permanently. Destructive: removes it from its address book with no undo.
+
+Example:
+  Input: { contactId: "c1" }
+  Output: { success: true }
+
+Note: contactId comes from thunderbird_contacts_list or thunderbird_contacts_search. No undo.`,
     inputSchema: {
       type: "object",
       properties: {
@@ -320,7 +362,12 @@ export const contactTools: McpTool[] = [
   },
   {
     name: "thunderbird_addressbooks_list",
-    description: "List all address books",
+    description: `List every address book Thunderbird knows about (Personal, Collected Addresses, CardDAV synced books, LDAP, etc.). Entry point for addressBookId discovery.
+
+Example:
+  Input: {}
+  Output: { addressBooks: [{ id: "ab1", name: "Personal", type: "jsaddrbook",
+           readOnly: false }, { id: "ab2", name: "CardDAV", type: "carddav" }] }`,
     inputSchema: {
       type: "object",
       properties: {},
@@ -328,7 +375,11 @@ export const contactTools: McpTool[] = [
   },
   {
     name: "thunderbird_addressbooks_create",
-    description: "Create a new address book",
+    description: `Create a new local address book. Remote books (CardDAV/LDAP) must be configured in Thunderbird's UI, not via this tool.
+
+Example:
+  Input: { name: "Work Contacts" }
+  Output: { id: "ab3", name: "Work Contacts", success: true }`,
     inputSchema: {
       type: "object",
       properties: {
@@ -342,7 +393,13 @@ export const contactTools: McpTool[] = [
   },
   {
     name: "thunderbird_addressbooks_delete",
-    description: "Delete an address book and all its contacts",
+    description: `Delete an entire address book together with every contact it contains. Destructive: no undo, no trash.
+
+Example:
+  Input: { addressBookId: "ab3" }
+  Output: { deletedContacts: 42, success: true }
+
+Note: addressBookId comes from thunderbird_addressbooks_list. Built-in books (Personal, Collected Addresses) cannot be deleted.`,
     inputSchema: {
       type: "object",
       properties: {

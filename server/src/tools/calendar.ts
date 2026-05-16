@@ -213,7 +213,14 @@ export async function handleEventsDelete(
 export const calendarTools: McpTool[] = [
   {
     name: "thunderbird_calendars_list",
-    description: "(EXPERIMENTAL) List all available calendars",
+    description: `(EXPERIMENTAL) List every calendar Thunderbird/Lightning knows about (local, CalDAV, ICS subscriptions). Entry point for calendarId discovery.
+
+Example:
+  Input: {}
+  Output: { calendars: [{ id: "cal1", name: "Personal", type: "storage",
+           color: "#3498DB", readOnly: false }] }
+
+Note: experimental — requires the Calendar experiments API in the extension.`,
     inputSchema: {
       type: "object",
       properties: {},
@@ -221,8 +228,14 @@ export const calendarTools: McpTool[] = [
   },
   {
     name: "thunderbird_calendars_get",
-    description:
-      "(EXPERIMENTAL) Get detailed information about a specific calendar",
+    description: `(EXPERIMENTAL) Fetch one calendar's metadata: name, type, color, sync state, read-only flag.
+
+Example:
+  Input: { calendarId: "cal1" }
+  Output: { id: "cal1", name: "Personal", type: "storage",
+           color: "#3498DB", readOnly: false }
+
+Note: calendarId is obtained from thunderbird_calendars_list. Experimental API.`,
     inputSchema: {
       type: "object",
       properties: {
@@ -233,8 +246,15 @@ export const calendarTools: McpTool[] = [
   },
   {
     name: "thunderbird_events_search",
-    description:
-      "(EXPERIMENTAL) Search for events across calendars within a date range",
+    description: `(EXPERIMENTAL) Search events across one or every calendar within a required date range. Free-text query matches title, location, description.
+
+Example:
+  Input: { query: "meeting", dateFrom: "2026-01-01T00:00:00Z",
+           dateTo: "2026-01-31T23:59:59Z", limit: 50 }
+  Output: { events: [{ id: "evt1", calendarId: "cal1", title: "Team meeting",
+           start: "2026-01-15T10:00:00Z", end: "2026-01-15T11:00:00Z" }] }
+
+Note: optional calendarId comes from thunderbird_calendars_list. Dates must be ISO 8601 with offset. Experimental API.`,
     inputSchema: {
       type: "object",
       properties: {
@@ -259,8 +279,16 @@ export const calendarTools: McpTool[] = [
   },
   {
     name: "thunderbird_events_list",
-    description:
-      "(EXPERIMENTAL) List events in a specific calendar within a date range",
+    description: `(EXPERIMENTAL) List events in one calendar between two dates. Use this when you already know which calendar to query.
+
+Example:
+  Input: { calendarId: "cal1", dateFrom: "2026-01-01T00:00:00Z",
+           dateTo: "2026-01-31T23:59:59Z", limit: 100 }
+  Output: { events: [{ id: "evt1", title: "Team meeting",
+           start: "2026-01-15T10:00:00Z", end: "2026-01-15T11:00:00Z",
+           location: "Office" }] }
+
+Note: calendarId comes from thunderbird_calendars_list. Dates ISO 8601 with offset. Experimental API.`,
     inputSchema: {
       type: "object",
       properties: {
@@ -278,8 +306,15 @@ export const calendarTools: McpTool[] = [
   },
   {
     name: "thunderbird_events_get",
-    description:
-      "(EXPERIMENTAL) Get detailed information about a specific event",
+    description: `(EXPERIMENTAL) Fetch one event with full details: title, description, attendees, recurrence rule, organizer, alarms.
+
+Example:
+  Input: { eventId: "evt1", calendarId: "cal1" }
+  Output: { id: "evt1", title: "Team meeting", description: "Weekly sync",
+           start: "2026-01-15T10:00:00Z", end: "2026-01-15T11:00:00Z",
+           attendees: ["alice@example.com"], location: "Office" }
+
+Note: eventId comes from thunderbird_events_list or thunderbird_events_search. calendarId from thunderbird_calendars_list. Experimental API.`,
     inputSchema: {
       type: "object",
       properties: {
@@ -291,8 +326,15 @@ export const calendarTools: McpTool[] = [
   },
   {
     name: "thunderbird_events_create",
-    description:
-      "(EXPERIMENTAL) Create a new calendar event with optional recurrence",
+    description: `(EXPERIMENTAL) Create a new event in one calendar with title, ISO 8601 start/end, optional location, description, attendees, and a recurrence rule.
+
+Example:
+  Input: { calendarId: "cal1", title: "Team meeting",
+           start: "2026-01-15T10:00:00Z", end: "2026-01-15T11:00:00Z",
+           location: "Office", attendees: ["alice@example.com"] }
+  Output: { id: "evt-new", success: true }
+
+Note: calendarId comes from thunderbird_calendars_list. All dates ISO 8601 with offset. Experimental API.`,
     inputSchema: {
       type: "object",
       properties: {
@@ -342,7 +384,14 @@ export const calendarTools: McpTool[] = [
   },
   {
     name: "thunderbird_events_update",
-    description: "(EXPERIMENTAL) Update an existing calendar event",
+    description: `(EXPERIMENTAL) Update fields of an existing event. For recurring events the scope chooses between updating this occurrence, all occurrences, or this and future.
+
+Example:
+  Input: { eventId: "evt1", calendarId: "cal1", location: "Room 42",
+           scope: "this" }
+  Output: { id: "evt1", success: true }
+
+Note: eventId comes from thunderbird_events_list or thunderbird_events_search. calendarId from thunderbird_calendars_list. Experimental API.`,
     inputSchema: {
       type: "object",
       properties: {
@@ -380,7 +429,14 @@ export const calendarTools: McpTool[] = [
   },
   {
     name: "thunderbird_events_move",
-    description: "(EXPERIMENTAL) Move an event to a different time",
+    description: `(EXPERIMENTAL) Reschedule an event to a new start/end time without touching other fields.
+
+Example:
+  Input: { eventId: "evt1", calendarId: "cal1",
+           newStart: "2026-01-16T10:00:00Z", newEnd: "2026-01-16T11:00:00Z" }
+  Output: { id: "evt1", success: true }
+
+Note: eventId comes from thunderbird_events_list or thunderbird_events_search. calendarId from thunderbird_calendars_list. Experimental API.`,
     inputSchema: {
       type: "object",
       properties: {
@@ -397,7 +453,13 @@ export const calendarTools: McpTool[] = [
   },
   {
     name: "thunderbird_events_delete",
-    description: "(EXPERIMENTAL) Delete a calendar event",
+    description: `(EXPERIMENTAL) Delete an event. For recurring events the scope chooses between this occurrence, all occurrences, or this and future. Destructive: no undo.
+
+Example:
+  Input: { eventId: "evt1", calendarId: "cal1", scope: "this" }
+  Output: { success: true }
+
+Note: eventId comes from thunderbird_events_list or thunderbird_events_search. calendarId from thunderbird_calendars_list. No undo. Experimental API.`,
     inputSchema: {
       type: "object",
       properties: {
