@@ -8,7 +8,9 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 // Mock the websocket client-adapter module
 const mockSendRequest = vi.fn();
 vi.mock("../../websocket/client-adapter.js", () => ({
-  getNativeClient: () => ({ sendRequest: mockSendRequest }),
+  getNativeClient: (): { sendRequest: typeof mockSendRequest } => ({
+    sendRequest: mockSendRequest,
+  }),
 }));
 
 // Mock logger
@@ -34,7 +36,7 @@ import {
 } from "../../resources/handlers.js";
 
 describe("Resource Handlers", () => {
-  beforeEach(() => {
+  beforeEach((): void => {
     vi.clearAllMocks();
   });
 
