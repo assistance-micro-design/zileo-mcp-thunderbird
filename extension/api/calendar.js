@@ -11,33 +11,7 @@ export const CalendarAPI = {
    * @returns {Promise<Array>} Array of calendars
    */
   async listCalendars() {
-    console.log("[CalendarAPI] listCalendars called");
-    console.log("[CalendarAPI] browser.calendar exists:", !!browser.calendar);
-    if (browser.calendar) {
-      console.log(
-        "[CalendarAPI] browser.calendar.calendars exists:",
-        !!browser.calendar.calendars,
-      );
-      console.log(
-        "[CalendarAPI] browser.calendar.calendars.query exists:",
-        typeof browser.calendar.calendars.query,
-      );
-    }
-    try {
-      console.log("[CalendarAPI] Calling query...");
-      const result = await browser.calendar.calendars.query({});
-      console.log("[CalendarAPI] Result:", result);
-      return result;
-    } catch (error) {
-      console.error("[CalendarAPI] Error name:", error.name);
-      console.error("[CalendarAPI] Error message:", error.message);
-      console.error("[CalendarAPI] Error stack:", error.stack);
-      console.error(
-        "[CalendarAPI] Full error:",
-        JSON.stringify(error, Object.getOwnPropertyNames(error)),
-      );
-      throw error;
-    }
+    return await browser.calendar.calendars.query({});
   },
 
   /**
@@ -73,11 +47,6 @@ export const CalendarAPI = {
     if (dateTo) {
       queryOptions.rangeEnd = this._toICalDate(dateTo);
     }
-
-    console.log(
-      "[CalendarAPI] searchEvents queryOptions:",
-      JSON.stringify(queryOptions),
-    );
 
     const items = await browser.calendar.items.query(queryOptions);
 
@@ -118,10 +87,6 @@ export const CalendarAPI = {
       rangeEnd: this._toICalDate(dateTo),
       returnFormat: "jcal",
     };
-    console.log(
-      "[CalendarAPI] listEvents queryOptions:",
-      JSON.stringify(queryOptions),
-    );
 
     const items = await browser.calendar.items.query(queryOptions);
 
@@ -355,8 +320,6 @@ export const CalendarAPI = {
   _formatCalendarItem(item) {
     if (!item) return null;
 
-    console.log("[CalendarAPI] Raw item:", JSON.stringify(item));
-
     // jCal format: item.item is the jCal array
     // Structure: ["vcalendar", [props], [["vevent", [props], []]]]
     // Or directly: ["vevent", [props], []]
@@ -376,8 +339,6 @@ export const CalendarAPI = {
         props = jcal[1] || [];
       }
     }
-
-    console.log("[CalendarAPI] Extracted props:", JSON.stringify(props));
 
     return {
       id: item.id,

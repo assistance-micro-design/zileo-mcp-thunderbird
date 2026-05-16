@@ -17,9 +17,11 @@ export const MessagesAPI = {
       body,
       tags = [],
       unread,
+      flagged,
       dateFrom,
       dateTo,
       folderId,
+      accountId,
       limit = 50,
     } = params;
 
@@ -31,9 +33,29 @@ export const MessagesAPI = {
     if (body) query.body = body;
     if (tags.length > 0) query.tags = { tags, mode: "any" };
     if (unread !== undefined) query.read = !unread;
+    if (flagged !== undefined) query.flagged = flagged;
     if (dateFrom) query.fromDate = new Date(dateFrom);
     if (dateTo) query.toDate = new Date(dateTo);
     if (folderId) query.folderId = folderId;
+
+    // When accountId is provided without an explicit folderId, scope the
+    // search to that account by iterating its folders (messenger.messages.query
+    // has no native accountId filter). folderId, if also supplied, wins.
+    if (accountId && !folderId) {
+      const account = await messenger.accounts.get(accountId);
+      const folders = await this._getAllFolders(account);
+
+      const allMessages = [];
+      for (const folder of folders) {
+        const messageList = await messenger.messages.query({
+          ...query,
+          folderId: folder.id,
+        });
+        allMessages.push(...messageList.messages);
+        if (allMessages.length >= limit) break;
+      }
+      return allMessages.slice(0, limit);
+    }
 
     const messageList = await messenger.messages.query(query);
     return messageList.messages.slice(0, limit);

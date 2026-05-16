@@ -88,3 +88,59 @@ describe("Contract coherence: Zod inputSchema vs extension code", () => {
     });
   }
 });
+
+/**
+ * Function-scoped coherence guard.
+ *
+ * The aggregated-code check above is necessary but not sufficient: a param
+ * may appear *somewhere* in the extension while still being silently
+ * dropped by the specific wrapper that handles a given action. Example:
+ * `flagged` was declared on thunderbird_messages_search yet ignored by
+ * MessagesAPI.search() — it slipped through the aggregated check because
+ * MessagesAPI.update() referenced `flagged` for a different purpose.
+ *
+ * Each entry below pins a tool's schema params to the exact wrapper
+ * function body that must reference them.
+ */
+const FUNCTION_SCOPED_CHECKS: ReadonlyArray<{
+  tool: string;
+  apiFile: string;
+  /** Regex capturing the wrapper function body */
+  bodyExtractor: RegExp;
+  /** Params that must appear inside that body */
+  requiredParams: readonly string[];
+}> = [
+  {
+    tool: "thunderbird_messages_search",
+    apiFile: "messages.js",
+    bodyExtractor: /async search\(params\)\s*\{([\s\S]*?)\n\s{2}\}/,
+    requiredParams: ["flagged", "accountId"],
+  },
+];
+
+describe("Wrapper-function coherence: per-action params land in the right function", () => {
+  for (const check of FUNCTION_SCOPED_CHECKS) {
+    it(`${check.tool} — wrapper in ${check.apiFile} references [${check.requiredParams.join(", ")}]`, () => {
+      const filePath = path.join(EXTENSION_DIR, "api", check.apiFile);
+      const source = fs.readFileSync(filePath, "utf8");
+      const match = source.match(check.bodyExtractor);
+      expect(
+        match,
+        `Could not locate wrapper function body in ${check.apiFile} ` +
+          `(extractor: ${check.bodyExtractor}). Adjust the regex when refactoring.`,
+      ).not.toBeNull();
+      const body = match![1];
+
+      const missing = check.requiredParams.filter(
+        (param) => !new RegExp(`\\b${param}\\b`).test(body),
+      );
+
+      expect(
+        missing,
+        `${check.tool}: params [${missing.join(", ")}] are declared in the Zod schema ` +
+          `but never referenced inside the wrapper function body in ${check.apiFile}. ` +
+          `They are being silently dropped before reaching messenger.*.query().`,
+      ).toEqual([]);
+    });
+  }
+});
