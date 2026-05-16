@@ -295,8 +295,16 @@ export async function handleMessagesListRecent(
 export const messageTools: McpTool[] = [
   {
     name: "thunderbird_messages_search",
-    description:
-      "Search messages across ALL folders (global search by default). Omit folderId to search everywhere. For recent emails without specific criteria, prefer thunderbird_messages_list_recent.",
+    description: `Search messages across ALL folders (or scoped to one folder/account) with advanced filters: subject, from/to, body, tags, read/flagged state, date range.
+
+Example:
+  Input: { subject: "invoice", from: "billing@", dateFrom: "2026-01-15T00:00:00Z",
+           limit: 20 }
+  Output: { messages: [{ id: 42, subject: "Invoice #1234",
+           author: "billing@example.com", date: "2026-01-15T10:00:00Z",
+           folderId: "imap://user@host/INBOX" }] }
+
+Note: optional folderId is obtained from thunderbird_folders_list (full URI, not "INBOX"); accountId from thunderbird_accounts_list. For unscoped "show my latest emails", prefer thunderbird_messages_list_recent.`,
     inputSchema: {
       type: "object",
       properties: {
@@ -335,8 +343,15 @@ export const messageTools: McpTool[] = [
   },
   {
     name: "thunderbird_messages_list",
-    description:
-      "List messages in a SPECIFIC folder with pagination. Requires folderId. For recent emails across ALL folders, use thunderbird_messages_list_recent instead.",
+    description: `List messages in one specific folder with pagination. Returns id, subject, author, date, and read status for each message.
+
+Example:
+  Input: { folderId: "imap://user@host/INBOX", limit: 10, offset: 0 }
+  Output: { messages: [{ id: 42, subject: "Hello",
+           author: "alice@example.com", date: "2026-01-15T10:00:00Z",
+           read: false }], total: 247 }
+
+Note: folderId is the full URI obtained from thunderbird_folders_list (not the literal "INBOX"). For recent emails across ALL folders, use thunderbird_messages_list_recent.`,
     inputSchema: {
       type: "object",
       properties: {
@@ -361,8 +376,15 @@ export const messageTools: McpTool[] = [
   },
   {
     name: "thunderbird_messages_list_unread",
-    description:
-      "List all unread messages across accounts or for a specific account",
+    description: `List unread messages across every account (or scoped to one). Implemented internally as a search with unread=true.
+
+Example:
+  Input: { accountId: "account1", limit: 50 }
+  Output: { messages: [{ id: 42, subject: "Please review",
+           author: "alice@example.com", date: "2026-01-15T10:00:00Z",
+           folderId: "imap://user@host/INBOX", read: false }] }
+
+Note: optional accountId is obtained from thunderbird_accounts_list. Omit to scan all accounts.`,
     inputSchema: {
       type: "object",
       properties: {
@@ -380,7 +402,15 @@ export const messageTools: McpTool[] = [
   },
   {
     name: "thunderbird_messages_get",
-    description: "Get a specific message by ID with different detail levels",
+    description: `Fetch one message by ID at a chosen detail level: headers (metadata only), full (with MIME parts and body), or raw (RFC 822 source).
+
+Example:
+  Input: { messageId: 42, format: "full" }
+  Output: { id: 42, subject: "Hello", author: "alice@example.com",
+           recipients: ["bob@example.com"], date: "2026-01-15T10:00:00Z",
+           body: "Hi Bob, ...", attachments: [...] }
+
+Note: messageId is obtained from thunderbird_messages_list, thunderbird_messages_search, or thunderbird_messages_list_recent.`,
     inputSchema: {
       type: "object",
       properties: {
@@ -398,7 +428,13 @@ export const messageTools: McpTool[] = [
   },
   {
     name: "thunderbird_messages_move",
-    description: "Move one or more messages to another folder",
+    description: `Move one or more messages to a target folder. The messageIds are removed from their current folder and appear in the destination.
+
+Example:
+  Input: { messageIds: [42, 43], destinationFolderId: "imap://user@host/Archive" }
+  Output: { movedCount: 2, success: true }
+
+Note: messageIds come from thunderbird_messages_list/_search/_list_recent. destinationFolderId is the full URI from thunderbird_folders_list.`,
     inputSchema: {
       type: "object",
       properties: {
@@ -417,7 +453,13 @@ export const messageTools: McpTool[] = [
   },
   {
     name: "thunderbird_messages_copy",
-    description: "Copy one or more messages to another folder",
+    description: `Copy one or more messages to a target folder. The originals stay in place; duplicates with new IDs are created in the destination.
+
+Example:
+  Input: { messageIds: [42, 43], destinationFolderId: "imap://user@host/Backup" }
+  Output: { copiedCount: 2, newIds: [101, 102], success: true }
+
+Note: messageIds come from thunderbird_messages_list/_search/_list_recent. destinationFolderId is the full URI from thunderbird_folders_list.`,
     inputSchema: {
       type: "object",
       properties: {
@@ -436,8 +478,13 @@ export const messageTools: McpTool[] = [
   },
   {
     name: "thunderbird_messages_delete",
-    description:
-      "Delete one or more messages (move to trash or permanent deletion)",
+    description: `Delete one or more messages. By default they go to Trash; set permanent=true to bypass Trash and lose them irreversibly.
+
+Example:
+  Input: { messageIds: [42], permanent: false }
+  Output: { deletedCount: 1, success: true }
+
+Note: messageIds come from thunderbird_messages_list/_search/_list_recent. Setting permanent=true has no undo.`,
     inputSchema: {
       type: "object",
       properties: {
@@ -458,7 +505,13 @@ export const messageTools: McpTool[] = [
   },
   {
     name: "thunderbird_messages_update",
-    description: "Update message properties (read status, flagged, tags, etc.)",
+    description: `Update message flags and tags in a single call: read, flagged (star), junk classification, applied tag keys.
+
+Example:
+  Input: { messageId: 42, read: true, flagged: true, tags: ["work", "urgent"] }
+  Output: { id: 42, success: true }
+
+Note: messageId is obtained from thunderbird_messages_list/_search/_list_recent. tag keys (not display names) come from thunderbird_tags_list.`,
     inputSchema: {
       type: "object",
       properties: {
@@ -480,7 +533,13 @@ export const messageTools: McpTool[] = [
   },
   {
     name: "thunderbird_messages_archive",
-    description: "Archive one or more messages (move to archive folder)",
+    description: `Archive messages by moving them to the account's Archive hierarchy (typically Archive/YYYY/). Uses Thunderbird's built-in archiving logic.
+
+Example:
+  Input: { messageIds: [42, 43] }
+  Output: { archivedCount: 2, success: true }
+
+Note: messageIds come from thunderbird_messages_list/_search/_list_recent. The destination Archive folder is selected automatically by Thunderbird account settings.`,
     inputSchema: {
       type: "object",
       properties: {
@@ -495,8 +554,15 @@ export const messageTools: McpTool[] = [
   },
   {
     name: "thunderbird_messages_list_recent",
-    description:
-      'List the most recent messages across ALL folders. Perfect for "show me my latest emails" without specifying a folder. Uses date-based search internally.',
+    description: `List the most recent messages across ALL folders, optionally scoped to one account. Perfect for "show me my latest emails" without specifying a folder.
+
+Example:
+  Input: { accountId: "account1", hoursAgo: 24, limit: 20 }
+  Output: { messages: [{ id: 42, subject: "Re: Meeting",
+           author: "alice@example.com", date: "2026-01-15T10:00:00Z",
+           folderId: "imap://user@host/INBOX", read: false }] }
+
+Note: optional accountId comes from thunderbird_accounts_list. hoursAgo capped at 168 (7 days). Internally translated to a date-bounded thunderbird_messages_search.`,
     inputSchema: {
       type: "object",
       properties: {

@@ -116,8 +116,14 @@ export const composeSendSchema = z.object({
 export const composeTools: McpTool[] = [
   {
     name: "thunderbird_compose_begin_new",
-    description:
-      "Open a new email composition window with optional pre-filled content (recipients, subject, body)",
+    description: `Open a new compose window in Thunderbird, optionally pre-filled with recipients, subject, body, and selected identity. Returns a tabId used by every other compose tool to refer to this draft.
+
+Example:
+  Input: { to: ["alice@example.com"], subject: "Hello",
+           body: "Hi Alice, ...", isPlainText: false }
+  Output: { tabId: 5, success: true }
+
+Note: this is the entry point for the compose workflow. Capture the returned tabId for thunderbird_compose_get_details/set_details/save_draft/save_template/send. Optional identityId comes from thunderbird_identities_list.`,
     inputSchema: {
       type: "object" as const,
       properties: {
@@ -157,7 +163,13 @@ export const composeTools: McpTool[] = [
   },
   {
     name: "thunderbird_compose_begin_reply",
-    description: "Open a compose window to reply to an existing message",
+    description: `Open a compose window pre-populated to reply to one existing message. replyType controls whether the reply targets only the sender or every recipient. Returns a tabId.
+
+Example:
+  Input: { messageId: 42, replyType: "replyToSender" }
+  Output: { tabId: 6, success: true }
+
+Note: messageId comes from thunderbird_messages_list, thunderbird_messages_search, or thunderbird_messages_list_recent. The returned tabId is consumed by thunderbird_compose_send and the other compose tools.`,
     inputSchema: {
       type: "object" as const,
       properties: {
@@ -176,7 +188,13 @@ export const composeTools: McpTool[] = [
   },
   {
     name: "thunderbird_compose_begin_forward",
-    description: "Open a compose window to forward an existing message",
+    description: `Open a compose window pre-populated to forward one existing message, either inline (quoted in body) or as an .eml attachment. Returns a tabId.
+
+Example:
+  Input: { messageId: 42, forwardType: "forwardInline" }
+  Output: { tabId: 7, success: true }
+
+Note: messageId comes from thunderbird_messages_list, thunderbird_messages_search, or thunderbird_messages_list_recent. The returned tabId is consumed by thunderbird_compose_send and the other compose tools.`,
     inputSchema: {
       type: "object" as const,
       properties: {
@@ -195,8 +213,14 @@ export const composeTools: McpTool[] = [
   },
   {
     name: "thunderbird_compose_get_details",
-    description:
-      "Get the current details of a compose window (recipients, subject, body)",
+    description: `Inspect the current state of an open compose tab: recipients, subject, body, identity, plain-text flag. Useful before sending or saving.
+
+Example:
+  Input: { tabId: 5 }
+  Output: { to: ["alice@example.com"], cc: [], subject: "Hello",
+           body: "Hi Alice, ...", identityId: "id1", isPlainText: false }
+
+Note: tabId comes from thunderbird_compose_begin_new, thunderbird_compose_begin_reply, or thunderbird_compose_begin_forward.`,
     inputSchema: {
       type: "object" as const,
       properties: {
@@ -210,8 +234,14 @@ export const composeTools: McpTool[] = [
   },
   {
     name: "thunderbird_compose_set_details",
-    description:
-      "Update the content of an existing compose window (recipients, subject, body)",
+    description: `Update fields of an open compose tab. Supplied fields replace the current values; omitted fields stay as-is.
+
+Example:
+  Input: { tabId: 5, subject: "Updated subject",
+           cc: ["bob@example.com"] }
+  Output: { success: true }
+
+Note: tabId comes from thunderbird_compose_begin_new, thunderbird_compose_begin_reply, or thunderbird_compose_begin_forward.`,
     inputSchema: {
       type: "object" as const,
       properties: {
@@ -248,7 +278,13 @@ export const composeTools: McpTool[] = [
   },
   {
     name: "thunderbird_compose_save_draft",
-    description: "Save the current composition as a draft in the Drafts folder",
+    description: `Save the current compose tab to the Drafts folder without sending it. The tab stays open after saving.
+
+Example:
+  Input: { tabId: 5 }
+  Output: { savedMessageId: 99, success: true }
+
+Note: tabId comes from thunderbird_compose_begin_new, thunderbird_compose_begin_reply, or thunderbird_compose_begin_forward.`,
     inputSchema: {
       type: "object" as const,
       properties: {
@@ -262,7 +298,13 @@ export const composeTools: McpTool[] = [
   },
   {
     name: "thunderbird_compose_save_template",
-    description: "Save the current composition as a reusable template",
+    description: `Save the current compose tab as a reusable template in the Templates folder. The tab stays open after saving.
+
+Example:
+  Input: { tabId: 5 }
+  Output: { savedMessageId: 100, success: true }
+
+Note: tabId comes from thunderbird_compose_begin_new, thunderbird_compose_begin_reply, or thunderbird_compose_begin_forward.`,
     inputSchema: {
       type: "object" as const,
       properties: {
@@ -276,7 +318,13 @@ export const composeTools: McpTool[] = [
   },
   {
     name: "thunderbird_compose_send",
-    description: "Send the email currently being composed",
+    description: `Send the email currently in a compose tab. mode picks between the account default, immediate send, or send-later queue. Destructive: once sent the message leaves Thunderbird's control.
+
+Example:
+  Input: { tabId: 5, mode: "sendNow" }
+  Output: { success: true, messageId: 101 }
+
+Note: tabId comes from thunderbird_compose_begin_new, thunderbird_compose_begin_reply, or thunderbird_compose_begin_forward. No undo after sendNow.`,
     inputSchema: {
       type: "object" as const,
       properties: {

@@ -94,7 +94,12 @@ export async function handleTagsDelete(args: unknown): Promise<ToolCallResult> {
 export const tagTools: McpTool[] = [
   {
     name: "thunderbird_tags_list",
-    description: "List all available message tags/labels",
+    description: `List every message tag/label defined in Thunderbird with its key, display name and color. Entry point for tag key discovery.
+
+Example:
+  Input: {}
+  Output: { tags: [{ key: "important", tag: "Important", color: "#FF5733" },
+           { key: "later", tag: "Later", color: "#3498DB" }] }`,
     inputSchema: {
       type: "object",
       properties: {},
@@ -102,8 +107,13 @@ export const tagTools: McpTool[] = [
   },
   {
     name: "thunderbird_tags_create",
-    description:
-      "Create a new message tag with a specific key, name, and color",
+    description: `Create a new message tag with a user-chosen key, display name and hex color.
+
+Example:
+  Input: { key: "urgent", tag: "Urgent", color: "#FF0000" }
+  Output: { key: "urgent", success: true }
+
+Note: key is user-defined and must be unique. The created tag will appear in thunderbird_tags_list output.`,
     inputSchema: {
       type: "object",
       properties: {
@@ -126,7 +136,13 @@ export const tagTools: McpTool[] = [
   },
   {
     name: "thunderbird_tags_update",
-    description: "Update an existing tag's display name or color",
+    description: `Update the display name and/or color of an existing tag. The key itself is immutable. At least one of tag or color must be supplied.
+
+Example:
+  Input: { key: "urgent", color: "#CC0000" }
+  Output: { key: "urgent", success: true }
+
+Note: key is obtained from thunderbird_tags_list.`,
     inputSchema: {
       type: "object",
       properties: {
@@ -148,7 +164,13 @@ export const tagTools: McpTool[] = [
   },
   {
     name: "thunderbird_tags_delete",
-    description: "Delete a tag (removes it from all messages)",
+    description: `Delete a tag and remove it from every message it was applied to. Destructive: no undo.
+
+Example:
+  Input: { key: "urgent" }
+  Output: { success: true, removedFromMessages: 17 }
+
+Note: key is obtained from thunderbird_tags_list. No undo.`,
     inputSchema: {
       type: "object",
       properties: {

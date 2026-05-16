@@ -67,7 +67,12 @@ export async function handleIdentitiesList(
 export const accountTools: McpTool[] = [
   {
     name: "thunderbird_accounts_list",
-    description: "List all configured email accounts",
+    description: `List every email account configured in Thunderbird. This is the entry point for discovering accountId values used by other tools.
+
+Example:
+  Input: {}
+  Output: { accounts: [{ id: "account1", name: "Personal", type: "imap",
+            identities: [{ id: "id1", email: "user@example.com" }] }] }`,
     inputSchema: {
       type: "object",
       properties: {},
@@ -75,7 +80,14 @@ export const accountTools: McpTool[] = [
   },
   {
     name: "thunderbird_accounts_get",
-    description: "Get detailed information about a specific account",
+    description: `Get the full details of one configured account (server settings, folder hierarchy, identities).
+
+Example:
+  Input: { accountId: "account1" }
+  Output: { id: "account1", name: "Personal", type: "imap",
+           server: "imap.example.com", identities: [...], folders: [...] }
+
+Note: accountId is obtained from thunderbird_accounts_list.`,
     inputSchema: {
       type: "object",
       properties: {
@@ -86,7 +98,14 @@ export const accountTools: McpTool[] = [
   },
   {
     name: "thunderbird_identities_list",
-    description: "List all identities (sender addresses) for an account",
+    description: `List every identity (sender address) declared for one account, including signatures and default flag.
+
+Example:
+  Input: { accountId: "account1" }
+  Output: { identities: [{ id: "id1", email: "user@example.com",
+           name: "Alice", isDefault: true, signature: "..." }] }
+
+Note: accountId is obtained from thunderbird_accounts_list.`,
     inputSchema: {
       type: "object",
       properties: {

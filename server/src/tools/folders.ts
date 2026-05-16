@@ -124,8 +124,12 @@ export async function handleFoldersMarkRead(
 export const folderTools: McpTool[] = [
   {
     name: "thunderbird_folders_list",
-    description:
-      "List all folders in an account or all accounts with hierarchical structure",
+    description: `List Thunderbird folders across one or all accounts, returning the full URI used by every other folder/message tool. Entry point for folderId discovery.
+
+Example:
+  Input: { accountId: "account1", includeSubFolders: true }
+  Output: { folders: [{ id: "imap://user@host/INBOX", name: "Inbox",
+           type: "inbox", unreadCount: 3, totalCount: 247, subFolders: [...] }] }`,
     inputSchema: {
       type: "object",
       properties: {
@@ -143,7 +147,14 @@ export const folderTools: McpTool[] = [
   },
   {
     name: "thunderbird_folders_get",
-    description: "Get detailed information about a specific folder",
+    description: `Get one folder's metadata: name, type (inbox/sent/...), unread count, total count, parent and sub-folders.
+
+Example:
+  Input: { folderId: "imap://user@host/INBOX" }
+  Output: { id: "imap://user@host/INBOX", name: "Inbox", type: "inbox",
+           unreadCount: 3, totalCount: 247 }
+
+Note: folderId is the full URI obtained from thunderbird_folders_list (not the literal "INBOX").`,
     inputSchema: {
       type: "object",
       properties: {
@@ -154,7 +165,14 @@ export const folderTools: McpTool[] = [
   },
   {
     name: "thunderbird_folders_create",
-    description: "Create a new subfolder under a parent folder",
+    description: `Create a new sub-folder under an existing parent folder.
+
+Example:
+  Input: { parentFolderId: "imap://user@host/", name: "Archive 2026" }
+  Output: { id: "imap://user@host/Archive%202026", name: "Archive 2026",
+           success: true }
+
+Note: parentFolderId is the full URI obtained from thunderbird_folders_list.`,
     inputSchema: {
       type: "object",
       properties: {
@@ -169,7 +187,13 @@ export const folderTools: McpTool[] = [
   },
   {
     name: "thunderbird_folders_rename",
-    description: "Rename an existing folder",
+    description: `Rename an existing folder. The folder URI changes after rename, so callers must refresh their folderId references.
+
+Example:
+  Input: { folderId: "imap://user@host/Archive", newName: "Archive-2026" }
+  Output: { id: "imap://user@host/Archive-2026", success: true }
+
+Note: folderId is the full URI obtained from thunderbird_folders_list. System folders (Inbox/Sent/Trash) cannot be renamed.`,
     inputSchema: {
       type: "object",
       properties: {
@@ -184,7 +208,13 @@ export const folderTools: McpTool[] = [
   },
   {
     name: "thunderbird_folders_delete",
-    description: "Delete a folder and all its contents (use with caution)",
+    description: `Delete a folder and all messages it contains. Destructive: contents are moved to Trash (or permanently lost for IMAP servers without trash).
+
+Example:
+  Input: { folderId: "imap://user@host/Old%20Project" }
+  Output: { success: true }
+
+Note: folderId is the full URI obtained from thunderbird_folders_list. System folders cannot be deleted. No undo.`,
     inputSchema: {
       type: "object",
       properties: {
@@ -195,7 +225,14 @@ export const folderTools: McpTool[] = [
   },
   {
     name: "thunderbird_folders_move",
-    description: "Move a folder to become a subfolder of another folder",
+    description: `Move a folder so that it becomes a sub-folder of another folder. The folder URI changes after move.
+
+Example:
+  Input: { folderId: "imap://user@host/Project",
+           destinationFolderId: "imap://user@host/Archive" }
+  Output: { id: "imap://user@host/Archive/Project", success: true }
+
+Note: both folderId and destinationFolderId are full URIs obtained from thunderbird_folders_list.`,
     inputSchema: {
       type: "object",
       properties: {
@@ -210,7 +247,13 @@ export const folderTools: McpTool[] = [
   },
   {
     name: "thunderbird_folders_mark_read",
-    description: "Mark all messages in a folder as read",
+    description: `Mark every unread message in a folder as read in a single operation. Useful for bulk inbox cleanup.
+
+Example:
+  Input: { folderId: "imap://user@host/Newsletters" }
+  Output: { markedCount: 42, success: true }
+
+Note: folderId is the full URI obtained from thunderbird_folders_list.`,
     inputSchema: {
       type: "object",
       properties: {
