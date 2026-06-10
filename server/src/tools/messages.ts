@@ -67,21 +67,24 @@ const messagesGetSchema = z.object({
   format: z.enum(["headers", "full", "raw"]).optional().default("headers"),
 });
 
+/** Upper bound for bulk message operations (move/copy/delete/archive) */
+const MAX_MESSAGE_IDS = 1000;
+
 /** Move messages to another folder */
 const messagesMoveSchema = z.object({
-  messageIds: z.array(z.number().int()).min(1),
+  messageIds: z.array(z.number().int()).min(1).max(MAX_MESSAGE_IDS),
   destinationFolderId: z.string().max(500),
 });
 
 /** Copy messages to another folder */
 const messagesCopySchema = z.object({
-  messageIds: z.array(z.number().int()).min(1),
+  messageIds: z.array(z.number().int()).min(1).max(MAX_MESSAGE_IDS),
   destinationFolderId: z.string().max(500),
 });
 
 /** Delete messages (trash or permanent) */
 const messagesDeleteSchema = z.object({
-  messageIds: z.array(z.number().int()).min(1),
+  messageIds: z.array(z.number().int()).min(1).max(MAX_MESSAGE_IDS),
   permanent: z.boolean().optional().default(false),
 });
 
@@ -96,7 +99,7 @@ const messagesUpdateSchema = z.object({
 
 /** Archive messages */
 const messagesArchiveSchema = z.object({
-  messageIds: z.array(z.number().int()).min(1),
+  messageIds: z.array(z.number().int()).min(1).max(MAX_MESSAGE_IDS),
 });
 
 /** List recent messages globally across all accounts */

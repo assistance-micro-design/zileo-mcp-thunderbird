@@ -38,7 +38,11 @@ export const composeBeginNewSchema = z.object({
  * Schema for compose begin reply parameters
  */
 export const composeBeginReplySchema = z.object({
-  messageId: z.number().describe("ID of the message to reply to"),
+  messageId: z
+    .number()
+    .int()
+    .nonnegative()
+    .describe("ID of the message to reply to"),
   replyType: z
     .enum(["replyToSender", "replyToAll"])
     .optional()
@@ -50,7 +54,11 @@ export const composeBeginReplySchema = z.object({
  * Schema for compose begin forward parameters
  */
 export const composeBeginForwardSchema = z.object({
-  messageId: z.number().describe("ID of the message to forward"),
+  messageId: z
+    .number()
+    .int()
+    .nonnegative()
+    .describe("ID of the message to forward"),
   forwardType: z
     .enum(["forwardInline", "forwardAsAttachment"])
     .optional()
@@ -61,14 +69,14 @@ export const composeBeginForwardSchema = z.object({
  * Schema for compose get details parameters
  */
 export const composeGetDetailsSchema = z.object({
-  tabId: z.number().describe("ID of the compose tab"),
+  tabId: z.number().int().nonnegative().describe("ID of the compose tab"),
 });
 
 /**
  * Schema for compose set details parameters
  */
 export const composeSetDetailsSchema = z.object({
-  tabId: z.number().describe("ID of the compose tab"),
+  tabId: z.number().int().nonnegative().describe("ID of the compose tab"),
   to: z
     .array(z.string().email())
     .max(200)
@@ -84,21 +92,21 @@ export const composeSetDetailsSchema = z.object({
  * Schema for compose save draft parameters
  */
 export const composeSaveDraftSchema = z.object({
-  tabId: z.number().describe("ID of the compose tab"),
+  tabId: z.number().int().nonnegative().describe("ID of the compose tab"),
 });
 
 /**
  * Schema for compose save template parameters
  */
 export const composeSaveTemplateSchema = z.object({
-  tabId: z.number().describe("ID of the compose tab"),
+  tabId: z.number().int().nonnegative().describe("ID of the compose tab"),
 });
 
 /**
  * Schema for compose send parameters
  */
 export const composeSendSchema = z.object({
-  tabId: z.number().describe("ID of the compose tab"),
+  tabId: z.number().int().nonnegative().describe("ID of the compose tab"),
   mode: z
     .enum(["default", "sendNow", "sendLater"])
     .optional()

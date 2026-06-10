@@ -6,6 +6,8 @@
  */
 
 import logger from "../utils/logger.js";
+import { createPermissionDeniedError } from "../utils/errors.js";
+import type { ToolCallResult } from "../types/mcp.js";
 
 /**
  * Tool risk tiers:
@@ -160,6 +162,28 @@ export function getDefaultPermissions(): Record<string, boolean> {
     permissions[toolName] = tier !== "destructive";
   }
   return permissions;
+}
+
+/**
+ * Builds the standard denial result for a tools/call rejected by permissions.
+ * Wraps the typed JSON-RPC permission error (-32002) from utils/errors.ts so
+ * every denial carries the same code instead of an ad hoc message.
+ *
+ * @param toolName - The denied MCP tool name
+ * @returns A ToolCallResult with isError: true and the -32002 code
+ */
+export function buildToolDeniedResult(toolName: string): ToolCallResult {
+  const tier = getToolTier(toolName) || "unknown";
+  const denied = createPermissionDeniedError(toolName);
+  return {
+    content: [
+      {
+        type: "text",
+        text: `Error ${denied.code}: ${denied.message} — Tool "${toolName}" is disabled (tier: ${tier}). Enable it in the Thunderbird extension options (Add-ons Manager > Thunderbird MCP Server > Options).`,
+      },
+    ],
+    isError: true,
+  };
 }
 
 /**

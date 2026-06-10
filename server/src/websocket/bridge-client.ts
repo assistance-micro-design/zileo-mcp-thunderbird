@@ -8,6 +8,7 @@ import http from "http";
 import WebSocket from "ws";
 import { EventEmitter } from "events";
 import logger from "../utils/logger.js";
+import { OperationTimeoutError } from "../utils/errors.js";
 import type { WsMessage, WebSocketBridgeOptions } from "./bridge.js";
 
 /**
@@ -287,7 +288,7 @@ export class WebSocketBridgeClient extends EventEmitter {
     return new Promise<WsMessage>((resolve, reject) => {
       const timeoutHandle = setTimeout(() => {
         this.pendingRequests.delete(requestId);
-        reject(new Error(`Request timeout: ${action} (${requestTimeout}ms)`));
+        reject(new OperationTimeoutError(action, requestTimeout));
       }, requestTimeout);
 
       this.pendingRequests.set(requestId, {

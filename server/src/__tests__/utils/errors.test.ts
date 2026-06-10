@@ -10,6 +10,7 @@ import {
   createInvalidParamsError,
   createThunderbirdNotRunningError,
   createResourceNotFoundError,
+  OperationTimeoutError,
 } from "../../utils/errors.js";
 
 describe("nativeErrorToJsonRpc", () => {
@@ -117,5 +118,28 @@ describe("createResourceNotFoundError", () => {
     const error = createResourceNotFoundError("inbox");
     expect(error.code).toBe(-32003);
     expect(error.data).toEqual({ resource: "inbox" });
+  });
+});
+
+describe("OperationTimeoutError (audit: typed bridge timeouts)", () => {
+  it("should carry the native TIMEOUT code and a -32004 JSON-RPC error", () => {
+    const error = new OperationTimeoutError("messages.list", 30000);
+
+    expect(error).toBeInstanceOf(Error);
+    expect(error.code).toBe("TIMEOUT");
+    expect(error.message).toBe("Request timeout: messages.list (30000ms)");
+    expect(error.jsonRpc.code).toBe(-32004);
+    expect(error.jsonRpc.data).toEqual({
+      operation: "messages.list",
+      timeout: 30000,
+    });
+  });
+
+  it("should be mapped to OperationTimeout (-32004) by nativeErrorToJsonRpc", () => {
+    const error = new OperationTimeoutError("calendar.listEvents", 5000);
+    const jsonRpc = nativeErrorToJsonRpc(error);
+
+    expect(jsonRpc.code).toBe(-32004);
+    expect(jsonRpc.message).toBe("Operation timeout");
   });
 });

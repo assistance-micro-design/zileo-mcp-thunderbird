@@ -217,6 +217,46 @@ describe("messages.ts schema hardening", () => {
     });
   });
 
+  describe("messageIds array bound (audit hardening, max 1000)", () => {
+    const tooManyIds = Array.from({ length: 1001 }, (_, i) => i + 1);
+
+    it("messagesMoveSchema: rejects more than 1000 messageIds", async () => {
+      const { handleMessagesMove } = await import("../../tools/messages.js");
+      const result = await handleMessagesMove({
+        messageIds: tooManyIds,
+        destinationFolderId: "imap://user@host/Archive",
+      });
+      expectZodValidationError(result);
+    });
+
+    it("messagesCopySchema: rejects more than 1000 messageIds", async () => {
+      const { handleMessagesCopy } = await import("../../tools/messages.js");
+      const result = await handleMessagesCopy({
+        messageIds: tooManyIds,
+        destinationFolderId: "imap://user@host/Backup",
+      });
+      expectZodValidationError(result);
+    });
+
+    it("messagesDeleteSchema: rejects more than 1000 messageIds", async () => {
+      const { handleMessagesDelete } = await import("../../tools/messages.js");
+      const result = await handleMessagesDelete({
+        messageIds: tooManyIds,
+      });
+      expectZodValidationError(result);
+    });
+
+    it("messagesArchiveSchema: rejects more than 1000 messageIds", async () => {
+      const { handleMessagesArchive } = await import(
+        "../../tools/messages.js"
+      );
+      const result = await handleMessagesArchive({
+        messageIds: tooManyIds,
+      });
+      expectZodValidationError(result);
+    });
+  });
+
   describe("sortBy / sortOrder enum constraints (cross-schema)", () => {
     const sortByCases = [
       {
@@ -409,6 +449,18 @@ describe("calendar.ts schema hardening", () => {
   });
 
   describe("eventsSearchSchema max constraints", () => {
+    it("should reject query exceeding 1000 chars (audit hardening)", async () => {
+      const { handleEventsSearch } = await import(
+        "../../tools/calendar.js"
+      );
+      const result = await handleEventsSearch({
+        query: strOfLen(1001),
+        dateFrom: "2024-01-01T00:00:00Z",
+        dateTo: "2024-12-31T23:59:59Z",
+      });
+      expectZodValidationError(result);
+    });
+
     it("should reject calendarId exceeding 200 chars", async () => {
       const { handleEventsSearch } = await import(
         "../../tools/calendar.js"
@@ -637,6 +689,46 @@ describe("compose.ts schema hardening", () => {
       const result = await handleComposeBeginNew({
         bcc: emails,
       });
+      expectZodValidationError(result);
+    });
+  });
+
+  describe("messageId / tabId integer bounds (audit hardening)", () => {
+    it("composeBeginReplySchema: rejects negative messageId", async () => {
+      const { handleComposeBeginReply } = await import(
+        "../../tools/compose.js"
+      );
+      const result = await handleComposeBeginReply({ messageId: -1 });
+      expectZodValidationError(result);
+    });
+
+    it("composeBeginReplySchema: rejects non-integer messageId", async () => {
+      const { handleComposeBeginReply } = await import(
+        "../../tools/compose.js"
+      );
+      const result = await handleComposeBeginReply({ messageId: 1.5 });
+      expectZodValidationError(result);
+    });
+
+    it("composeBeginForwardSchema: rejects negative messageId", async () => {
+      const { handleComposeBeginForward } = await import(
+        "../../tools/compose.js"
+      );
+      const result = await handleComposeBeginForward({ messageId: -42 });
+      expectZodValidationError(result);
+    });
+
+    it("composeGetDetailsSchema: rejects negative tabId", async () => {
+      const { handleComposeGetDetails } = await import(
+        "../../tools/compose.js"
+      );
+      const result = await handleComposeGetDetails({ tabId: -1 });
+      expectZodValidationError(result);
+    });
+
+    it("composeSendSchema: rejects non-integer tabId", async () => {
+      const { handleComposeSend } = await import("../../tools/compose.js");
+      const result = await handleComposeSend({ tabId: 3.14 });
       expectZodValidationError(result);
     });
   });

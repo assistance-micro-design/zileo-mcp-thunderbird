@@ -93,6 +93,25 @@ export function createOperationTimeoutError(
 }
 
 /**
+ * Error thrown when a bridge request times out.
+ * Carries the native code "TIMEOUT" so nativeErrorToJsonRpc() maps it to
+ * McpErrorCode.OperationTimeout (-32004), and exposes the typed JSON-RPC
+ * error built by createOperationTimeoutError().
+ */
+export class OperationTimeoutError extends Error {
+  /** Native error code recognized by nativeErrorToJsonRpc() */
+  readonly code = "TIMEOUT";
+  /** Typed JSON-RPC error (-32004) for this timeout */
+  readonly jsonRpc: JsonRpcError;
+
+  constructor(operation: string, timeoutMs: number) {
+    super(`Request timeout: ${operation} (${timeoutMs}ms)`);
+    this.name = "OperationTimeoutError";
+    this.jsonRpc = createOperationTimeoutError(operation, timeoutMs);
+  }
+}
+
+/**
  * Convert a native error to JSON-RPC error
  */
 export function nativeErrorToJsonRpc(nativeError: unknown): JsonRpcError {

@@ -8,7 +8,9 @@ import crypto from "crypto";
 import { WebSocketServer, WebSocket } from "ws";
 import { EventEmitter } from "events";
 import { createServer, Server as HttpServer, IncomingMessage } from "http";
+import { Duplex } from "stream";
 import logger from "../utils/logger.js";
+import { OperationTimeoutError } from "../utils/errors.js";
 import {
   isToolAllowed,
   getToolTier,
@@ -86,6 +88,27 @@ export function isAllowedOrigin(origin: string | undefined | null): boolean {
 
   try {
     const url = new URL(origin);
+    return ALLOWED_LOCAL_HOSTS.has(url.hostname);
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Validates the Host header of an HTTP request against local hostnames.
+ * Prevents DNS rebinding: a malicious domain resolving to 127.0.0.1 would
+ * carry its own Host header (e.g. "evil.example:9876") and must be rejected
+ * even though the underlying socket address is local.
+ *
+ * @param host - The raw Host header value (may include a port)
+ * @returns true if the host is localhost, 127.0.0.1 or [::1]
+ */
+export function isAllowedHostHeader(host: string | undefined): boolean {
+  if (!host) {
+    return false;
+  }
+  try {
+    const url = new URL(`http://${host}`);
     return ALLOWED_LOCAL_HOSTS.has(url.hostname);
   } catch {
     return false;
@@ -265,6 +288,17 @@ export class WebSocketBridge extends EventEmitter {
               return;
             }
 
+            // SEC-AUDIT: DNS rebinding guard — the Host header must name a
+            // local endpoint, regardless of the (local/private) source IP.
+            if (!isAllowedHostHeader(req.headers.host)) {
+              logger.warn(
+                `Auth token request rejected: forbidden Host "${req.headers.host}"`,
+              );
+              res.writeHead(403, { "Content-Type": "application/json" });
+              res.end(JSON.stringify({ error: "Forbidden: invalid Host header" }));
+              return;
+            }
+
             // Rate limiting: max TOKEN_RATE_LIMIT requests per TOKEN_RATE_WINDOW_MS per IP
             const now = Date.now();
             const timestamps = this.tokenRequestLog.get(remoteAddr) || [];
@@ -309,62 +343,24 @@ export class WebSocketBridge extends EventEmitter {
           this.handleMcpConnection(ws);
         });
 
-        // Route WebSocket upgrades based on URL path
+        // Route WebSocket upgrades based on URL path.
+        // SEC-AUDIT: the whole handler is wrapped in try/catch — a malformed
+        // request (invalid Host header, multi-byte token, ...) must produce a
+        // clean rejection, never an uncaught exception that kills the process.
         this.httpServer.on(
           "upgrade",
           (request: IncomingMessage, socket, head) => {
-            // SEC-WS-003: Validate origin before allowing upgrade
-            const origin = request.headers.origin;
-            if (!isAllowedOrigin(origin)) {
+            try {
+              this.handleUpgrade(request, socket, head);
+            } catch (error) {
               logger.warn(
-                `WebSocket upgrade rejected: forbidden origin "${origin}"`,
+                `WebSocket upgrade rejected: malformed request (${error instanceof Error ? error.message : "unknown error"})`,
               );
-              socket.write("HTTP/1.1 403 Forbidden\r\n\r\n");
-              socket.destroy();
-              return;
-            }
-
-            const requestUrl = new URL(
-              request.url || "/",
-              `http://${request.headers.host}`,
-            );
-            const pathname = requestUrl.pathname;
-
-            // SEC-WS-001: Validate auth token before allowing upgrade
-            const token = requestUrl.searchParams.get("token");
-            if (
-              !token ||
-              token.length !== this.authToken.length ||
-              !crypto.timingSafeEqual(
-                Buffer.from(token),
-                Buffer.from(this.authToken),
-              )
-            ) {
-              logger.warn(
-                "WebSocket upgrade rejected: invalid or missing auth token",
-              );
-              socket.write("HTTP/1.1 401 Unauthorized\r\n\r\n");
-              socket.destroy();
-              return;
-            }
-
-            if (pathname === "/thunderbird" || pathname === "/") {
-              // Default path and /thunderbird go to Thunderbird handler
-              this.wssThunderbird!.handleUpgrade(
-                request,
-                socket,
-                head,
-                (ws) => {
-                  this.wssThunderbird!.emit("connection", ws, request);
-                },
-              );
-            } else if (pathname === "/mcp") {
-              // /mcp path goes to MCP clients handler
-              this.wssMcp!.handleUpgrade(request, socket, head, (ws) => {
-                this.wssMcp!.emit("connection", ws, request);
-              });
-            } else {
-              logger.warn(`Unknown WebSocket path: ${pathname}`);
+              try {
+                socket.write("HTTP/1.1 400 Bad Request\r\n\r\n");
+              } catch {
+                // Socket already gone - nothing to write to
+              }
               socket.destroy();
             }
           },
@@ -401,6 +397,69 @@ export class WebSocketBridge extends EventEmitter {
   }
 
   /**
+   * Routes a WebSocket upgrade request after validating origin and auth token.
+   * Called from the http "upgrade" listener, which catches any exception
+   * thrown here and turns it into a clean 400 rejection.
+   *
+   * @param request - The HTTP upgrade request
+   * @param socket - The underlying duplex socket
+   * @param head - The first packet of the upgraded stream
+   */
+  private handleUpgrade(
+    request: IncomingMessage,
+    socket: Duplex,
+    head: Buffer,
+  ): void {
+    // SEC-WS-003: Validate origin before allowing upgrade
+    const origin = request.headers.origin;
+    if (!isAllowedOrigin(origin)) {
+      logger.warn(`WebSocket upgrade rejected: forbidden origin "${origin}"`);
+      socket.write("HTTP/1.1 403 Forbidden\r\n\r\n");
+      socket.destroy();
+      return;
+    }
+
+    // Throws TypeError on a malformed Host header — caught by the caller.
+    const requestUrl = new URL(
+      request.url || "/",
+      `http://${request.headers.host}`,
+    );
+    const pathname = requestUrl.pathname;
+
+    // SEC-WS-001: Validate auth token before allowing upgrade.
+    // Compare in BYTE length, not string length: a multi-byte token of the
+    // same character length would make crypto.timingSafeEqual throw.
+    const token = requestUrl.searchParams.get("token");
+    const tokenBuffer = token === null ? null : Buffer.from(token, "utf8");
+    const authBuffer = Buffer.from(this.authToken, "utf8");
+    if (
+      !tokenBuffer ||
+      tokenBuffer.length !== authBuffer.length ||
+      !crypto.timingSafeEqual(tokenBuffer, authBuffer)
+    ) {
+      logger.warn("WebSocket upgrade rejected: invalid or missing auth token");
+      socket.write("HTTP/1.1 401 Unauthorized\r\n\r\n");
+      socket.destroy();
+      return;
+    }
+
+    if (pathname === "/thunderbird" || pathname === "/") {
+      // Default path and /thunderbird go to Thunderbird handler
+      this.wssThunderbird!.handleUpgrade(request, socket, head, (ws) => {
+        this.wssThunderbird!.emit("connection", ws, request);
+      });
+    } else if (pathname === "/mcp") {
+      // /mcp path goes to MCP clients handler
+      this.wssMcp!.handleUpgrade(request, socket, head, (ws) => {
+        this.wssMcp!.emit("connection", ws, request);
+      });
+    } else {
+      logger.warn(`Unknown WebSocket path: ${pathname}`);
+      socket.destroy();
+    }
+  }
+
+  /**
    * Handle Thunderbird extension connection (single client)
    *
    * Strategy: Always accept new connections and replace existing ones.
@@ -419,7 +478,15 @@ export class WebSocketBridge extends EventEmitter {
     this.thunderbirdClient = ws;
     this.emit("connected");
 
+    // Every handler below is identity-guarded (`this.thunderbirdClient === ws`)
+    // so a replaced (zombie) connection can finish closing without clobbering
+    // the state of its replacement. Do NOT use removeAllListeners() here: it
+    // would also strip the ws server's internal client-tracking listener and
+    // make wss.close() wait forever in stop().
     ws.on("message", (data: Buffer) => {
+      if (this.thunderbirdClient !== ws) {
+        return;
+      }
       try {
         const message = JSON.parse(data.toString()) as WsMessage;
         this.handleThunderbirdMessage(message);
@@ -429,6 +496,9 @@ export class WebSocketBridge extends EventEmitter {
     });
 
     ws.on("close", () => {
+      if (this.thunderbirdClient !== ws) {
+        return;
+      }
       logger.info("Thunderbird extension disconnected");
       this.thunderbirdClient = null;
       this.rejectAllPending("Thunderbird disconnected");
@@ -436,6 +506,9 @@ export class WebSocketBridge extends EventEmitter {
     });
 
     ws.on("error", (error) => {
+      if (this.thunderbirdClient !== ws) {
+        return;
+      }
       logger.error("Thunderbird WebSocket error:", error);
       this.emit("error", error);
     });
@@ -459,6 +532,9 @@ export class WebSocketBridge extends EventEmitter {
 
     ws.on("close", () => {
       this.mcpClients.delete(ws);
+      // SEC-AUDIT: purge the rate-limit log entry, otherwise the Map keeps
+      // one entry per disconnected client forever (memory leak).
+      this.mcpClientMessageLog.delete(ws);
       logger.info(
         `MCP client disconnected (remaining: ${this.mcpClients.size})`,
       );
@@ -704,7 +780,11 @@ export class WebSocketBridge extends EventEmitter {
         `Relaying response to MCP client: ${pending.action} (${response.id})`,
       );
       pending.mcpClient.send(JSON.stringify(response));
-    } else if (!pending.mcpClient) {
+    } else if (pending.mcpClient) {
+      logger.debug(
+        `Dropping response for disconnected MCP client: ${pending.action} (${response.id})`,
+      );
+    } else {
       // Direct request (from this bridge instance)
       if (response.success) {
         logger.debug(`Request completed: ${pending.action}`);
@@ -781,7 +861,7 @@ export class WebSocketBridge extends EventEmitter {
     return new Promise<WsMessage>((resolve, reject) => {
       const timeoutHandle = setTimeout(() => {
         this.pendingRequests.delete(requestId);
-        reject(new Error(`Request timeout: ${action} (${requestTimeout}ms)`));
+        reject(new OperationTimeoutError(action, requestTimeout));
       }, requestTimeout);
 
       this.pendingRequests.set(requestId, {
@@ -888,19 +968,22 @@ export class WebSocketBridge extends EventEmitter {
   }
 
   /**
-   * Clean up Thunderbird client connection
+   * Clean up Thunderbird client connection.
+   * Detaches the stale connection first (its identity-guarded handlers become
+   * no-ops), then closes it gracefully so the ws server can keep tracking the
+   * socket until the close handshake completes.
    */
   private cleanupThunderbirdClient(): void {
-    if (this.thunderbirdClient) {
+    const stale = this.thunderbirdClient;
+    if (stale) {
+      this.thunderbirdClient = null;
       try {
-        this.thunderbirdClient.removeAllListeners();
-        if (this.thunderbirdClient.readyState === WebSocket.OPEN) {
-          this.thunderbirdClient.close();
+        if (stale.readyState === WebSocket.OPEN) {
+          stale.close();
         }
       } catch {
         // Ignore errors during cleanup
       }
-      this.thunderbirdClient = null;
       this.rejectAllPending("Thunderbird client replaced");
     }
   }
@@ -935,6 +1018,9 @@ export class WebSocketBridge extends EventEmitter {
     return new Promise((resolve) => {
       const closeServers = (): void => {
         if (this.httpServer) {
+          // Drop idle keep-alive HTTP sockets (token fetches) so close()
+          // resolves immediately instead of waiting for their timeout.
+          this.httpServer.closeIdleConnections();
           this.httpServer.close(() => {
             this.httpServer = null;
             this.wssThunderbird = null;

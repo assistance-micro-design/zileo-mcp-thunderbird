@@ -11,6 +11,7 @@ import {
   isToolAllowed,
   getToolTier,
   resolveActionToMcpTool,
+  buildToolDeniedResult,
 } from "../../tools/tool-permissions.js";
 import { allTools } from "../../tools/index.js";
 
@@ -362,6 +363,29 @@ describe("tool-permissions", () => {
       expect(isToolAllowed("thunderbird_messages_delete", permissions)).toBe(
         false,
       );
+    });
+  });
+
+  describe("buildToolDeniedResult (audit: typed permission denials)", () => {
+    it("should embed the JSON-RPC permission denied code (-32002)", () => {
+      const result = buildToolDeniedResult("thunderbird_messages_delete");
+
+      expect(result.isError).toBe(true);
+      const text =
+        "text" in result.content[0] ? result.content[0].text : "";
+      expect(text).toContain("-32002");
+      expect(text).toContain("Permission denied");
+      expect(text).toContain("thunderbird_messages_delete");
+      expect(text).toContain("tier: destructive");
+    });
+
+    it("should report unknown tier for unclassified tools", () => {
+      const result = buildToolDeniedResult("not_a_real_tool");
+
+      expect(result.isError).toBe(true);
+      const text =
+        "text" in result.content[0] ? result.content[0].text : "";
+      expect(text).toContain("tier: unknown");
     });
   });
 });

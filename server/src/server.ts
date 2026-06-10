@@ -20,7 +20,11 @@ import {
   getWebSocketBridge,
 } from "./websocket/bridge.js";
 import { allTools, getToolHandler, toolExists } from "./tools/index.js";
-import { isToolAllowed, getToolTier } from "./tools/tool-permissions.js";
+import {
+  isToolAllowed,
+  getToolTier,
+  buildToolDeniedResult,
+} from "./tools/tool-permissions.js";
 import {
   resources,
   resourceTemplates,
@@ -93,15 +97,7 @@ export class ThunderbirdMcpServer {
       if (!isToolAllowed(name, permissions)) {
         const tier = getToolTier(name) || "unknown";
         logger.warn(`Tool call denied by permissions: ${name} (tier: ${tier})`);
-        return {
-          content: [
-            {
-              type: "text",
-              text: `Error: Tool "${name}" is disabled (tier: ${tier}). Enable it in the Thunderbird extension options (Add-ons Manager > Thunderbird MCP Server > Options).`,
-            },
-          ],
-          isError: true,
-        };
+        return buildToolDeniedResult(name);
       }
 
       // Get tool handler

@@ -248,7 +248,58 @@ describe("SEC-REVIEW-002: /auth/token IP restriction", () => {
     const parsed = JSON.parse(result.body);
     expect(parsed).toHaveProperty("token");
   });
+
+  it("should reject /auth/token with a non-local Host header (DNS rebinding)", async () => {
+    const result = await fetchTokenWithHostHeader(
+      TEST_PORT + 1,
+      "evil.example:9876",
+    );
+    expect(result.status).toBe(403);
+    expect(result.body).toContain("invalid Host header");
+  });
+
+  it("should accept /auth/token with Host localhost:port", async () => {
+    const result = await fetchTokenWithHostHeader(
+      TEST_PORT + 1,
+      `localhost:${TEST_PORT + 1}`,
+    );
+    expect(result.status).toBe(200);
+  });
 });
+
+/**
+ * Helper: fetch the auth token while spoofing the Host header
+ * (connects to 127.0.0.1 but presents an arbitrary Host, as a DNS
+ * rebinding attack would).
+ */
+function fetchTokenWithHostHeader(
+  port: number,
+  hostHeader: string,
+): Promise<{ status: number; body: string }> {
+  return new Promise((resolve, reject) => {
+    const req = http.get(
+      {
+        hostname: "127.0.0.1",
+        port,
+        path: "/auth/token",
+        headers: { Host: hostHeader },
+      },
+      (res) => {
+        let data = "";
+        res.on("data", (chunk: Buffer) => {
+          data += chunk.toString();
+        });
+        res.on("end", () => {
+          resolve({ status: res.statusCode ?? 0, body: data });
+        });
+      },
+    );
+    req.on("error", reject);
+    req.setTimeout(3000, () => {
+      req.destroy(new Error("Timeout"));
+    });
+  });
+}
 
 describe("SEC-REVIEW-003: Rate limiter cleanup", () => {
   it("should expose cleanupRateLimiter method", () => {

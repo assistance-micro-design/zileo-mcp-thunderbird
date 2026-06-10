@@ -20,7 +20,7 @@ const calendarsGetSchema = z.object({
 });
 
 const eventsSearchSchema = z.object({
-  query: z.string().optional(),
+  query: z.string().max(1000).optional(),
   calendarId: z.string().max(200).optional(),
   dateFrom: z.string().datetime({ offset: true }),
   dateTo: z.string().datetime({ offset: true }),
