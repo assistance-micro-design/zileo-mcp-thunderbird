@@ -3,6 +3,17 @@
  * Provides email search, list, get, update, move, copy, delete, archive operations
  */
 
+/**
+ * Maximum number of messages enumerated per request.
+ * messenger.messages.list()/query() return ONE page (~100 messages, a
+ * non-contractual pref); every page must be fetched via continueList().
+ * MAX_SCAN bounds that enumeration so a huge folder cannot stall a request
+ * forever. When the bound is hit, the response carries scanComplete: false
+ * (never a silent truncation) and the enumeration is released server-side
+ * with abortList().
+ */
+const MAX_SCAN = 5000;
+
 export const MessagesAPI = {
   /**
    * Search messages with advanced filters
@@ -44,24 +55,42 @@ export const MessagesAPI = {
     // search to that account by iterating its folders (messenger.messages.query
     // has no native accountId filter). folderId, if also supplied, wins.
     let collected;
+    let scanComplete = true;
     if (accountId && !folderId) {
       const account = await messenger.accounts.get(accountId);
       const folders = await this._getAllFolders(account);
 
       collected = [];
       for (const folder of folders) {
-        const messageList = await messenger.messages.query({
+        const remaining = MAX_SCAN - collected.length;
+        if (remaining <= 0) {
+          scanComplete = false;
+          break;
+        }
+        const firstPage = await messenger.messages.query({
           ...query,
           folderId: folder.id,
         });
-        collected.push(...messageList.messages);
+        const drained = await this._drainMessageList(firstPage, remaining);
+        collected.push(...drained.messages);
+        if (!drained.scanComplete) {
+          scanComplete = false;
+        }
       }
     } else {
-      const messageList = await messenger.messages.query(query);
-      collected = messageList.messages;
+      const firstPage = await messenger.messages.query(query);
+      const drained = await this._drainMessageList(firstPage, MAX_SCAN);
+      collected = drained.messages;
+      scanComplete = drained.scanComplete;
     }
 
-    return this._sortMessages(collected, sortBy, sortOrder).slice(0, limit);
+    const sorted = this._sortMessages(collected, sortBy, sortOrder);
+    return {
+      messages: sorted.slice(0, limit),
+      total: sorted.length,
+      hasMore: sorted.length > limit || !scanComplete,
+      scanComplete,
+    };
   },
 
   /**
@@ -73,11 +102,17 @@ export const MessagesAPI = {
    */
   async list(folderId, limit = 50, offset = 0, sortBy = "date", sortOrder = "desc") {
     // messages.list() takes a folderId string directly, not a MailFolder object.
-    // Sort is applied client-side via _sortMessages — same strategy as search()
-    // and listUnread() — for predictable behavior across Thunderbird versions
-    // (the 2-arg listOptions signature is recent-only).
-    const messageList = await messenger.messages.list(folderId);
-    const raw = (messageList && messageList.messages) || [];
+    // It returns only the FIRST page; _drainMessageList walks the remaining
+    // pages via continueList() up to MAX_SCAN. Sort is applied client-side via
+    // _sortMessages — same strategy as search() and listUnread() — for
+    // predictable behavior across Thunderbird versions (the 2-arg listOptions
+    // signature is recent-only). offset/limit are applied AFTER the sort, so
+    // pagination is consistent across the whole folder, not within one page.
+    const firstPage = await messenger.messages.list(folderId);
+    const { messages: raw, scanComplete } = await this._drainMessageList(
+      firstPage,
+      MAX_SCAN,
+    );
     const sorted = this._sortMessages(raw, sortBy, sortOrder);
     const paginatedMessages = sorted.slice(offset, offset + limit);
 
@@ -86,7 +121,8 @@ export const MessagesAPI = {
       total: sorted.length,
       limit,
       offset,
-      hasMore: offset + limit < sorted.length,
+      hasMore: offset + limit < sorted.length || !scanComplete,
+      scanComplete,
     };
   },
 
@@ -100,24 +136,42 @@ export const MessagesAPI = {
     const query = { read: false };
 
     let collected;
+    let scanComplete = true;
     if (accountId) {
       const account = await messenger.accounts.get(accountId);
       const folders = await this._getAllFolders(account);
 
       collected = [];
       for (const folder of folders) {
-        const messageList = await messenger.messages.query({
+        const remaining = MAX_SCAN - collected.length;
+        if (remaining <= 0) {
+          scanComplete = false;
+          break;
+        }
+        const firstPage = await messenger.messages.query({
           ...query,
           folderId: folder.id,
         });
-        collected.push(...messageList.messages);
+        const drained = await this._drainMessageList(firstPage, remaining);
+        collected.push(...drained.messages);
+        if (!drained.scanComplete) {
+          scanComplete = false;
+        }
       }
     } else {
-      const messageList = await messenger.messages.query(query);
-      collected = messageList.messages;
+      const firstPage = await messenger.messages.query(query);
+      const drained = await this._drainMessageList(firstPage, MAX_SCAN);
+      collected = drained.messages;
+      scanComplete = drained.scanComplete;
     }
 
-    return this._sortMessages(collected, sortBy, sortOrder).slice(0, limit);
+    const sorted = this._sortMessages(collected, sortBy, sortOrder);
+    return {
+      messages: sorted.slice(0, limit),
+      total: sorted.length,
+      hasMore: sorted.length > limit || !scanComplete,
+      scanComplete,
+    };
   },
 
   /**
@@ -227,6 +281,41 @@ export const MessagesAPI = {
    */
   async archive(messageIds) {
     await messenger.messages.archive(messageIds);
+  },
+
+  /**
+   * Helper: Drain a paginated MessageList up to maxScan messages.
+   * messenger.messages.list()/query() return one page; the rest must be
+   * pulled with continueList(pageId) until id is null. If the budget is
+   * exhausted first, the enumeration is released with abortList() and
+   * scanComplete is false.
+   * @private
+   * @param {Object} firstPage - The MessageList returned by list()/query()
+   * @param {number} maxScan - Maximum number of messages to accumulate
+   * @returns {Promise<{messages: Array, scanComplete: boolean}>}
+   */
+  async _drainMessageList(firstPage, maxScan) {
+    const messages = [...((firstPage && firstPage.messages) || [])];
+    let pageId = (firstPage && firstPage.id) || null;
+
+    while (pageId && messages.length < maxScan) {
+      const page = await messenger.messages.continueList(pageId);
+      messages.push(...(page.messages || []));
+      pageId = page.id || null;
+    }
+
+    if (pageId) {
+      // Budget exhausted with pages remaining: stop the enumeration early.
+      try {
+        await messenger.messages.abortList(pageId);
+      } catch (error) {
+        // abortList is available since TB 121; an unreleased enumeration
+        // simply expires server-side, so this is non-fatal.
+        console.warn("[MessagesAPI] abortList failed:", error);
+      }
+    }
+
+    return { messages, scanComplete: pageId === null };
   },
 
   /**

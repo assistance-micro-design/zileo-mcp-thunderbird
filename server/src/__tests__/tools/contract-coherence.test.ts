@@ -156,3 +156,57 @@ describe("Wrapper-function coherence: per-action params land in the right functi
     });
   }
 });
+
+/**
+ * Pagination contract guard (audit fix 2026-06-10).
+ *
+ * messenger.messages.list()/query() return ONE page of ~100 messages; the
+ * wrappers must drain the remaining pages via continueList() (bounded by
+ * MAX_SCAN) and expose `scanComplete` so truncation is never silent. This
+ * guard pins that behavior: if a wrapper regresses to reading only
+ * `messageList.messages`, these assertions fail.
+ */
+describe("Pagination contract: message wrappers drain MessageList pages", () => {
+  const messagesSource = fs.readFileSync(
+    path.join(EXTENSION_DIR, "api", "messages.js"),
+    "utf8",
+  );
+
+  it("messages.js declares MAX_SCAN and a continueList/abortList drain helper", () => {
+    expect(messagesSource).toMatch(/const MAX_SCAN = \d+/);
+    expect(messagesSource).toMatch(/messenger\.messages\.continueList\(/);
+    expect(messagesSource).toMatch(/messenger\.messages\.abortList\(/);
+  });
+
+  const paginatedWrappers: ReadonlyArray<{
+    name: string;
+    bodyExtractor: RegExp;
+  }> = [
+    {
+      name: "list",
+      bodyExtractor: /async list\([^)]*\)\s*\{([\s\S]*?)\n\s{2}\}/,
+    },
+    {
+      name: "search",
+      bodyExtractor: /async search\(params\)\s*\{([\s\S]*?)\n\s{2}\}/,
+    },
+    {
+      name: "listUnread",
+      bodyExtractor: /async listUnread\([^)]*\)\s*\{([\s\S]*?)\n\s{2}\}/,
+    },
+  ];
+
+  for (const wrapper of paginatedWrappers) {
+    it(`MessagesAPI.${wrapper.name}() drains pages and exposes scanComplete`, () => {
+      const match = messagesSource.match(wrapper.bodyExtractor);
+      expect(
+        match,
+        `Could not locate ${wrapper.name}() body in messages.js. Adjust the regex when refactoring.`,
+      ).not.toBeNull();
+      const body = match![1];
+
+      expect(body).toMatch(/_drainMessageList\(/);
+      expect(body).toMatch(/\bscanComplete\b/);
+    });
+  }
+});

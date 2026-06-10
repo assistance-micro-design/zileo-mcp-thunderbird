@@ -281,9 +281,10 @@ Example:
            limit: 20, sortBy: "date", sortOrder: "desc" }
   Output: { messages: [{ id: 42, subject: "Invoice #1234",
            author: "billing@example.com", date: "2026-01-15T10:00:00Z",
-           folderId: "imap://user@host/INBOX" }] }
+           folderId: "imap://user@host/INBOX" }],
+           total: 1, hasMore: false, scanComplete: true }
 
-Note: optional folderId is obtained from thunderbird_folders_list (full URI, not "INBOX"); accountId from thunderbird_accounts_list. For unscoped "show my latest emails", prefer thunderbird_messages_list_recent.`,
+Note: optional folderId is obtained from thunderbird_folders_list (full URI, not "INBOX"); accountId from thunderbird_accounts_list. For unscoped "show my latest emails", prefer thunderbird_messages_list_recent. scanComplete: false means the scan stopped at the 5000-message bound, so total is a lower bound; narrow the filters for an exhaustive result.`,
     inputSchema: {
       type: "object",
       properties: {
@@ -342,9 +343,10 @@ Example:
            sortBy: "date", sortOrder: "desc" }
   Output: { messages: [{ id: 42, subject: "Hello",
            author: "alice@example.com", date: "2026-01-15T10:00:00Z",
-           read: false }], total: 247 }
+           read: false }], total: 247, limit: 10, offset: 0,
+           hasMore: true, scanComplete: true }
 
-Note: folderId is the full URI obtained from thunderbird_folders_list (not the literal "INBOX"). For recent emails across ALL folders, use thunderbird_messages_list_recent.`,
+Note: folderId is the full URI obtained from thunderbird_folders_list (not the literal "INBOX"). For recent emails across ALL folders, use thunderbird_messages_list_recent. The whole folder is enumerated (up to 5000 messages) before sorting, so total is the real count and offset paginates globally; scanComplete: false signals the 5000 bound was hit and total is a lower bound.`,
     inputSchema: {
       type: "object",
       properties: {
@@ -388,9 +390,10 @@ Example:
   Input: { accountId: "account1", limit: 50, sortBy: "date", sortOrder: "desc" }
   Output: { messages: [{ id: 42, subject: "Please review",
            author: "alice@example.com", date: "2026-01-15T10:00:00Z",
-           folderId: "imap://user@host/INBOX", read: false }] }
+           folderId: "imap://user@host/INBOX", read: false }],
+           total: 1, hasMore: false, scanComplete: true }
 
-Note: optional accountId is obtained from thunderbird_accounts_list. Omit to scan all accounts.`,
+Note: optional accountId is obtained from thunderbird_accounts_list. Omit to scan all accounts. scanComplete: false means the 5000-message scan bound was hit and total is a lower bound.`,
     inputSchema: {
       type: "object",
       properties: {
@@ -580,9 +583,10 @@ Example:
            sortBy: "date", sortOrder: "desc" }
   Output: { messages: [{ id: 42, subject: "Re: Meeting",
            author: "alice@example.com", date: "2026-01-15T10:00:00Z",
-           folderId: "imap://user@host/INBOX", read: false }] }
+           folderId: "imap://user@host/INBOX", read: false }],
+           total: 1, hasMore: false, scanComplete: true }
 
-Note: optional accountId comes from thunderbird_accounts_list. hoursAgo capped at 168 (7 days). Internally translated to a date-bounded thunderbird_messages_search.`,
+Note: optional accountId comes from thunderbird_accounts_list. hoursAgo capped at 168 (7 days). Internally translated to a date-bounded thunderbird_messages_search. scanComplete: false means the 5000-message scan bound was hit and total is a lower bound.`,
     inputSchema: {
       type: "object",
       properties: {

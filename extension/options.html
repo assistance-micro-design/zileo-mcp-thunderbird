@@ -3,9 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Thunderbird MCP - Tool Permissions</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Signika:wght@400;500;600&display=swap" rel="stylesheet">
+  <!-- System font stack only: no remote asset (privacy + ATN review policy) -->
   <style>
     :root {
       --bg: #FFFFFF;
@@ -28,7 +26,7 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      font-family: 'Signika', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
       background: var(--bg);
       color: var(--text);
       padding: 24px;
@@ -57,7 +55,7 @@
     }
 
     button {
-      font-family: 'Signika', sans-serif;
+      font-family: inherit;
       background: var(--accent);
       color: var(--text);
       border: none;

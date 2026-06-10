@@ -4,13 +4,22 @@
  */
 
 import { handleNativeMessage } from "./native-messaging/handler.js";
+import { debugLog } from "./debug.js";
 
 // WebSocket connection state
 let ws = null;
 let reconnectAttempts = 0;
 const MAX_RECONNECT_ATTEMPTS = 10;
-const RECONNECT_DELAY = 3000;
 const WS_PORT = 9876;
+
+// Reconnection backoff: one-shot alarm (survives MV3 event page suspension,
+// unlike setTimeout), exponential delay capped at RECONNECT_MAX_DELAY_MS.
+const RECONNECT_ALARM = "ws-reconnect";
+const RECONNECT_BASE_DELAY_MS = 3000;
+const RECONNECT_MAX_DELAY_MS = 60000;
+
+// Auth token fetch timeout (symmetric with server-side bridge-client.ts)
+const TOKEN_FETCH_TIMEOUT_MS = 5000;
 
 // Track last message time for connection health
 let lastMessageTime = Date.now();
@@ -31,15 +40,25 @@ let isInitialized = false;
  * @returns {Promise<string>} The auth token
  */
 async function fetchAuthToken() {
-  const response = await fetch(`http://localhost:${WS_PORT}/auth/token`);
-  if (!response.ok) {
-    throw new Error(`Token fetch failed: HTTP ${response.status}`);
+  // Abort the fetch after TOKEN_FETCH_TIMEOUT_MS: without this, a hung
+  // bridge would block connectWebSocket() (and isConnecting) indefinitely.
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), TOKEN_FETCH_TIMEOUT_MS);
+  try {
+    const response = await fetch(`http://localhost:${WS_PORT}/auth/token`, {
+      signal: controller.signal,
+    });
+    if (!response.ok) {
+      throw new Error(`Token fetch failed: HTTP ${response.status}`);
+    }
+    const data = await response.json();
+    if (!data.token) {
+      throw new Error("No token in auth response");
+    }
+    return data.token;
+  } finally {
+    clearTimeout(timer);
   }
-  const data = await response.json();
-  if (!data.token) {
-    throw new Error("No token in auth response");
-  }
-  return data.token;
 }
 
 /**
@@ -49,14 +68,14 @@ async function fetchAuthToken() {
 async function connectWebSocket() {
   // Prevent multiple simultaneous connections (including during async token fetch)
   if (isConnecting) {
-    console.log("[MCP] Connection already in progress, skipping");
+    debugLog("[MCP] Connection already in progress, skipping");
     return;
   }
   if (
     ws &&
     (ws.readyState === WebSocket.CONNECTING || ws.readyState === WebSocket.OPEN)
   ) {
-    console.log("[MCP] WebSocket already connected or connecting, skipping");
+    debugLog("[MCP] WebSocket already connected or connecting, skipping");
     return;
   }
 
@@ -66,7 +85,7 @@ async function connectWebSocket() {
     const token = await fetchAuthToken();
 
     const wsUrl = `ws://localhost:${WS_PORT}?token=${token}`;
-    console.log(`[MCP] Connecting to WebSocket server at ws://localhost:${WS_PORT}`);
+    debugLog(`[MCP] Connecting to WebSocket server at ws://localhost:${WS_PORT}`);
 
     const thisWsId = ++currentWsId;
     ws = new WebSocket(wsUrl);
@@ -89,7 +108,7 @@ async function connectWebSocket() {
  * in the ready notification so the bridge can enforce authorization.
  */
 async function handleOpen() {
-  console.log("[MCP] WebSocket connected to MCP server");
+  debugLog("[MCP] WebSocket connected to MCP server");
   reconnectAttempts = 0;
   isReconnecting = false; // Reset reconnection flag
   lastMessageTime = Date.now(); // Reset connection health timer
@@ -100,7 +119,7 @@ async function handleOpen() {
     const stored = await browser.storage.local.get("toolPermissions");
     if (stored.toolPermissions) {
       toolPermissions = stored.toolPermissions;
-      console.log("[MCP] Loaded tool permissions from storage");
+      debugLog("[MCP] Loaded tool permissions from storage");
     }
   } catch (error) {
     console.warn("[MCP] Failed to load tool permissions:", error);
@@ -142,7 +161,7 @@ async function handleMessage(event) {
 
   try {
     const message = JSON.parse(event.data);
-    console.log("[MCP] Received:", message.type, message.id || "");
+    debugLog("[MCP] Received:", message.type, message.id || "");
 
     // Handle ping from server
     if (message.type === "ping") {
@@ -167,7 +186,7 @@ async function handleMessage(event) {
  * @param {Object} request - Request message
  */
 async function processRequest(request) {
-  console.log("[MCP] Processing request:", request.action);
+  debugLog("[MCP] Processing request:", request.action);
 
   try {
     const result = await handleNativeMessage(request);
@@ -181,11 +200,11 @@ async function processRequest(request) {
       timestamp: new Date().toISOString(),
     });
 
-    console.log("[MCP] Request completed:", request.action);
+    debugLog("[MCP] Request completed:", request.action);
   } catch (error) {
     console.error("[MCP] Request failed:", request.action, error);
 
-    console.warn("[MCP] Request error:", error.stack);
+    debugLog("[MCP] Request error stack:", error.stack);
 
     // Send error response (no stack trace leaked to clients)
     sendMessage({
@@ -207,7 +226,7 @@ async function processRequest(request) {
  * @param {number} wsId - ID of the WebSocket that closed
  */
 function handleClose(event, wsId) {
-  console.log(
+  debugLog(
     "[MCP] WebSocket closed:",
     event.code,
     event.reason || "No reason",
@@ -216,7 +235,7 @@ function handleClose(event, wsId) {
 
   // Ignore close events from old WebSocket instances
   if (wsId !== currentWsId) {
-    console.log(
+    debugLog(
       `[MCP] Ignoring close event from old WebSocket #${wsId} (current is #${currentWsId})`,
     );
     return;
@@ -226,7 +245,7 @@ function handleClose(event, wsId) {
 
   // Don't schedule reconnect if we're already handling a forced reconnect
   if (forcedReconnect) {
-    console.log(
+    debugLog(
       "[MCP] Skipping scheduled reconnect (forced reconnect in progress)",
     );
     forcedReconnect = false;
@@ -245,7 +264,10 @@ function handleError(error) {
 }
 
 /**
- * Schedule reconnection attempt
+ * Schedule a reconnection attempt with exponential backoff.
+ * Uses a one-shot alarm instead of setTimeout: MV3 event pages can be
+ * suspended at any time and pending timers are lost, while alarms persist
+ * and wake the page up (the keep-alive alarms remain as a safety net).
  */
 function scheduleReconnect() {
   if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
@@ -256,13 +278,18 @@ function scheduleReconnect() {
 
   reconnectAttempts++;
   isReconnecting = true;
-  console.log(
-    `[MCP] Reconnecting in ${RECONNECT_DELAY}ms (attempt ${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS})`,
+  const delayMs = Math.min(
+    RECONNECT_BASE_DELAY_MS * 2 ** (reconnectAttempts - 1),
+    RECONNECT_MAX_DELAY_MS,
+  );
+  debugLog(
+    `[MCP] Reconnecting in ${delayMs}ms (attempt ${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS})`,
   );
 
-  setTimeout(() => {
-    connectWebSocket();
-  }, RECONNECT_DELAY);
+  // Sub-minute delays are honored by Gecko (implementation behavior, not
+  // contractual); if a future version clamps them, the keep-alive alarms
+  // still trigger ensureWebSocketConnected() within ~30s.
+  browser.alarms.create(RECONNECT_ALARM, { delayInMinutes: delayMs / 60000 });
 }
 
 /**
@@ -272,7 +299,7 @@ function scheduleReconnect() {
 function sendMessage(message) {
   if (ws && ws.readyState === WebSocket.OPEN) {
     ws.send(JSON.stringify(message));
-    console.log("[MCP] Sent:", message.type, message.id || "");
+    debugLog("[MCP] Sent:", message.type, message.id || "");
   } else {
     console.warn("[MCP] Cannot send - WebSocket not connected");
   }
@@ -297,38 +324,33 @@ function generateId() {
  */
 function setupKeepAlive() {
   // Clear any existing alarms first to avoid duplicates on restart
-  browser.alarms.clearAll().then(() => {
-    // Create staggered alarms using delayInMinutes (survives idle)
-    // Alarm 0: starts immediately, repeats every 30 seconds
-    browser.alarms.create("keepAlive-0", {
-      delayInMinutes: 0.1, // First trigger in ~6 seconds
-      periodInMinutes: 0.5, // Then every 30 seconds
+  browser.alarms
+    .clearAll()
+    .then(() => {
+      // Create staggered alarms using delayInMinutes (survives idle)
+      // Alarm 0: starts immediately, repeats every 30 seconds
+      browser.alarms.create("keepAlive-0", {
+        delayInMinutes: 0.1, // First trigger in ~6 seconds
+        periodInMinutes: 0.5, // Then every 30 seconds
+      });
+
+      // Alarm 1: starts after 10 seconds, repeats every 30 seconds
+      browser.alarms.create("keepAlive-1", {
+        delayInMinutes: 0.17, // First trigger in ~10 seconds
+        periodInMinutes: 0.5,
+      });
+
+      // Alarm 2: starts after 20 seconds, repeats every 30 seconds
+      browser.alarms.create("keepAlive-2", {
+        delayInMinutes: 0.33, // First trigger in ~20 seconds
+        periodInMinutes: 0.5,
+      });
+
+      debugLog("[MCP] Keep-alive alarms configured (3 alarms, ~10s intervals)");
+    })
+    .catch((error) => {
+      console.error("[MCP] Failed to configure keep-alive alarms:", error);
     });
-
-    // Alarm 1: starts after 10 seconds, repeats every 30 seconds
-    browser.alarms.create("keepAlive-1", {
-      delayInMinutes: 0.17, // First trigger in ~10 seconds
-      periodInMinutes: 0.5,
-    });
-
-    // Alarm 2: starts after 20 seconds, repeats every 30 seconds
-    browser.alarms.create("keepAlive-2", {
-      delayInMinutes: 0.33, // First trigger in ~20 seconds
-      periodInMinutes: 0.5,
-    });
-
-    console.log(
-      "[MCP] Keep-alive alarms configured (3 alarms, ~10s intervals)",
-    );
-  });
-
-  // Listen for alarms to reconnect WebSocket if needed
-  browser.alarms.onAlarm.addListener((alarm) => {
-    if (alarm.name.startsWith("keepAlive")) {
-      console.log("[MCP] Keep-alive alarm triggered:", alarm.name);
-      ensureWebSocketConnected();
-    }
-  });
 }
 
 /**
@@ -337,7 +359,7 @@ function setupKeepAlive() {
 function ensureWebSocketConnected() {
   // Prevent concurrent reconnection attempts
   if (isReconnecting) {
-    console.log("[MCP] Reconnection already in progress, skipping");
+    debugLog("[MCP] Reconnection already in progress, skipping");
     return;
   }
 
@@ -346,7 +368,7 @@ function ensureWebSocketConnected() {
 
   // Check if WebSocket is not connected
   if (!ws || ws.readyState !== WebSocket.OPEN) {
-    console.log("[MCP] WebSocket not connected, reconnecting...");
+    debugLog("[MCP] WebSocket not connected, reconnecting...");
     isReconnecting = true;
     reconnectAttempts = 0;
     connectWebSocket();
@@ -356,7 +378,7 @@ function ensureWebSocketConnected() {
   // Check for stale connection (no messages received in CONNECTION_HEALTH_TIMEOUT)
   // This detects "zombie" connections where WebSocket appears open but is not receiving
   if (timeSinceLastMessage > CONNECTION_HEALTH_TIMEOUT) {
-    console.log(
+    debugLog(
       `[MCP] Connection appears stale (${Math.round(timeSinceLastMessage / 1000)}s since last message), forcing reconnect...`,
     );
     isReconnecting = true;
@@ -384,15 +406,15 @@ function ensureWebSocketConnected() {
 function initialize() {
   // Prevent multiple initializations
   if (isInitialized) {
-    console.log("[MCP] Already initialized, skipping");
+    debugLog("[MCP] Already initialized, skipping");
     // Just ensure WebSocket is connected
     ensureWebSocketConnected();
     return;
   }
   isInitialized = true;
 
-  console.log("[MCP] Thunderbird MCP Extension starting...");
-  console.log("[MCP] Version:", browser.runtime.getManifest().version);
+  debugLog("[MCP] Thunderbird MCP Extension starting...");
+  debugLog("[MCP] Version:", browser.runtime.getManifest().version);
 
   // Setup keep-alive mechanism to prevent Event Page termination
   setupKeepAlive();
@@ -406,7 +428,7 @@ function initialize() {
 // ============================================================
 browser.storage.onChanged.addListener((changes, areaName) => {
   if (areaName === "local" && changes.toolPermissions) {
-    console.log("[MCP] Tool permissions updated from options page");
+    debugLog("[MCP] Tool permissions updated from options page");
     const newPermissions = changes.toolPermissions.newValue;
     sendMessage({
       id: generateId(),
@@ -423,9 +445,22 @@ browser.storage.onChanged.addListener((changes, areaName) => {
 // These must be at top-level to wake up the event page
 // ============================================================
 
+// Alarm dispatcher: keep-alive health checks + one-shot reconnect alarm.
+// Registered synchronously at top-level (event page requirement: listeners
+// added inside async init paths are not restored after a suspension).
+browser.alarms.onAlarm.addListener((alarm) => {
+  if (alarm.name.startsWith("keepAlive")) {
+    debugLog("[MCP] Keep-alive alarm triggered:", alarm.name);
+    ensureWebSocketConnected();
+  } else if (alarm.name === RECONNECT_ALARM) {
+    debugLog("[MCP] Reconnect alarm fired");
+    connectWebSocket();
+  }
+});
+
 // Handle extension suspend (cleanup)
 browser.runtime.onSuspend.addListener(() => {
-  console.log("[MCP] Extension suspending...");
+  debugLog("[MCP] Extension suspending...");
   if (ws) {
     ws.close();
   }
@@ -433,17 +468,17 @@ browser.runtime.onSuspend.addListener(() => {
 
 // Handle browser/Thunderbird startup - reconnect WebSocket
 browser.runtime.onStartup.addListener(() => {
-  console.log("[MCP] Thunderbird started - initializing extension");
+  debugLog("[MCP] Thunderbird started - initializing extension");
   initialize();
 });
 
 // Handle extension install/update - setup alarms and connect
 browser.runtime.onInstalled.addListener((details) => {
-  console.log("[MCP] Extension installed/updated:", details.reason);
+  debugLog("[MCP] Extension installed/updated:", details.reason);
   initialize();
 });
 
 // Also initialize immediately for when the event page wakes up
 // This handles the case where the page was terminated and restarted by an alarm
-console.log("[MCP] Event page loaded");
+debugLog("[MCP] Event page loaded");
 initialize();
