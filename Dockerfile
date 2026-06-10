@@ -2,7 +2,7 @@
 # Multi-stage build for optimized production image
 
 # Version injected into OCI labels (kept in sync by version-coherence.test.ts)
-ARG APP_VERSION=1.3.1
+ARG APP_VERSION=1.4.0
 
 # Base image pinned by digest for reproducible builds (node:20-alpine)
 ARG NODE_IMAGE=node:20-alpine@sha256:09e2b3d9726018aecf269bd35325f46bf75046a643a66d28360ec71132750ec8
