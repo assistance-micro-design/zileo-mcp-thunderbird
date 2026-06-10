@@ -36,5 +36,17 @@
     "ip-address": ">=10.2.0",
     "express-rate-limit": ">=8.5.2",
     "ajv-formats": ">=3.0.1"
+  },
+  "keywords": [
+    "thunderbird",
+    "mcp",
+    "model-context-protocol",
+    "email",
+    "ai-assistant",
+    "webextension"
+  ],
+  "homepage": "https://github.com/assistance-micro-design/thunderbird-mcp#readme",
+  "bugs": {
+    "url": "https://github.com/assistance-micro-design/thunderbird-mcp/issues"
   }
 }

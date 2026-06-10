@@ -43,12 +43,15 @@ This compiles the TypeScript server code.
 
 ### Step 4: Install Thunderbird Extension
 
-1. Open Thunderbird
-2. Navigate to **Tools** > **Add-ons and Themes**
-3. Click the gear icon > **Install Add-on From File**
-4. Select `releases/thunderbird-mcp-1.3.1.xpi`
-5. Click **Add** when prompted
-6. Restart Thunderbird if requested
+1. Get the extension package:
+   - download the latest `thunderbird-mcp-x.y.z.xpi` from [GitHub Releases](https://github.com/assistance-micro-design/thunderbird-mcp/releases), or
+   - build it from the sources: `npm run package:extension` (output in `releases/`)
+2. Open Thunderbird
+3. Navigate to **Tools** > **Add-ons and Themes**
+4. Click the gear icon > **Install Add-on From File**
+5. Select the `.xpi` file
+6. Click **Add** when prompted
+7. Restart Thunderbird if requested
 
 ### Step 5: Configure MCP Client
 

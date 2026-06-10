@@ -117,10 +117,11 @@ docker compose up -d
 ```
 
 3. Install the Thunderbird extension:
+   - Download the latest `thunderbird-mcp-x.y.z.xpi` from [GitHub Releases](https://github.com/assistance-micro-design/thunderbird-mcp/releases), or build it from the sources with `npm run package:extension` (output in `releases/`)
    - Open Thunderbird
    - Go to Tools > Add-ons and Themes
    - Click the gear icon > Install Add-on From File
-   - Select `releases/thunderbird-mcp-1.3.1.xpi`
+   - Select the downloaded `.xpi` file
 
 4. Verify the bridge is running:
 
@@ -456,13 +457,35 @@ npm run lint
 
 - WebSocket communication on localhost only
 - **Origin validation** on WebSocket upgrade (rejects non-local origins with HTTP 403)
+- **Host header validation** on the auth token endpoint (DNS rebinding guard)
 - Granular Thunderbird permissions model
 - No credentials stored in server memory
-- Input validation with Zod schemas (bounded strings, datetime format enforcement)
+- Input validation with Zod schemas (bounded strings and arrays, datetime format enforcement)
 - WebSocket payload limit (5 MiB)
 - Error responses sanitized (no stack traces or internal details)
 
 See [SECURITY.md](SECURITY.md) for the full security policy.
+
+### Tool Permission Tiers
+
+All 56 MCP tools are classified into three risk tiers, enforced both by the
+MCP server and by the WebSocket bridge:
+
+| Tier | Tools | Default | Examples |
+|------|-------|---------|----------|
+| `read` | 23 | **Enabled** | list, get, search |
+| `modify` | 25 | **Enabled** | create, update, move, copy, archive |
+| `destructive` | 8 | **Disabled** | delete, send |
+
+Destructive tools (every `*_delete` plus `compose_send`) are **disabled by
+default**: enable them per tool in the extension options page
+(Add-ons Manager > Thunderbird MCP Server > Options), which also offers
+bulk presets (Read Only, Read + Modify, Enable All). Changes apply
+immediately — no restart needed.
+
+> Note (v1.4.0): the extension now requests the `messagesDelete`
+> permission so `thunderbird_messages_delete` actually works. Existing
+> users are prompted to re-approve the extension on update.
 
 ## Troubleshooting
 

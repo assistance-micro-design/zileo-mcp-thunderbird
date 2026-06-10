@@ -244,6 +244,14 @@ Liste les messages recents sur tous les comptes.
 | sortBy    | enum   | Non    | Champ de tri: `date` (defaut), `subject`, `author`       |
 | sortOrder | enum   | Non    | Direction: `asc`, `desc` (defaut)                        |
 
-**Retour:** Liste des messages recents avec metadata
+**Retour:** `{ messages, total, hasMore, scanComplete }`
 
 **Note tri:** Tous les tools `messages_search`, `messages_list`, `messages_list_unread` et `messages_list_recent` acceptent egalement `sortBy` et `sortOrder` avec les memes valeurs et les memes defauts (`date` / `desc`). Le tri est applique APRES filtrage et AVANT troncature a `limit`.
+
+**Note pagination (v1.4.0):** ces 4 tools retournent une enveloppe
+`{ messages, total, hasMore, scanComplete }` (`messages_list` echoie en plus
+`limit`/`offset`). L'extension enumere toutes les pages natives via
+`continueList()` jusqu'a `MAX_SCAN = 5000` messages ; `scanComplete: false`
+signifie que la borne a ete atteinte et que `total` est un minorant — jamais
+de troncature silencieuse. Voir `docs/api/messages-api.md` (« Pagination
+semantics »).

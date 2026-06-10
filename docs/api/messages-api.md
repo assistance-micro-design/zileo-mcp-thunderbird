@@ -36,38 +36,39 @@ Performs a comprehensive search across email messages with support for multiple 
 | `folderId`  | string   | No       | -       | Specific folder ID to search within                    |
 | `accountId` | string   | No       | -       | Specific account ID to search within                   |
 | `limit`     | number   | No       | 50      | Maximum number of results to return (max: 1000)        |
+| `sortBy`    | string   | No       | `date`  | Sort field: `date`, `subject`, or `author`             |
+| `sortOrder` | string   | No       | `desc`  | Sort direction: `asc` or `desc`                        |
 
 #### Response Format
 
-Returns an array of message header objects:
+Returns a pagination envelope containing the matching message headers:
 
 ```json
 {
   "content": [{
     "type": "text",
-    "text": "[
-      {
-        \"id\": 12345,
-        \"subject\": \"Project update - Q1 2025\",
-        \"from\": {
-          \"name\": \"John Doe\",
-          \"email\": \"john.doe@example.com\"
-        },
-        \"to\": [{
-          \"name\": \"Jane Smith\",
-          \"email\": \"jane.smith@example.com\"
-        }],
-        \"date\": \"2025-03-15T14:30:00Z\",
-        \"read\": false,
-        \"flagged\": false,
-        \"tags\": [\"work\", \"important\"],
-        \"folderId\": \"inbox-1\",
-        \"size\": 2048
-      }
-    ]"
+    "text": "{
+      \"messages\": [
+        {
+          \"id\": 12345,
+          \"subject\": \"Project update - Q1 2025\",
+          \"author\": \"John Doe <john.doe@example.com>\",
+          \"date\": \"2025-03-15T14:30:00Z\",
+          \"read\": false,
+          \"flagged\": false,
+          \"tags\": [\"work\", \"important\"],
+          \"folderId\": \"inbox-1\"
+        }
+      ],
+      \"total\": 1,
+      \"hasMore\": false,
+      \"scanComplete\": true
+    }"
   }]
 }
 ```
+
+See [Pagination semantics](#pagination-semantics) for `total`/`hasMore`/`scanComplete`.
 
 #### Example Request
 
@@ -100,15 +101,20 @@ Lists all messages in a specified folder with pagination support for efficient r
 
 #### Parameters
 
-| Name       | Type   | Required | Default | Description                                        |
-| ---------- | ------ | -------- | ------- | -------------------------------------------------- |
-| `folderId` | string | Yes      | -       | ID of the folder to list messages from             |
-| `limit`    | number | No       | 100     | Maximum number of messages per page (max: 1000)    |
-| `offset`   | number | No       | 0       | Number of messages to skip for pagination (min: 0) |
+| Name        | Type   | Required | Default | Description                                        |
+| ----------- | ------ | -------- | ------- | -------------------------------------------------- |
+| `folderId`  | string | Yes      | -       | ID of the folder to list messages from             |
+| `limit`     | number | No       | 100     | Maximum number of messages per page (max: 1000)    |
+| `offset`    | number | No       | 0       | Number of messages to skip for pagination (min: 0) |
+| `sortBy`    | string | No       | `date`  | Sort field: `date`, `subject`, or `author`         |
+| `sortOrder` | string | No       | `desc`  | Sort direction: `asc` or `desc`                    |
 
 #### Response Format
 
-Returns a paginated list with metadata:
+Returns a paginated list with metadata. The whole folder is enumerated
+(up to `MAX_SCAN` = 5000 messages) **before** sorting, so `total` is the
+real folder count and `offset` paginates globally, not within one
+Thunderbird-internal page:
 
 ```json
 {
@@ -119,11 +125,14 @@ Returns a paginated list with metadata:
       \"total\": 250,
       \"offset\": 0,
       \"limit\": 100,
-      \"hasMore\": true
+      \"hasMore\": true,
+      \"scanComplete\": true
     }"
   }]
 }
 ```
+
+See [Pagination semantics](#pagination-semantics).
 
 #### Example Request
 
@@ -158,10 +167,12 @@ Retrieves unread messages using a search query with `unread: true` filter. Can b
 | ----------- | ------ | -------- | ------- | -------------------------------------------------------- |
 | `accountId` | string | No       | -       | Specific account ID to filter by (omit for all accounts) |
 | `limit`     | number | No       | 50      | Maximum number of results (max: 1000)                    |
+| `sortBy`    | string | No       | `date`  | Sort field: `date`, `subject`, or `author`               |
+| `sortOrder` | string | No       | `desc`  | Sort direction: `asc` or `desc`                          |
 
 #### Response Format
 
-Same as `thunderbird_messages_search` response format - returns an array of message headers.
+Same as `thunderbird_messages_search`: a `{ messages, total, hasMore, scanComplete }` envelope.
 
 #### Example Request
 
@@ -196,10 +207,12 @@ Retrieves the latest messages across all folders using date-based search. Ideal 
 | `accountId` | string | No       | -       | Specific account ID to filter by (omit for all accounts) |
 | `limit`     | number | No       | 20      | Maximum number of results (max: 100)                     |
 | `hoursAgo`  | number | No       | 24      | How many hours back to search (max: 168 = 7 days)        |
+| `sortBy`    | string | No       | `date`  | Sort field: `date`, `subject`, or `author`               |
+| `sortOrder` | string | No       | `desc`  | Sort direction: `asc` or `desc`                          |
 
 #### Response Format
 
-Same as `thunderbird_messages_search` response format - returns an array of message headers.
+Same as `thunderbird_messages_search`: a `{ messages, total, hasMore, scanComplete }` envelope.
 
 #### Example Request
 
@@ -579,6 +592,23 @@ Moves messages to the appropriate archive folder based on Thunderbird's archive 
 - Archive structure cannot be customized through this API
 
 ---
+
+## Pagination semantics
+
+`messenger.messages.list()`/`query()` return their results in pages of
+~100 messages. Since v1.4.0 the extension drains every page
+(`messages.continueList()`) before sorting and slicing, bounded by
+**`MAX_SCAN` = 5000** accumulated messages per request:
+
+| Field          | Meaning                                                                                       |
+| -------------- | --------------------------------------------------------------------------------------------- |
+| `total`        | Real number of matching messages when `scanComplete` is `true`; otherwise a **lower bound** (number scanned) |
+| `hasMore`      | More results exist beyond `limit`/`offset`, or the scan was incomplete                        |
+| `scanComplete` | `false` means the `MAX_SCAN` bound was hit and the enumeration was released (`abortList()`) — narrow the filters (folder, date range) for an exhaustive result |
+
+Sorting (`sortBy`/`sortOrder`) is applied over the **full scan**, before
+`offset`/`limit`, so pagination is stable across the whole result set.
+Truncation is never silent: an incomplete scan is always flagged.
 
 ## Common Error Codes
 

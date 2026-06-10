@@ -20,10 +20,11 @@ docker compose up -d
 
 ### Step 3: Install Extension
 
-1. Open Thunderbird
-2. Go to **Tools** > **Add-ons and Themes**
-3. Click gear icon > **Install Add-on From File**
-4. Select `releases/thunderbird-mcp-1.3.1.xpi`
+1. Download the latest `thunderbird-mcp-x.y.z.xpi` from [GitHub Releases](https://github.com/assistance-micro-design/thunderbird-mcp/releases) (or build it: `npm run package:extension` → `releases/`)
+2. Open Thunderbird
+3. Go to **Tools** > **Add-ons and Themes**
+4. Click gear icon > **Install Add-on From File**
+5. Select the downloaded `.xpi` file
 
 ### Step 4: Configure Claude Desktop
 

@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Planned
+
+- HTTP+SSE transport option for remote connections
+- Resource subscription support
+- Additional prompts for common email workflows
+- Performance optimizations for large mailboxes
+- Configurable bridge port on the extension side
+
+---
+
+## [1.4.0] - 2026-06-10
+
+First release published under the **Apache License 2.0** (see Changed below) —
+this release clarifies the license transition announced after v1.3.1.
+
+Full senior-audit remediation: every critical/high finding fixed with a
+tests-first, zero-regression strategy (389 tests, 0 npm audit vulnerability).
+
 ### Changed
 
 - **License changed from MIT to Apache License 2.0.** The Apache 2.0
@@ -14,96 +32,185 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   lacks, aligning Thunderbird-MCP with the default license of the
   Assistance Micro Design organization. All previous releases
   (v1.0.0 through v1.3.1) remain published under MIT as released; this
-  change applies prospectively to new releases. See `LICENSE` for the
+  change applies prospectively from v1.4.0. See `LICENSE` for the
   full text and `NOTICE` for required attribution under Apache 2.0
   Section 4.
-
-### Security
-
-- Bump `@modelcontextprotocol/sdk` from `^1.0.0` to `^1.29.0` and add transitive
-  overrides (`hono`, `@hono/node-server`, `fast-uri`, `ip-address`,
-  `express-rate-limit`) at the workspace root. `npm audit --omit=dev` now
-  reports 0 vulnerabilities (was 5).
-- Prevent XSS in extension Options UI; tighten MCP rate limiting (df4b20f).
-- Resolve native actions to correct MCP tool names for permission checks
-  (55dcf64).
+- **Message list/search responses are now pagination envelopes.**
+  `thunderbird_messages_search`, `_list_unread` and `_list_recent` used to
+  return a bare array; they now return `{ messages, total, hasMore,
+  scanComplete }` (and `_list` additionally echoes `limit`/`offset`).
+  `scanComplete: false` signals the 5000-message scan bound (`MAX_SCAN`)
+  was reached — truncation is never silent.
+- `sortBy`/`sortOrder` parameters added to all 4 message listing tools
+  (date|subject|author, asc|desc), with sorting applied JS-side across the
+  full result set for predictable behavior on every Thunderbird version.
+- All 56 MCP tool descriptions rewritten with a richer LLM-oriented format:
+  short action sentence, an `Example:` block (Input/Output), and a `Note:`
+  block citing the source tool for every external ID consumed.
+- Extracted `executeToolHandler()` shared wrapper (~1400 lines of
+  boilerplate removed); JSDoc added on zod schemas (7acca08) and on the
+  22 previously undocumented exported handlers.
+- Tool permission denials and bridge timeouts now carry typed JSON-RPC
+  errors (-32002 Permission denied, -32004 Operation timeout) instead of
+  ad hoc strings.
+- Structured logger metadata is now serialized into the log line (it was
+  silently dropped); log directory configurable via `LOG_DIR` (defaults to
+  an absolute, module-anchored path; file logging disables itself with a
+  notice when the directory is not writable).
+- `tsconfig.build.json` excludes tests from `dist/` (local build now
+  matches the Docker image); the MCP server reports its version from
+  `server/package.json` (single source of truth, guarded by a version
+  coherence test across root/server/extension/manifest/Dockerfile).
+- Docker: base image pinned by digest, version label via `ARG APP_VERSION`,
+  `LOG_DIR=/app/logs` so the logs volume is actually used; the dev image
+  now runs the standalone bridge (same architecture as production) and the
+  dev compose service gains healthcheck, `stdin_open` and resource limits.
+- Renames for clarity: `extension/native-messaging/` → `extension/routing/`;
+  server `getNativeClient()` → `getBridgeClient()` (it has always been the
+  WebSocket path since the native messaging transport was abandoned).
 
 ### Added
 
-- Permission denial logging with reason and tier (9f0c38f).
-- Resource handler test suite covering all 6 resources + 2 templates (8659bce).
-- Non-blocking coverage step in the CI validate workflow (b520830).
-
-### Changed
-
-- Rewrote all 56 MCP tool descriptions with a richer LLM-oriented format:
-  short action sentence, an `Example:` block (Input/Output), and a `Note:`
-  block citing the source tool for every external ID consumed
-  (`folderId`, `messageId`, `tagKey`, `tabId`, etc.). `inputSchema.properties`
-  unchanged — non-breaking for MCP clients.
-- Updated `.claude/rules/mcp.md` reference block to document the new format.
-- Synced `CLAUDE.md` and `.claude/registry/inventory.yml` with on-disk reality
-  (56 tools in 8 files, 100 TypeScript types in 6 files, 2 utility files).
-- JSDoc added on zod schemas for contacts/folders/messages (7acca08).
-- Extracted `executeToolHandler()` shared wrapper, eliminating ~1400 lines of
-  boilerplate across tool handlers (ebfa7ce).
+- **Real pagination in the extension**: `messages.list`/`query` results are
+  drained page by page via `messages.continueList()` (bounded by
+  `MAX_SCAN = 5000`, with `messages.abortList()` on early stop). Before
+  this, every message tool silently operated on the first ~100 messages:
+  `total` and `hasMore` were wrong and the sort was per-page only.
+- **Typed server↔extension contract**: `types/action-results.ts` maps all
+  52 routed native actions to the real extension payload shapes;
+  `sendRequest<A>()` returns typed responses. A new pagination contract
+  guard in `contract-coherence.test.ts` pins the `continueList`/
+  `scanComplete` behavior.
+- **Bridge-client reconnection**: a bridge restart no longer kills the MCP
+  session — exponential backoff (1s/2s/4s, 3 attempts), auth token
+  re-fetched per attempt, terminal `reconnect_failed` event.
+- **Extension reconnection MV3-safe**: one-shot `ws-reconnect` alarm with
+  exponential backoff replaces `setTimeout` (lost on event page
+  suspension); `onAlarm` dispatcher registered synchronously at top-level.
+- i18n wired: manifest `name`/`description` use
+  `__MSG_extensionName__`/`__MSG_extensionDescription__` from `_locales/en`.
+- Safety-net test suites: bridge relay (rate limit, pending rejection,
+  zombie replacement), bridge-client lifecycle, tool tiers coherence
+  (server vs options.js), version coherence, logger metadata.
+- `npm run package:extension`: zips the content of `extension/` into
+  `releases/thunderbird-mcp-<version>.xpi` (manifest at the zip root).
+- CI: runs on push to main and PRs; blocking coverage step
+  (`@vitest/coverage-v8`), blocking `npm audit --audit-level=high`, and a
+  `docker compose build` smoke job. Weekly Dependabot (npm +
+  github-actions).
+- Permission denial logging with reason and tier (9f0c38f); resource
+  handler test suite covering all 6 resources + 2 templates (8659bce).
+- Contract coherence test (`contract-coherence.test.ts`): every parameter
+  declared in a tool's `inputSchema.properties` must be referenced in the
+  extension code, with an explicit allowlist for server-side-consumed
+  params. Guards against the silent-ignored-param pattern.
 
 ### Fixed
 
-- `thunderbird_folders_list` now actually honors `includeSubFolders`.
-  Previously the parameter was accepted, validated by Zod, and silently
-  ignored by `FoldersAPI.list` (extension/api/folders.js). When set to
-  `false`, the tool now returns only top-level folders per account
-  (direct children of the account root) instead of the full flat
-  descendant list. Default behavior (`true`) unchanged.
-- TypeScript build now emits `.tsbuildinfo` and ignores it via `.gitignore`;
-  test script corrected (942731d).
+- **`thunderbird_messages_delete` never worked**: the `messagesDelete`
+  permission was missing from the manifest, so Thunderbird did not inject
+  `messenger.messages.delete` and every call threw
+  `TypeError: ... is not a function`. Permission added — existing users
+  must re-approve the extension on update.
+- **Bridge crash (DoS) on malformed upgrade requests**: a 64-character
+  multi-byte token made `crypto.timingSafeEqual` throw `RangeError`, and a
+  malformed `Host` header made `new URL()` throw `TypeError` — both killed
+  the bridge process. Tokens are now compared in byte length and the
+  upgrade handler is fully guarded (clean 401/400 instead).
+- **Memory leak**: the per-client rate-limit log kept one entry per
+  disconnected MCP client forever; purged on close.
+- **`bridge.stop()` hang after a zombie connection replacement**:
+  `removeAllListeners()` broke the ws client tracking; replaced by
+  identity-guarded handlers. `closeIdleConnections()` added so shutdown
+  does not wait for idle keep-alive sockets.
+- **`thunderbird://contacts/recent` always returned an empty list**: the
+  handler tested `Array.isArray` on the `contacts.list` pagination
+  envelope (bug surfaced by the new typed contract).
+- `thunderbird_messages_search` no longer drops `flagged`/`accountId`
+  (e576f28); JS-side sort used everywhere instead of the recent-only
+  native `messages.list` options (e379231).
+- `thunderbird_folders_list` now actually honors `includeSubFolders`
+  (was accepted, validated, and silently ignored).
+- TypeScript build emits `.tsbuildinfo` ignored via `.gitignore`; test
+  script corrected (942731d).
+
+### Security
+
+- `/auth/token` now validates the `Host` header against
+  localhost/127.0.0.1/[::1] (DNS rebinding guard) in addition to the
+  source-IP check; CORS reflection and per-IP rate limiting unchanged.
+- Zod hardening: `messageIds` bounded to 1000 entries on
+  move/copy/delete/archive; calendar search `query` bounded to 1000 chars;
+  compose `messageId`/`tabId` must be non-negative integers.
+- Options page no longer loads Google Fonts (system font stack — no
+  remote asset, ATN-compliant); CSP tightened to `object-src 'none'`.
+- `fetchAuthToken` (extension) aborts after 5 s via `AbortController`,
+  symmetric with the server-side bridge client.
+- Verbose extension logging gated behind a `DEBUG` flag
+  (`extension/debug.js`); real failures stay on `console.error`.
+- `npm audit`: 0 vulnerability — hono/qs advisories fixed via
+  `npm audit fix`, the esbuild/vite chain closed by the vitest 4
+  migration.
+- Bump `@modelcontextprotocol/sdk` to `^1.29.0` with transitive overrides
+  (`hono`, `@hono/node-server`, `fast-uri`, `ip-address`,
+  `express-rate-limit`, `ajv-formats`) at the workspace root.
+- Prevent XSS in extension Options UI; tighten MCP rate limiting
+  (df4b20f); resolve native actions to correct MCP tool names for
+  permission checks (55dcf64).
 
 ### Removed
 
+- `server/src/native-messaging/` (abandoned stdin/stdout transport, 514
+  unreferenced lines with a known framing bug) — the WebSocket bridge is
+  the only transport. The action vocabulary (`MessageActions`) is kept in
+  `types/native-messaging.ts`.
+- 28 unused MCP-SDK-duplicate type exports from `types/mcp.ts`; the
+  aspirational calendar/compose models that never matched real extension
+  payloads (replaced by `types/action-results.ts`); unrouted actions
+  (`messages.listAttachments`, `addressBooks.get`, `ping`, `getVersion`)
+  purged from the action map.
+- 7 vendored calendar experiment files that were never registered in
+  `experiment_apis` (UI/provider extension points unusable by MCP tools);
+  provenance documented in `extension/experiments/calendar/VENDORED.md`
+  for future re-import.
 - `scope` parameter dropped from `thunderbird_events_update` and
   `thunderbird_events_delete` schemas and tool descriptions. The param
   was accepted but never honored downstream — the experimental
   `browser.calendar.items.{update,remove}` API exposes no `scope` and
   per-occurrence handling requires iCal manipulation
   (RECURRENCE-ID / recurrenceInfo.modifyException) that is not yet
-  wired up. See `docs/specs/2026-05-16_spec-silent-ignored-params.md`
-  for the design note covering future reimplementation.
-- Empty `server/src/schemas/` directory (no references in source).
-- Stale root launcher script `/thunderbird-mcp` (hard-coded path was incorrect).
-- Duplicated XPI release: `releases/thunderbird-mcp-1.3.1.xpi` + symlink
-  consolidated into a single `releases/thunderbird-mcp-latest.xpi`.
+  wired up. Reimplementation would require dedicated jCal handling in
+  the calendar experiment wrappers.
+- Empty `server/src/schemas/` directory; stale root launcher script;
+  duplicated XPI in `releases/` (artifacts are now built on demand and
+  published as GitHub Release assets; the directory is gitignored).
 - `scripts/install.sh`, `scripts/package.sh`, and `native-host.json`:
-  vestiges of the abandoned Native Messaging architecture (project now
-  uses WebSocket via `bridge-standalone.ts` on port 9876). `install.sh`
-  would have installed an unused native messaging host with sudo;
-  `package.sh` targeted a stale `dist/` location and is superseded by
-  the upcoming GitHub Actions release workflow.
-
-### Added
-
-- Contract coherence test (`server/src/__tests__/tools/contract-coherence.test.ts`):
-  asserts that every parameter declared in a tool's `inputSchema.properties`
-  is referenced by name in the extension code (handler or `api/*.js`).
-  Guards against the silent-ignored-param pattern that produced the three
-  fixes above. Server-side-consumed params (e.g. `format` dispatched via
-  `resolveAction`, `hoursAgo` resolved via `transformParams`) are listed
-  in an explicit allowlist with justifications.
+  vestiges of the abandoned Native Messaging architecture.
 
 ### Documentation
 
-- GitHub standards, CI workflow, README sync (9b81760).
-- Recommend Docker setup and clarify risk warnings (7a3a462).
-- Root files reorganized (685c1f4); 8 documentation inaccuracies corrected
-  during audit (219914a).
+- Installation docs fixed end-to-end: the four references to a
+  non-existent `releases/thunderbird-mcp-1.3.1.xpi` now point to GitHub
+  Releases, with a documented from-source packaging procedure.
+- README gains a tool permission tiers section (read/modify/destructive,
+  defaults, options UI) and the `messagesDelete` re-approval note.
+- API docs updated: pagination semantics (`scanComplete`, `MAX_SCAN`),
+  `sortBy`/`sortOrder`, stale `scope` parameters purged from
+  `calendar-api.md`.
+- GitHub standards, CI workflow, README sync (9b81760); Docker setup
+  recommended with clarified risk warnings (7a3a462); root files
+  reorganized (685c1f4); 8 documentation inaccuracies corrected (219914a).
 
-### Planned
+### Upgrade notes
 
-- HTTP+SSE transport option for remote connections
-- Resource subscription support
-- Additional prompts for common email workflows
-- Automated test suite expansion
-- Performance optimizations for large mailboxes
+- **Extension update prompts for re-approval** because of the new
+  `messagesDelete` permission.
+- MCP clients consuming `thunderbird_messages_search`/`_list_unread`/
+  `_list_recent` must read the `messages` field of the new response
+  envelope instead of a bare array.
+- Calls exceeding the new Zod bounds (`messageIds` > 1000, calendar
+  `query` > 1000 chars, negative/float `messageId`/`tabId`) are now
+  rejected with a validation error.
 
 ---
 
@@ -133,7 +240,7 @@ Implements the top 5 priorities from the security review (score: 80/100 B+):
 | P5 | SEC-REVIEW-010/011: Log exposure + no rotation | Winston `maxsize: 10MiB, maxFiles: 5`, sensitive data removed from logs |
 
 - Extension `console.log` sanitized: logs only message type+id (SEC-REVIEW-015)
-- Security review document added: `docs/reviews/security-review-2026-02-27.md`
+- Internal security review conducted (2026-02-27, score 80/100 B+)
 - 18 new schema hardening tests for folders/tags/accounts (138 total)
 
 ### Added
@@ -337,11 +444,11 @@ Completes the 8-fix security plan (initial score: 72/100 B-, target: ~92/100):
 
 - Calendar and Tasks tools are marked as EXPERIMENTAL and require the calendar experiment API
 - The extension requires Thunderbird 128.0 or later
-- Native Messaging must be configured for the server to communicate with Thunderbird
 
 ---
 
-[Unreleased]: https://github.com/assistance-micro-design/thunderbird-mcp/compare/v1.3.1...HEAD
+[Unreleased]: https://github.com/assistance-micro-design/thunderbird-mcp/compare/v1.4.0...HEAD
+[1.4.0]: https://github.com/assistance-micro-design/thunderbird-mcp/releases/tag/v1.4.0
 [1.3.1]: https://github.com/assistance-micro-design/thunderbird-mcp/releases/tag/v1.3.1
 [1.3.0]: https://github.com/assistance-micro-design/thunderbird-mcp/releases/tag/v1.3.0
 [1.2.2]: https://github.com/assistance-micro-design/thunderbird-mcp/releases/tag/v1.2.2

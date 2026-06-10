@@ -378,13 +378,10 @@ Modifies event properties with support for updating single instances or entire r
 | `location`    | string   | No       | -       | New location (max 500 characters)                |
 | `description` | string   | No       | -       | New description                                  |
 | `attendees`   | string[] | No       | -       | New attendee list (email addresses)              |
-| `scope`       | string   | No       | `this`  | For recurring events: `this`, `all`, or `future` |
 
-#### Modification Scope
-
-- `this` - Update only this instance of recurring event
-- `all` - Update all instances (past and future)
-- `future` - Update this and all future instances
+> Note: recurring events are updated as a whole. A per-occurrence `scope`
+> parameter existed in older versions but was removed on 2026-05-16: the
+> experimental `browser.calendar.items.update` API does not expose it.
 
 #### Response Format
 
@@ -417,8 +414,7 @@ Modifies event properties with support for updating single instances or entire r
       "title": "Updated Meeting Title",
       "location": "Building B, Room 301",
       "start": "2025-03-20T15:00:00Z",
-      "end": "2025-03-20T16:00:00Z",
-      "scope": "this"
+      "end": "2025-03-20T16:00:00Z"
     }
   }
 }
@@ -494,7 +490,6 @@ Removes an event from the calendar with support for deleting single or multiple 
 | ------------ | ------ | -------- | ------- | ------------------------------------------------ |
 | `eventId`    | string | Yes      | -       | ID of the event to delete                        |
 | `calendarId` | string | Yes      | -       | ID of the calendar containing the event          |
-| `scope`      | string | No       | `this`  | For recurring events: `this`, `all`, or `future` |
 
 #### Response Format
 
@@ -515,8 +510,7 @@ Removes an event from the calendar with support for deleting single or multiple 
     "name": "thunderbird_events_delete",
     "arguments": {
       "eventId": "event-old-123",
-      "calendarId": "calendar-1",
-      "scope": "all"
+      "calendarId": "calendar-1"
     }
   }
 }
