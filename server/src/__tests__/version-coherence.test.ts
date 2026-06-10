@@ -46,7 +46,7 @@ function readServerTsVersion(): string {
     return literal[1];
   }
   if (/createRequire/.test(source) && /package\.json/.test(source)) {
-    return readJsonVersion("server/package.json");
+    return readJsonVersion("package.json");
   }
   throw new Error(
     "Could not determine the version reported by server/src/server.ts " +
@@ -59,21 +59,28 @@ function readDockerfileVersion(): string {
     path.join(SERVER_ROOT, "../Dockerfile"),
     "utf8",
   );
-  const match = source.match(
+  // Either a literal label, or the APP_VERSION build arg default that feeds
+  // the org.opencontainers.image.version label.
+  const argMatch = source.match(/ARG APP_VERSION=(\d+\.\d+\.\d+)/);
+  if (argMatch) {
+    return argMatch[1];
+  }
+  const labelMatch = source.match(
     /org\.opencontainers\.image\.version=["']?(\d+\.\d+\.\d+)["']?/,
   );
-  if (!match) {
+  if (!labelMatch) {
     throw new Error(
-      "No org.opencontainers.image.version label found in Dockerfile",
+      "No APP_VERSION arg or org.opencontainers.image.version label found in Dockerfile",
     );
   }
-  return match[1];
+  return labelMatch[1];
 }
 
 describe("Version coherence across the monorepo", () => {
   const versions: Record<string, string> = {
     "package.json (root)": readJsonVersion("../package.json"),
     "server/package.json": readJsonVersion("package.json"),
+    "extension/package.json": readJsonVersion("../extension/package.json"),
     "extension/manifest.json": readJsonVersion("../extension/manifest.json"),
     "server/src/server.ts": readServerTsVersion(),
     Dockerfile: readDockerfileVersion(),

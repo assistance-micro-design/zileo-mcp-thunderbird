@@ -3,7 +3,7 @@
  *
  * For every MCP tool, every parameter declared in `inputSchema.properties`
  * must be referenced by name somewhere in the extension-side code (either
- * `extension/native-messaging/handler.js` or `extension/api/*.js`).
+ * `extension/routing/handler.js` or `extension/api/*.js`).
  *
  * If a Zod-validated parameter never appears in extension code, it means the
  * tool is silently lying to its callers — the param goes through the wire,
@@ -41,11 +41,7 @@ const SERVER_SIDE_CONSUMED: Record<string, readonly string[]> = {
 
 function loadExtensionCode(): string {
   const apiDir = path.join(EXTENSION_DIR, "api");
-  const handlerFile = path.join(
-    EXTENSION_DIR,
-    "native-messaging",
-    "handler.js",
-  );
+  const handlerFile = path.join(EXTENSION_DIR, "routing", "handler.js");
 
   const apiFiles = fs
     .readdirSync(apiDir)

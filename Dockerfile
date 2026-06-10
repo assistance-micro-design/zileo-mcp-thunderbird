@@ -1,16 +1,25 @@
 # Thunderbird MCP Server Dockerfile
 # Multi-stage build for optimized production image
 
+# Version injected into OCI labels (kept in sync by version-coherence.test.ts)
+ARG APP_VERSION=1.3.1
+
+# Base image pinned by digest for reproducible builds (node:20-alpine)
+ARG NODE_IMAGE=node:20-alpine@sha256:09e2b3d9726018aecf269bd35325f46bf75046a643a66d28360ec71132750ec8
+
 # ============================================
 # Stage 1: Build
 # ============================================
-FROM node:20-alpine AS builder
+FROM ${NODE_IMAGE} AS builder
 
 WORKDIR /app
 
 # Copy package files for dependency installation
+# (extension/package.json is required: it is an npm workspace referenced
+# by package-lock.json, even though only the server is built here)
 COPY package.json package-lock.json ./
 COPY server/package.json ./server/
+COPY extension/package.json ./extension/
 
 # Install all dependencies (including devDependencies for build)
 RUN npm ci --workspace=server
@@ -25,12 +34,13 @@ RUN npm run build
 # ============================================
 # Stage 2: Production
 # ============================================
-FROM node:20-alpine AS production
+FROM ${NODE_IMAGE} AS production
+ARG APP_VERSION
 
 # Add labels for container identification
 LABEL org.opencontainers.image.title="Thunderbird MCP Server"
 LABEL org.opencontainers.image.description="MCP Server for Thunderbird email client integration"
-LABEL org.opencontainers.image.version="1.3.1"
+LABEL org.opencontainers.image.version="${APP_VERSION}"
 LABEL org.opencontainers.image.vendor="Assistance Micro Design"
 LABEL org.opencontainers.image.source="https://github.com/assistance-micro-design/thunderbird-mcp"
 
@@ -43,6 +53,7 @@ WORKDIR /app
 # Copy package files
 COPY --from=builder /app/package.json /app/package-lock.json ./
 COPY --from=builder /app/server/package.json ./server/
+COPY --from=builder /app/extension/package.json ./extension/
 
 # Install production dependencies only
 RUN npm ci --workspace=server --omit=dev && \
@@ -61,6 +72,8 @@ USER mcp
 ENV NODE_ENV=production
 ENV LOG_LEVEL=info
 ENV THUNDERBIRD_PORT=9876
+# Point file logging at the volume-backed directory (see docker-compose.yml)
+ENV LOG_DIR=/app/logs
 
 # Expose WebSocket port for Thunderbird extension connection
 EXPOSE 9876

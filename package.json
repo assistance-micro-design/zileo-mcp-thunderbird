@@ -9,10 +9,11 @@
     "extension"
   ],
   "scripts": {
-    "build": "npm run build --workspaces",
-    "test": "npm run test --workspaces",
+    "build": "npm run build --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "npm run typecheck --workspace=server",
+    "package:extension": "npm run package --workspace=extension"
   },
   "repository": {
     "type": "git",
@@ -21,17 +22,19 @@
   "author": "Assistance Micro Design",
   "license": "Apache-2.0",
   "devDependencies": {
+    "@eslint/js": "^9.39.2",
     "@types/node": "^20.0.0",
-    "typescript": "^5.5.0",
     "eslint": "^9.0.0",
-    "@typescript-eslint/eslint-plugin": "^8.0.0",
-    "@typescript-eslint/parser": "^8.0.0"
+    "globals": "^17.3.0",
+    "typescript": "^5.5.0",
+    "typescript-eslint": "^8.54.0"
   },
   "overrides": {
     "hono": ">=4.12.18",
     "@hono/node-server": ">=1.19.14",
     "fast-uri": ">=3.1.2",
     "ip-address": ">=10.2.0",
-    "express-rate-limit": ">=8.5.2"
+    "express-rate-limit": ">=8.5.2",
+    "ajv-formats": ">=3.0.1"
   }
 }

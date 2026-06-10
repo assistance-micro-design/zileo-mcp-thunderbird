@@ -12,7 +12,8 @@
 import { describe, it, expect, afterEach } from "vitest";
 import http from "http";
 import WebSocket from "ws";
-import { WebSocketBridge, WsMessage } from "../../websocket/bridge.js";
+import { WebSocketBridge } from "../../websocket/bridge.js";
+import type { WsMessage } from "../../websocket/types.js";
 import { WebSocketBridgeClient } from "../../websocket/bridge-client.js";
 
 /** Base port for this file; bumped per test to avoid cross-test collisions. */

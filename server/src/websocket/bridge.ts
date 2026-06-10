@@ -7,7 +7,12 @@
 import crypto from "crypto";
 import { WebSocketServer, WebSocket } from "ws";
 import { EventEmitter } from "events";
-import { createServer, Server as HttpServer, IncomingMessage } from "http";
+import {
+  createServer,
+  Server as HttpServer,
+  IncomingMessage,
+  ServerResponse,
+} from "http";
 import { Duplex } from "stream";
 import logger from "../utils/logger.js";
 import { OperationTimeoutError } from "../utils/errors.js";
@@ -15,26 +20,12 @@ import {
   isToolAllowed,
   getToolTier,
   resolveActionToMcpTool,
-} from "../tools/tool-permissions.js";
+} from "../permissions/tool-permissions.js";
 import {
   WebSocketBridgeClient,
   tryConnectToExistingBridge,
 } from "./bridge-client.js";
-
-/**
- * Message types for WebSocket communication
- */
-export interface WsMessage {
-  id: string;
-  type: "request" | "response" | "notification" | "ping" | "pong" | "heartbeat";
-  action?: string;
-  event?: string;
-  params?: Record<string, unknown>;
-  data?: unknown;
-  success?: boolean;
-  error?: { code: number; message: string; data?: unknown };
-  timestamp: string;
-}
+import type { WsMessage, WebSocketBridgeOptions } from "./types.js";
 
 /**
  * Pending request info
@@ -187,16 +178,6 @@ export function isLocalAddress(address: string | undefined): boolean {
 const RATE_LIMITER_CLEANUP_INTERVAL_MS = 5 * 60_000;
 
 /**
- * WebSocket Bridge Options
- */
-export interface WebSocketBridgeOptions {
-  port: number;
-  host?: string;
-  timeout?: number;
-  maxPendingRequests?: number;
-}
-
-/**
  * WebSocket Bridge for Thunderbird Extension
  * Supports two types of connections:
  * - Thunderbird extension (single connection, handles requests)
@@ -265,70 +246,7 @@ export class WebSocketBridge extends EventEmitter {
       try {
         // Create HTTP server for path-based WebSocket routing
         this.httpServer = createServer((req, res) => {
-          // Simple health check endpoint
-          if (req.url === "/health") {
-            res.writeHead(200, { "Content-Type": "application/json" });
-            res.end(
-              JSON.stringify({
-                status: "ok",
-                thunderbird: this.thunderbirdClient !== null,
-                mcpClients: this.mcpClients.size,
-              }),
-            );
-          } else if (req.url === "/auth/token") {
-            // SEC-WS-001: Serve auth token for WebSocket authentication.
-            // SEC-REVIEW-001: Restricted CORS + rate limiting + local address check.
-            const remoteAddr = req.socket.remoteAddress || "";
-
-            // SEC-REVIEW-002: Reject requests from non-local IPs
-            if (!isLocalAddress(remoteAddr)) {
-              logger.warn(`Auth token request rejected: non-local IP ${remoteAddr}`);
-              res.writeHead(403, { "Content-Type": "application/json" });
-              res.end(JSON.stringify({ error: "Forbidden: local access only" }));
-              return;
-            }
-
-            // SEC-AUDIT: DNS rebinding guard — the Host header must name a
-            // local endpoint, regardless of the (local/private) source IP.
-            if (!isAllowedHostHeader(req.headers.host)) {
-              logger.warn(
-                `Auth token request rejected: forbidden Host "${req.headers.host}"`,
-              );
-              res.writeHead(403, { "Content-Type": "application/json" });
-              res.end(JSON.stringify({ error: "Forbidden: invalid Host header" }));
-              return;
-            }
-
-            // Rate limiting: max TOKEN_RATE_LIMIT requests per TOKEN_RATE_WINDOW_MS per IP
-            const now = Date.now();
-            const timestamps = this.tokenRequestLog.get(remoteAddr) || [];
-            const recent = timestamps.filter((t) => now - t < TOKEN_RATE_WINDOW_MS);
-            if (recent.length >= TOKEN_RATE_LIMIT) {
-              logger.warn(`Auth token rate limit exceeded for ${remoteAddr}`);
-              res.writeHead(429, { "Content-Type": "application/json" });
-              res.end(JSON.stringify({ error: "Too many requests" }));
-              return;
-            }
-            recent.push(now);
-            this.tokenRequestLog.set(remoteAddr, recent);
-
-            logger.debug(`Auth token served to ${remoteAddr}`);
-            // SEC-REVIEW-001: Reflect origin only if allowed (moz-extension://, localhost);
-            // reject all others with "null" to block cross-origin web page attacks.
-            const requestOrigin = req.headers.origin;
-            const corsOrigin = isAllowedOrigin(requestOrigin) && requestOrigin
-              ? requestOrigin
-              : "null";
-            res.writeHead(200, {
-              "Content-Type": "application/json",
-              "Access-Control-Allow-Origin": corsOrigin,
-              "Cache-Control": "no-store",
-            });
-            res.end(JSON.stringify({ token: this.authToken }));
-          } else {
-            res.writeHead(404);
-            res.end();
-          }
+          this.handleHttpRequest(req, res);
         });
 
         // WebSocket server for Thunderbird extension (single client)
@@ -394,6 +312,88 @@ export class WebSocketBridge extends EventEmitter {
         reject(error);
       }
     });
+  }
+
+  /**
+   * Routes plain HTTP requests: /health, /auth/token, 404 otherwise.
+   *
+   * @param req - The incoming HTTP request
+   * @param res - The HTTP response
+   */
+  private handleHttpRequest(req: IncomingMessage, res: ServerResponse): void {
+    if (req.url === "/health") {
+      // Simple health check endpoint
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(
+        JSON.stringify({
+          status: "ok",
+          thunderbird: this.thunderbirdClient !== null,
+          mcpClients: this.mcpClients.size,
+        }),
+      );
+    } else if (req.url === "/auth/token") {
+      this.handleAuthToken(req, res);
+    } else {
+      res.writeHead(404);
+      res.end();
+    }
+  }
+
+  /**
+   * Serves the WebSocket auth token (SEC-WS-001).
+   * SEC-REVIEW-001/002: restricted CORS, per-IP rate limiting, local source
+   * address check, and Host header validation (DNS rebinding guard).
+   *
+   * @param req - The incoming HTTP request
+   * @param res - The HTTP response
+   */
+  private handleAuthToken(req: IncomingMessage, res: ServerResponse): void {
+    const remoteAddr = req.socket.remoteAddress || "";
+
+    // SEC-REVIEW-002: Reject requests from non-local IPs
+    if (!isLocalAddress(remoteAddr)) {
+      logger.warn(`Auth token request rejected: non-local IP ${remoteAddr}`);
+      res.writeHead(403, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: "Forbidden: local access only" }));
+      return;
+    }
+
+    // SEC-AUDIT: DNS rebinding guard — the Host header must name a
+    // local endpoint, regardless of the (local/private) source IP.
+    if (!isAllowedHostHeader(req.headers.host)) {
+      logger.warn(
+        `Auth token request rejected: forbidden Host "${req.headers.host}"`,
+      );
+      res.writeHead(403, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: "Forbidden: invalid Host header" }));
+      return;
+    }
+
+    // Rate limiting: max TOKEN_RATE_LIMIT requests per TOKEN_RATE_WINDOW_MS per IP
+    const now = Date.now();
+    const timestamps = this.tokenRequestLog.get(remoteAddr) || [];
+    const recent = timestamps.filter((t) => now - t < TOKEN_RATE_WINDOW_MS);
+    if (recent.length >= TOKEN_RATE_LIMIT) {
+      logger.warn(`Auth token rate limit exceeded for ${remoteAddr}`);
+      res.writeHead(429, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: "Too many requests" }));
+      return;
+    }
+    recent.push(now);
+    this.tokenRequestLog.set(remoteAddr, recent);
+
+    logger.debug(`Auth token served to ${remoteAddr}`);
+    // SEC-REVIEW-001: Reflect origin only if allowed (moz-extension://, localhost);
+    // reject all others with "null" to block cross-origin web page attacks.
+    const requestOrigin = req.headers.origin;
+    const corsOrigin =
+      isAllowedOrigin(requestOrigin) && requestOrigin ? requestOrigin : "null";
+    res.writeHead(200, {
+      "Content-Type": "application/json",
+      "Access-Control-Allow-Origin": corsOrigin,
+      "Cache-Control": "no-store",
+    });
+    res.end(JSON.stringify({ token: this.authToken }));
   }
 
   /**
@@ -1154,9 +1154,3 @@ export async function stopWebSocketBridge(): Promise<void> {
     isClientMode = false;
   }
 }
-
-// Re-export for convenience
-export {
-  tryConnectToExistingBridge,
-  WebSocketBridgeClient,
-} from "./bridge-client.js";

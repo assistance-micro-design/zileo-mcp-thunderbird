@@ -6,7 +6,7 @@
 
 import { z } from "zod";
 import type { ZodType } from "zod";
-import { getNativeClient } from "../websocket/client-adapter.js";
+import { getBridgeClient } from "../websocket/client-adapter.js";
 import { nativeErrorToJsonRpc } from "../utils/errors.js";
 import logger from "../utils/logger.js";
 import type { ToolCallResult } from "../types/mcp.js";
@@ -50,7 +50,7 @@ export async function executeToolHandler(
 ): Promise<ToolCallResult> {
   try {
     const parsed = schema.parse(args) as Record<string, unknown>;
-    const client = getNativeClient();
+    const client = getBridgeClient();
 
     const params = options?.transformParams
       ? options.transformParams(parsed)

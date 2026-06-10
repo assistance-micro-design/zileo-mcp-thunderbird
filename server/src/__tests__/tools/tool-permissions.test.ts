@@ -12,7 +12,7 @@ import {
   getToolTier,
   resolveActionToMcpTool,
   buildToolDeniedResult,
-} from "../../tools/tool-permissions.js";
+} from "../../permissions/tool-permissions.js";
 import { allTools } from "../../tools/index.js";
 
 describe("tool-permissions", () => {

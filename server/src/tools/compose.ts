@@ -356,6 +356,11 @@ Note: tabId comes from thunderbird_compose_begin_new, thunderbird_compose_begin_
 // Handlers
 // =============================================================================
 
+/**
+ * Opens a new compose window (thunderbird_compose_begin_new).
+ * @param args - Raw tool arguments, validated against the Zod schema
+ * @returns ToolCallResult with the JSON payload, or isError on failure
+ */
 export async function handleComposeBeginNew(
   args: unknown,
 ): Promise<ToolCallResult> {
@@ -367,6 +372,11 @@ export async function handleComposeBeginNew(
   );
 }
 
+/**
+ * Opens a reply compose window for a message (thunderbird_compose_begin_reply).
+ * @param args - Raw tool arguments, validated against the Zod schema
+ * @returns ToolCallResult with the JSON payload, or isError on failure
+ */
 export async function handleComposeBeginReply(
   args: unknown,
 ): Promise<ToolCallResult> {
@@ -378,6 +388,11 @@ export async function handleComposeBeginReply(
   );
 }
 
+/**
+ * Opens a forward compose window for a message (thunderbird_compose_begin_forward).
+ * @param args - Raw tool arguments, validated against the Zod schema
+ * @returns ToolCallResult with the JSON payload, or isError on failure
+ */
 export async function handleComposeBeginForward(
   args: unknown,
 ): Promise<ToolCallResult> {
@@ -389,6 +404,11 @@ export async function handleComposeBeginForward(
   );
 }
 
+/**
+ * Reads the current state of a compose tab (thunderbird_compose_get_details).
+ * @param args - Raw tool arguments, validated against the Zod schema
+ * @returns ToolCallResult with the JSON payload, or isError on failure
+ */
 export async function handleComposeGetDetails(
   args: unknown,
 ): Promise<ToolCallResult> {
@@ -400,6 +420,11 @@ export async function handleComposeGetDetails(
   );
 }
 
+/**
+ * Updates recipients/subject/body of a compose tab (thunderbird_compose_set_details).
+ * @param args - Raw tool arguments, validated against the Zod schema
+ * @returns ToolCallResult with the JSON payload, or isError on failure
+ */
 export async function handleComposeSetDetails(
   args: unknown,
 ): Promise<ToolCallResult> {
@@ -412,6 +437,11 @@ export async function handleComposeSetDetails(
   );
 }
 
+/**
+ * Saves a compose tab as draft (thunderbird_compose_save_draft).
+ * @param args - Raw tool arguments, validated against the Zod schema
+ * @returns ToolCallResult with the JSON payload, or isError on failure
+ */
 export async function handleComposeSaveDraft(
   args: unknown,
 ): Promise<ToolCallResult> {
@@ -423,6 +453,11 @@ export async function handleComposeSaveDraft(
   );
 }
 
+/**
+ * Saves a compose tab as template (thunderbird_compose_save_template).
+ * @param args - Raw tool arguments, validated against the Zod schema
+ * @returns ToolCallResult with the JSON payload, or isError on failure
+ */
 export async function handleComposeSaveTemplate(
   args: unknown,
 ): Promise<ToolCallResult> {
@@ -434,6 +469,11 @@ export async function handleComposeSaveTemplate(
   );
 }
 
+/**
+ * Sends the message of a compose tab (thunderbird_compose_send).
+ * @param args - Raw tool arguments, validated against the Zod schema
+ * @returns ToolCallResult with the JSON payload, or isError on failure
+ */
 export async function handleComposeSend(
   args: unknown,
 ): Promise<ToolCallResult> {

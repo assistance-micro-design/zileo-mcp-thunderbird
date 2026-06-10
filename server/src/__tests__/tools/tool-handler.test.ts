@@ -9,7 +9,7 @@ import { z } from "zod";
 // Mock the websocket client-adapter module
 const mockSendRequest = vi.fn();
 vi.mock("../../websocket/client-adapter.js", () => ({
-  getNativeClient: (): { sendRequest: typeof mockSendRequest } => ({
+  getBridgeClient: (): { sendRequest: typeof mockSendRequest } => ({
     sendRequest: mockSendRequest,
   }),
 }));

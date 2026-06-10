@@ -115,6 +115,11 @@ const messagesListRecentSchema = z.object({
 // Tool Handlers
 // =============================================================================
 
+/**
+ * Searches messages across folders with filters (thunderbird_messages_search).
+ * @param args - Raw tool arguments, validated against the Zod schema
+ * @returns ToolCallResult with the JSON payload, or isError on failure
+ */
 export async function handleMessagesSearch(
   args: unknown,
 ): Promise<ToolCallResult> {
@@ -126,6 +131,11 @@ export async function handleMessagesSearch(
   );
 }
 
+/**
+ * Lists messages of one folder with global sort and pagination (thunderbird_messages_list).
+ * @param args - Raw tool arguments, validated against the Zod schema
+ * @returns ToolCallResult with the JSON payload, or isError on failure
+ */
 export async function handleMessagesList(
   args: unknown,
 ): Promise<ToolCallResult> {
@@ -183,6 +193,11 @@ export async function handleMessagesGet(
   );
 }
 
+/**
+ * Moves messages to a destination folder (thunderbird_messages_move).
+ * @param args - Raw tool arguments, validated against the Zod schema
+ * @returns ToolCallResult with the JSON payload, or isError on failure
+ */
 export async function handleMessagesMove(
   args: unknown,
 ): Promise<ToolCallResult> {
@@ -194,6 +209,11 @@ export async function handleMessagesMove(
   );
 }
 
+/**
+ * Copies messages to a destination folder (thunderbird_messages_copy).
+ * @param args - Raw tool arguments, validated against the Zod schema
+ * @returns ToolCallResult with the JSON payload, or isError on failure
+ */
 export async function handleMessagesCopy(
   args: unknown,
 ): Promise<ToolCallResult> {
@@ -205,6 +225,11 @@ export async function handleMessagesCopy(
   );
 }
 
+/**
+ * Deletes messages, to trash or permanently (thunderbird_messages_delete).
+ * @param args - Raw tool arguments, validated against the Zod schema
+ * @returns ToolCallResult with the JSON payload, or isError on failure
+ */
 export async function handleMessagesDelete(
   args: unknown,
 ): Promise<ToolCallResult> {
@@ -216,6 +241,11 @@ export async function handleMessagesDelete(
   );
 }
 
+/**
+ * Updates read/flagged/junk/tags of a message (thunderbird_messages_update).
+ * @param args - Raw tool arguments, validated against the Zod schema
+ * @returns ToolCallResult with the JSON payload, or isError on failure
+ */
 export async function handleMessagesUpdate(
   args: unknown,
 ): Promise<ToolCallResult> {
@@ -227,6 +257,11 @@ export async function handleMessagesUpdate(
   );
 }
 
+/**
+ * Archives messages via account settings (thunderbird_messages_archive).
+ * @param args - Raw tool arguments, validated against the Zod schema
+ * @returns ToolCallResult with the JSON payload, or isError on failure
+ */
 export async function handleMessagesArchive(
   args: unknown,
 ): Promise<ToolCallResult> {

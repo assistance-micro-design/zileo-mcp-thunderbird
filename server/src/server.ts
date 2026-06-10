@@ -4,6 +4,7 @@
  * @module server
  */
 
+import { createRequire } from "node:module";
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import {
@@ -24,7 +25,7 @@ import {
   isToolAllowed,
   getToolTier,
   buildToolDeniedResult,
-} from "./tools/tool-permissions.js";
+} from "./permissions/tool-permissions.js";
 import {
   resources,
   resourceTemplates,
@@ -32,6 +33,17 @@ import {
 } from "./resources/index.js";
 import { nativeErrorToJsonRpc } from "./utils/errors.js";
 import logger from "./utils/logger.js";
+
+/**
+ * Single source of truth for the version reported to MCP clients:
+ * server/package.json (bumped by the release process). The Dockerfile label,
+ * manifest.json and root package.json are kept in sync by
+ * version-coherence.test.ts.
+ */
+const require = createRequire(import.meta.url);
+const { version: SERVER_VERSION } = require("../package.json") as {
+  version: string;
+};
 
 /**
  * MCP Server for Thunderbird
@@ -45,7 +57,7 @@ export class ThunderbirdMcpServer {
     this.server = new Server(
       {
         name: "thunderbird-mcp",
-        version: "1.3.1",
+        version: SERVER_VERSION,
       },
       {
         capabilities: {

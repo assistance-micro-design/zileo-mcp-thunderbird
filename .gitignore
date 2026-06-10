@@ -27,3 +27,6 @@ docs/cahier-des-charges.md
 
 # Design assets
 Charte-graphique/
+
+# Packaged extension artifacts (published as GitHub Release assets)
+releases/

@@ -9,7 +9,7 @@ import WebSocket from "ws";
 import { EventEmitter } from "events";
 import logger from "../utils/logger.js";
 import { OperationTimeoutError } from "../utils/errors.js";
-import type { WsMessage, WebSocketBridgeOptions } from "./bridge.js";
+import type { WsMessage, WebSocketBridgeOptions } from "./types.js";
 
 /**
  * Fetches the auth token from the bridge HTTP endpoint.
@@ -84,6 +84,15 @@ export class WebSocketBridgeClient extends EventEmitter {
   private requestCounter: number = 0;
   private reconnectAttempts: number = 0;
   private readonly maxReconnectAttempts: number = 3;
+  /** Base delay for exponential reconnection backoff (1s, 2s, 4s, ...) */
+  private readonly reconnectBaseDelayMs: number = 1000;
+  private reconnectTimer: NodeJS.Timeout | null = null;
+  /** True while a scheduled reconnect attempt is pending/running */
+  private reconnecting: boolean = false;
+  /** True once a connection has succeeded (reconnect only makes sense then) */
+  private everConnected: boolean = false;
+  /** Set by disconnect() so an intentional close does not trigger reconnection */
+  private intentionalClose: boolean = false;
 
   /**
    * SEC-AUTH-001: Tool permissions received from the bridge.
@@ -139,6 +148,8 @@ export class WebSocketBridgeClient extends EventEmitter {
           clearTimeout(connectionTimeout);
           logger.info("Connected to existing WebSocket bridge");
           this.reconnectAttempts = 0;
+          this.reconnecting = false;
+          this.everConnected = true;
           this.emit("connected");
           resolve();
         });
@@ -157,6 +168,12 @@ export class WebSocketBridgeClient extends EventEmitter {
           this.ws = null;
           this.rejectAllPending("Connection closed");
           this.emit("disconnected");
+          // Audit fix: a bridge restart used to kill the MCP session for
+          // good. Re-establish with exponential backoff unless the close
+          // was requested (disconnect()) or a retry is already scheduled.
+          if (!this.intentionalClose && !this.reconnecting && this.everConnected) {
+            this.scheduleReconnect();
+          }
         });
 
         this.ws.on("error", (error) => {
@@ -170,6 +187,42 @@ export class WebSocketBridgeClient extends EventEmitter {
         reject(error);
       }
     });
+  }
+
+  /**
+   * Schedule the next reconnection attempt with exponential backoff
+   * (1s, 2s, 4s by default). After maxReconnectAttempts consecutive
+   * failures, gives up and emits a terminal "reconnect_failed" event.
+   * Each attempt re-fetches the auth token: a restarted bridge generates
+   * a new one.
+   */
+  private scheduleReconnect(): void {
+    if (this.reconnectAttempts >= this.maxReconnectAttempts) {
+      logger.warn(
+        `Bridge reconnection abandoned after ${this.maxReconnectAttempts} attempts`,
+      );
+      this.reconnecting = false;
+      this.emit("reconnect_failed");
+      return;
+    }
+
+    this.reconnectAttempts++;
+    this.reconnecting = true;
+    const delay =
+      this.reconnectBaseDelayMs * 2 ** (this.reconnectAttempts - 1);
+    logger.info(
+      `Reconnecting to bridge in ${delay}ms (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`,
+    );
+
+    this.reconnectTimer = setTimeout(() => {
+      this.reconnectTimer = null;
+      this.connect().catch((error) => {
+        logger.debug(
+          `Reconnect attempt ${this.reconnectAttempts} failed: ${error instanceof Error ? error.message : String(error)}`,
+        );
+        this.scheduleReconnect();
+      });
+    }, delay);
   }
 
   /**
@@ -335,10 +388,18 @@ export class WebSocketBridgeClient extends EventEmitter {
   }
 
   /**
-   * Disconnect from the bridge
+   * Disconnect from the bridge (intentional: cancels any pending
+   * reconnection and prevents the close event from scheduling one)
    */
   async disconnect(): Promise<void> {
     logger.info("Disconnecting from WebSocket bridge");
+
+    this.intentionalClose = true;
+    this.reconnecting = false;
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer);
+      this.reconnectTimer = null;
+    }
 
     this.rejectAllPending("Client disconnecting");
 

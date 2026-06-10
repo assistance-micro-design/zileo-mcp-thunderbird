@@ -84,35 +84,6 @@ export interface MailFolder {
   parentId?: string;
 }
 
-/** Folder information/metadata */
-export interface MailFolderInfo {
-  /** Total number of messages */
-  totalMessageCount: number;
-  /** Number of unread messages */
-  unreadMessageCount: number;
-  /** Last time folder was used */
-  lastUsed?: string;
-  /** Folder quota information */
-  quota?: {
-    used: number;
-    limit: number;
-  };
-}
-
-/** Folder capability flags */
-export interface MailFolderCapabilities {
-  /** Can add messages to folder */
-  canAddMessages: boolean;
-  /** Can add subfolders */
-  canAddSubfolders: boolean;
-  /** Can be deleted */
-  canDelete: boolean;
-  /** Can be renamed */
-  canRename: boolean;
-  /** Can delete messages */
-  canDeleteMessages: boolean;
-}
-
 // =============================================================================
 // Message Types
 // =============================================================================
@@ -167,88 +138,6 @@ export interface MessagePart {
   name?: string;
   /** Headers */
   headers?: Record<string, string[]>;
-}
-
-/** Message attachment information */
-export interface MessageAttachment {
-  /** Attachment content type */
-  contentType: string;
-  /** Filename */
-  name: string;
-  /** Size in bytes */
-  size: number;
-  /** Part name for retrieval */
-  partName: string;
-}
-
-/** Paginated message list */
-export interface MessageList {
-  /** Pagination ID for continueList */
-  id?: string;
-  /** Array of message headers */
-  messages: MessageHeader[];
-}
-
-/** Properties that can be updated on a message */
-export interface MessageProperties {
-  /** Mark as read/unread */
-  read?: boolean;
-  /** Mark as flagged/unflagged */
-  flagged?: boolean;
-  /** Mark as junk/not junk */
-  junk?: boolean;
-  /** Tags to apply */
-  tags?: string[];
-}
-
-/** Message query/search parameters */
-export interface MessageQuery {
-  /** Search in subject */
-  subject?: string;
-  /** Search by author */
-  author?: string;
-  /** Alias for author */
-  from?: string;
-  /** Search in recipients */
-  recipients?: string;
-  /** Alias for recipients */
-  to?: string;
-  /** Search in body */
-  body?: string;
-  /** Full text search */
-  fullText?: string;
-  /** Filter by tags */
-  tags?: string[];
-  /** Filter by read status */
-  read?: boolean;
-  /** Alias for read */
-  unread?: boolean;
-  /** Filter by flagged status */
-  flagged?: boolean;
-  /** Filter by junk status */
-  junk?: boolean;
-  /** Has attachments filter */
-  hasAttachments?: boolean;
-  /** Filter by header Message-ID */
-  headerMessageId?: string;
-  /** Start date filter */
-  fromDate?: string;
-  /** Alias for fromDate */
-  dateFrom?: string;
-  /** End date filter */
-  toDate?: string;
-  /** Alias for toDate */
-  dateTo?: string;
-  /** Limit to specific folder */
-  folderId?: string;
-  /** Limit to specific account */
-  accountId?: string;
-  /** Maximum results per page */
-  limit?: number;
-  /** Alias for limit */
-  pageSize?: number;
-  /** Query remote server */
-  queryRemote?: boolean;
 }
 
 // =============================================================================

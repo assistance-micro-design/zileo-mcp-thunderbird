@@ -12,7 +12,8 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import http from "http";
 import WebSocket from "ws";
-import { WebSocketBridge, WsMessage } from "../../websocket/bridge.js";
+import { WebSocketBridge } from "../../websocket/bridge.js";
+import type { WsMessage } from "../../websocket/types.js";
 
 /** Base port for this file; each test gets a fresh bridge on a unique port. */
 const BASE_PORT = 20100;

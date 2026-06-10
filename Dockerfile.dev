@@ -1,7 +1,10 @@
 # Thunderbird MCP Server - Development Dockerfile
 # With hot-reload support for development
 
-FROM node:20-alpine
+# Base image pinned by digest (same as production Dockerfile)
+ARG NODE_IMAGE=node:20-alpine@sha256:09e2b3d9726018aecf269bd35325f46bf75046a643a66d28360ec71132750ec8
+
+FROM ${NODE_IMAGE}
 
 # Install development tools
 RUN apk add --no-cache git
@@ -12,9 +15,10 @@ RUN addgroup -g 1001 -S mcp && \
 
 WORKDIR /app
 
-# Copy package files
+# Copy package files (extension/package.json: npm workspace in the lockfile)
 COPY package.json package-lock.json ./
 COPY server/package.json ./server/
+COPY extension/package.json ./extension/
 
 # Install all dependencies including devDependencies
 RUN npm ci --workspace=server
@@ -29,6 +33,7 @@ RUN mkdir -p /app/logs && chown -R mcp:mcp /app
 ENV NODE_ENV=development
 ENV LOG_LEVEL=debug
 ENV THUNDERBIRD_PORT=9876
+ENV LOG_DIR=/app/logs
 
 # Expose WebSocket port
 EXPOSE 9876
@@ -38,5 +43,7 @@ WORKDIR /app/server
 # Switch to non-root user for runtime
 USER mcp
 
-# Run with tsx for hot-reload
-CMD ["npx", "tsx", "watch", "src/index.ts"]
+# Run the standalone bridge with tsx hot-reload.
+# Rule (docker.md): the container main process is ALWAYS the bridge —
+# the MCP server is started on demand via `docker exec`.
+CMD ["npx", "tsx", "watch", "src/bridge-standalone.ts"]

@@ -100,6 +100,32 @@ services:
       - ./server/src:/app/server/src:ro
       - thunderbird-mcp-logs:/app/logs
 
+    # Same operational guarantees as production (docker.md rules):
+    # stdin open for `docker exec -i`, health check, resource limits.
+    stdin_open: true
+
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+        reservations:
+          cpus: "0.1"
+          memory: 64M
+
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "const http = require('http'); http.get('http://127.0.0.1:9876/health', r => { let d=''; r.on('data',c=>d+=c); r.on('end',()=>{ try { const j=JSON.parse(d); process.exit(j.status==='ok'?0:1); } catch { process.exit(1); }}); }).on('error',()=>process.exit(1));",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
     networks:
       - mcp-network
 

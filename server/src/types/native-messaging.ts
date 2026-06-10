@@ -1,77 +1,19 @@
 /**
  * Native Messaging Types
- * Types for communication between MCP Server and Thunderbird Extension
+ * Action vocabulary shared between the MCP server and the Thunderbird
+ * extension (extension/routing/handler.js routes on these names).
+ *
+ * Audit 2026-06-10: the native messaging *transport* (stdin/stdout framing)
+ * was removed with server/src/native-messaging/ — the WebSocket bridge is the
+ * only transport. This module keeps the protocol *vocabulary*, which is
+ * transport-independent. Message envelope types live in websocket/types.ts;
+ * response payload types live in types/action-results.ts. Unrouted actions
+ * (messages.listAttachments, addressBooks.get, ping, getVersion) were purged:
+ * the extension handler has no case for them.
  * @module types/native-messaging
  */
 
-// =============================================================================
-// Message Types
-// =============================================================================
-
-/** Native messaging message types */
-export type NativeMessageType =
-  | "request"
-  | "response"
-  | "error"
-  | "notification";
-
-/** Base native message structure */
-export interface NativeMessageBase {
-  /** Message type */
-  type: NativeMessageType;
-  /** Unique message ID for request/response correlation */
-  id: string;
-  /** Timestamp (ISO 8601) */
-  timestamp: string;
-}
-
-/** Native messaging request */
-export interface NativeRequest extends NativeMessageBase {
-  type: "request";
-  /** Action to perform */
-  action: string;
-  /** Action parameters */
-  params: Record<string, unknown>;
-}
-
-/** Native messaging response */
-export interface NativeResponse extends NativeMessageBase {
-  type: "response";
-  /** Whether operation was successful */
-  success: boolean;
-  /** Result data (on success) */
-  data?: unknown;
-  /** Error details (on failure) */
-  error?: NativeError;
-}
-
-/** Native messaging error */
-export interface NativeError {
-  /** Error code */
-  code: string;
-  /** Error message */
-  message: string;
-  /** Additional error details */
-  details?: unknown;
-}
-
-/** Native messaging notification (one-way, no response expected) */
-export interface NativeNotification extends NativeMessageBase {
-  type: "notification";
-  /** Notification event name */
-  event: string;
-  /** Event data */
-  data: unknown;
-}
-
-/** Union of all native message types */
-export type NativeMessage = NativeRequest | NativeResponse | NativeNotification;
-
-// =============================================================================
-// Action Types (Server -> Extension)
-// =============================================================================
-
-/** Message actions */
+/** Message actions (Server -> Extension) */
 export const MessageActions = {
   // Messages
   MESSAGES_SEARCH: "messages.search",
@@ -84,7 +26,6 @@ export const MessageActions = {
   MESSAGES_COPY: "messages.copy",
   MESSAGES_DELETE: "messages.delete",
   MESSAGES_ARCHIVE: "messages.archive",
-  MESSAGES_LIST_ATTACHMENTS: "messages.listAttachments",
 
   // Folders
   FOLDERS_LIST: "folders.list",
@@ -108,7 +49,6 @@ export const MessageActions = {
 
   // Address Books & Contacts
   ADDRESSBOOKS_LIST: "addressBooks.list",
-  ADDRESSBOOKS_GET: "addressBooks.get",
   ADDRESSBOOKS_CREATE: "addressBooks.create",
   ADDRESSBOOKS_DELETE: "addressBooks.delete",
   CONTACTS_LIST: "contacts.list",
@@ -146,217 +86,8 @@ export const MessageActions = {
   COMPOSE_SAVE_DRAFT: "compose.saveDraft",
   COMPOSE_SAVE_TEMPLATE: "compose.saveTemplate",
   COMPOSE_SEND: "compose.send",
-
-  // System
-  PING: "ping",
-  GET_VERSION: "getVersion",
 } as const;
 
+/** Union of all action string literals */
 export type MessageAction =
   (typeof MessageActions)[keyof typeof MessageActions];
-
-// =============================================================================
-// Notification Events (Extension -> Server)
-// =============================================================================
-
-/** Notification event types */
-export const NotificationEvents = {
-  // Messages
-  MESSAGE_CREATED: "message.created",
-  MESSAGE_UPDATED: "message.updated",
-  MESSAGE_DELETED: "message.deleted",
-  MESSAGE_MOVED: "message.moved",
-  NEW_MAIL_RECEIVED: "newMail.received",
-
-  // Folders
-  FOLDER_CREATED: "folder.created",
-  FOLDER_RENAMED: "folder.renamed",
-  FOLDER_DELETED: "folder.deleted",
-  FOLDER_MOVED: "folder.moved",
-
-  // Contacts
-  CONTACT_CREATED: "contact.created",
-  CONTACT_UPDATED: "contact.updated",
-  CONTACT_DELETED: "contact.deleted",
-
-  // Calendar
-  EVENT_CREATED: "event.created",
-  EVENT_UPDATED: "event.updated",
-  EVENT_DELETED: "event.deleted",
-
-  // Tasks
-  TASK_CREATED: "task.created",
-  TASK_UPDATED: "task.updated",
-  TASK_DELETED: "task.deleted",
-  TASK_COMPLETED: "task.completed",
-
-  // Connection
-  CONNECTED: "connected",
-  DISCONNECTED: "disconnected",
-  ERROR: "error",
-} as const;
-
-export type NotificationEvent =
-  (typeof NotificationEvents)[keyof typeof NotificationEvents];
-
-// =============================================================================
-// Error Codes
-// =============================================================================
-
-/** Native messaging error codes */
-export const NativeErrorCodes = {
-  // General errors
-  UNKNOWN_ERROR: "UNKNOWN_ERROR",
-  INVALID_REQUEST: "INVALID_REQUEST",
-  INVALID_ACTION: "INVALID_ACTION",
-  INVALID_PARAMS: "INVALID_PARAMS",
-  TIMEOUT: "TIMEOUT",
-
-  // Connection errors
-  NOT_CONNECTED: "NOT_CONNECTED",
-  CONNECTION_FAILED: "CONNECTION_FAILED",
-  CONNECTION_CLOSED: "CONNECTION_CLOSED",
-
-  // Permission errors
-  PERMISSION_DENIED: "PERMISSION_DENIED",
-
-  // Resource errors
-  NOT_FOUND: "NOT_FOUND",
-  ACCOUNT_NOT_FOUND: "ACCOUNT_NOT_FOUND",
-  FOLDER_NOT_FOUND: "FOLDER_NOT_FOUND",
-  MESSAGE_NOT_FOUND: "MESSAGE_NOT_FOUND",
-  CONTACT_NOT_FOUND: "CONTACT_NOT_FOUND",
-  CALENDAR_NOT_FOUND: "CALENDAR_NOT_FOUND",
-  EVENT_NOT_FOUND: "EVENT_NOT_FOUND",
-  TASK_NOT_FOUND: "TASK_NOT_FOUND",
-
-  // Operation errors
-  OPERATION_FAILED: "OPERATION_FAILED",
-  READ_ONLY: "READ_ONLY",
-  ALREADY_EXISTS: "ALREADY_EXISTS",
-  INVALID_FOLDER: "INVALID_FOLDER",
-  INVALID_MESSAGE: "INVALID_MESSAGE",
-
-  // Calendar errors
-  CALENDAR_NOT_AVAILABLE: "CALENDAR_NOT_AVAILABLE",
-  EXPERIMENTAL_API_UNAVAILABLE: "EXPERIMENTAL_API_UNAVAILABLE",
-} as const;
-
-export type NativeErrorCode =
-  (typeof NativeErrorCodes)[keyof typeof NativeErrorCodes];
-
-// =============================================================================
-// Protocol Types
-// =============================================================================
-
-/** Native messaging host manifest */
-export interface NativeHostManifest {
-  /** Application name (used in connectNative) */
-  name: string;
-  /** Human-readable description */
-  description: string;
-  /** Absolute path to executable */
-  path: string;
-  /** Connection type (always "stdio") */
-  type: "stdio";
-  /** List of allowed extension IDs */
-  allowed_extensions: string[];
-}
-
-/** Connection options */
-export interface ConnectionOptions {
-  /** Timeout for operations (ms) */
-  timeout?: number;
-  /** Reconnection attempts */
-  maxRetries?: number;
-  /** Delay between retries (ms) */
-  retryDelay?: number;
-}
-
-/** Connection state */
-export type ConnectionState =
-  | "disconnected"
-  | "connecting"
-  | "connected"
-  | "error";
-
-/** Connection status */
-export interface ConnectionStatus {
-  /** Current state */
-  state: ConnectionState;
-  /** Error message if state is 'error' */
-  error?: string;
-  /** Extension version */
-  extensionVersion?: string;
-  /** Thunderbird version */
-  thunderbirdVersion?: string;
-  /** Connected timestamp */
-  connectedAt?: string;
-}
-
-// =============================================================================
-// Helper Functions
-// =============================================================================
-
-/** Create a unique message ID */
-export function createMessageId(): string {
-  return `msg-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
-}
-
-/** Create a native request */
-export function createRequest(
-  action: MessageAction,
-  params: Record<string, unknown> = {},
-): NativeRequest {
-  return {
-    type: "request",
-    id: createMessageId(),
-    timestamp: new Date().toISOString(),
-    action,
-    params,
-  };
-}
-
-/** Create a native response */
-export function createResponse(
-  requestId: string,
-  success: boolean,
-  data?: unknown,
-  error?: NativeError,
-): NativeResponse {
-  return {
-    type: "response",
-    id: requestId,
-    timestamp: new Date().toISOString(),
-    success,
-    data,
-    error,
-  };
-}
-
-/** Create a native notification */
-export function createNotification(
-  event: NotificationEvent,
-  data: unknown,
-): NativeNotification {
-  return {
-    type: "notification",
-    id: createMessageId(),
-    timestamp: new Date().toISOString(),
-    event,
-    data,
-  };
-}
-
-/** Create a native error */
-export function createError(
-  code: NativeErrorCode,
-  message: string,
-  details?: unknown,
-): NativeError {
-  return {
-    code,
-    message,
-    details,
-  };
-}

@@ -8,7 +8,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 // Mock the websocket client-adapter module
 const mockSendRequest = vi.fn();
 vi.mock("../../websocket/client-adapter.js", () => ({
-  getNativeClient: (): { sendRequest: typeof mockSendRequest } => ({
+  getBridgeClient: (): { sendRequest: typeof mockSendRequest } => ({
     sendRequest: mockSendRequest,
   }),
 }));
@@ -200,6 +200,8 @@ describe("Resource Handlers", () => {
   // =========================================================================
   describe("handleContactsRecentResource", () => {
     it("should aggregate contacts from address books", async () => {
+      // contacts.list returns a pagination envelope, not a bare array
+      // (see ContactsPage in types/action-results.ts)
       mockSendRequest
         .mockResolvedValueOnce({
           success: true,
@@ -207,11 +209,23 @@ describe("Resource Handlers", () => {
         })
         .mockResolvedValueOnce({
           success: true,
-          data: [{ id: "c1", name: "Alice" }],
+          data: {
+            contacts: [{ id: "c1", name: "Alice" }],
+            total: 1,
+            limit: 10,
+            offset: 0,
+            hasMore: false,
+          },
         })
         .mockResolvedValueOnce({
           success: true,
-          data: [{ id: "c2", name: "Bob" }],
+          data: {
+            contacts: [{ id: "c2", name: "Bob" }],
+            total: 1,
+            limit: 10,
+            offset: 0,
+            hasMore: false,
+          },
         });
 
       const result = await handleContactsRecentResource(

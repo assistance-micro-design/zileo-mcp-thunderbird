@@ -3,7 +3,7 @@
  * Handles WebSocket communication with MCP server and dispatches API calls
  */
 
-import { handleNativeMessage } from "./native-messaging/handler.js";
+import { handleNativeMessage } from "./routing/handler.js";
 import { debugLog } from "./debug.js";
 
 // WebSocket connection state

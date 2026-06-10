@@ -27,6 +27,11 @@ const identitiesListSchema = z.object({
 // Tool Handlers
 // =============================================================================
 
+/**
+ * Lists all configured mail accounts (thunderbird_accounts_list).
+ * @param args - Raw tool arguments, validated against the Zod schema
+ * @returns ToolCallResult with the JSON payload, or isError on failure
+ */
 export async function handleAccountsList(
   args: unknown,
 ): Promise<ToolCallResult> {
@@ -38,6 +43,11 @@ export async function handleAccountsList(
   );
 }
 
+/**
+ * Fetches one mail account by ID (thunderbird_accounts_get).
+ * @param args - Raw tool arguments, validated against the Zod schema
+ * @returns ToolCallResult with the JSON payload, or isError on failure
+ */
 export async function handleAccountsGet(
   args: unknown,
 ): Promise<ToolCallResult> {
@@ -49,6 +59,11 @@ export async function handleAccountsGet(
   );
 }
 
+/**
+ * Lists sending identities, optionally per account (thunderbird_identities_list).
+ * @param args - Raw tool arguments, validated against the Zod schema
+ * @returns ToolCallResult with the JSON payload, or isError on failure
+ */
 export async function handleIdentitiesList(
   args: unknown,
 ): Promise<ToolCallResult> {

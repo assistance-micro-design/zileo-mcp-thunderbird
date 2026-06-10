@@ -51,6 +51,11 @@ const tagsDeleteSchema = z.object({
 // Tool Handlers
 // =============================================================================
 
+/**
+ * Lists all message tags (thunderbird_tags_list).
+ * @param args - Raw tool arguments, validated against the Zod schema
+ * @returns ToolCallResult with the JSON payload, or isError on failure
+ */
 export async function handleTagsList(args: unknown): Promise<ToolCallResult> {
   return executeToolHandler(
     args,
@@ -60,6 +65,11 @@ export async function handleTagsList(args: unknown): Promise<ToolCallResult> {
   );
 }
 
+/**
+ * Creates a message tag (thunderbird_tags_create).
+ * @param args - Raw tool arguments, validated against the Zod schema
+ * @returns ToolCallResult with the JSON payload, or isError on failure
+ */
 export async function handleTagsCreate(args: unknown): Promise<ToolCallResult> {
   return executeToolHandler(
     args,
@@ -69,6 +79,11 @@ export async function handleTagsCreate(args: unknown): Promise<ToolCallResult> {
   );
 }
 
+/**
+ * Updates a message tag (thunderbird_tags_update).
+ * @param args - Raw tool arguments, validated against the Zod schema
+ * @returns ToolCallResult with the JSON payload, or isError on failure
+ */
 export async function handleTagsUpdate(args: unknown): Promise<ToolCallResult> {
   return executeToolHandler(
     args,
@@ -78,6 +93,11 @@ export async function handleTagsUpdate(args: unknown): Promise<ToolCallResult> {
   );
 }
 
+/**
+ * Deletes a message tag (thunderbird_tags_delete).
+ * @param args - Raw tool arguments, validated against the Zod schema
+ * @returns ToolCallResult with the JSON payload, or isError on failure
+ */
 export async function handleTagsDelete(args: unknown): Promise<ToolCallResult> {
   return executeToolHandler(
     args,

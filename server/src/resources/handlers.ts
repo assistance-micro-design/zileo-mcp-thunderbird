@@ -4,9 +4,10 @@
  * @module resources/handlers
  */
 
-import { getNativeClient } from "../websocket/client-adapter.js";
+import { getBridgeClient } from "../websocket/client-adapter.js";
 import { MessageActions } from "../types/native-messaging.js";
 import type { ResourceContentsItem } from "../types/mcp.js";
+import type { ContactNode } from "../types/thunderbird.js";
 import logger from "../utils/logger.js";
 
 /**
@@ -22,7 +23,7 @@ export async function handleAccountsResource(
   uri: string,
 ): Promise<ResourceContentsItem> {
   logger.info("Fetching accounts resource");
-  const client = getNativeClient();
+  const client = getBridgeClient();
 
   const response = await client.sendRequest(MessageActions.ACCOUNTS_LIST, {});
 
@@ -51,7 +52,7 @@ export async function handleFoldersResource(
 
   const accountId = match[1];
   logger.info(`Fetching folders resource for account: ${accountId}`);
-  const client = getNativeClient();
+  const client = getBridgeClient();
 
   const response = await client.sendRequest(MessageActions.FOLDERS_LIST, {
     accountId,
@@ -77,7 +78,7 @@ export async function handleInboxUnreadResource(
   uri: string,
 ): Promise<ResourceContentsItem> {
   logger.info("Fetching all unread messages");
-  const client = getNativeClient();
+  const client = getBridgeClient();
 
   const response = await client.sendRequest(MessageActions.MESSAGES_SEARCH, {
     unread: true,
@@ -111,7 +112,7 @@ export async function handleInboxUnreadAccountResource(
 
   const accountId = match[1];
   logger.info(`Fetching unread messages for account: ${accountId}`);
-  const client = getNativeClient();
+  const client = getBridgeClient();
 
   const response = await client.sendRequest(MessageActions.MESSAGES_SEARCH, {
     unread: true,
@@ -140,7 +141,7 @@ export async function handleContactsRecentResource(
   uri: string,
 ): Promise<ResourceContentsItem> {
   logger.info("Fetching recent contacts");
-  const client = getNativeClient();
+  const client = getBridgeClient();
 
   // Get all address books
   const addressBooksResponse = await client.sendRequest(
@@ -155,9 +156,10 @@ export async function handleContactsRecentResource(
   }
 
   // For now, return contacts from all books (limited)
-  // In a real implementation, we'd track "recent" usage
-  const addressBooks = addressBooksResponse.data as Array<{ id: string }>;
-  const allContacts: unknown[] = [];
+  // In a real implementation, we'd track "recent" usage.
+  // data is typed AddressBookNode[] via the ActionResultMap contract.
+  const addressBooks = addressBooksResponse.data ?? [];
+  const allContacts: ContactNode[] = [];
 
   for (const book of addressBooks.slice(0, 3)) {
     // Limit to first 3 books
@@ -169,8 +171,14 @@ export async function handleContactsRecentResource(
       },
     );
 
-    if (contactsResponse.success && Array.isArray(contactsResponse.data)) {
-      allContacts.push(...contactsResponse.data);
+    // contacts.list returns a pagination envelope { contacts, total, ... } —
+    // the previous Array.isArray(data) check never matched, so this resource
+    // silently returned an empty list (bug surfaced by the typed contract).
+    if (
+      contactsResponse.success &&
+      Array.isArray(contactsResponse.data?.contacts)
+    ) {
+      allContacts.push(...contactsResponse.data.contacts);
     }
   }
 
@@ -189,7 +197,7 @@ export async function handleCalendarTodayResource(
   uri: string,
 ): Promise<ResourceContentsItem> {
   logger.info("Fetching today's calendar events");
-  const client = getNativeClient();
+  const client = getBridgeClient();
 
   const today = new Date();
   const todayStart = new Date(
@@ -233,7 +241,7 @@ export async function handleCalendarUpcomingResource(
   uri: string,
 ): Promise<ResourceContentsItem> {
   logger.info("Fetching upcoming calendar events");
-  const client = getNativeClient();
+  const client = getBridgeClient();
 
   const today = new Date();
   const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
@@ -265,7 +273,7 @@ export async function handleTasksPendingResource(
   uri: string,
 ): Promise<ResourceContentsItem> {
   logger.info("Fetching pending tasks");
-  const client = getNativeClient();
+  const client = getBridgeClient();
 
   const response = await client.sendRequest(MessageActions.TASKS_LIST, {
     completed: false,
