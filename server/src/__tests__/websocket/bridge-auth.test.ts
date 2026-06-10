@@ -5,6 +5,7 @@
 
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import http from "http";
+import net from "net";
 import WebSocket from "ws";
 import { WebSocketBridge, isLocalAddress } from "../../websocket/bridge.js";
 
@@ -282,6 +283,92 @@ describe("SEC-REVIEW-003: Rate limiter cleanup", () => {
     }
   });
 });
+
+describe("DoS hardening: malformed upgrade requests must not crash the bridge", () => {
+  let bridge: WebSocketBridge;
+  const PORT = TEST_PORT + 4;
+
+  beforeAll(async () => {
+    bridge = new WebSocketBridge({
+      port: PORT,
+      timeout: 5000,
+      maxPendingRequests: 10,
+    });
+    await bridge.start();
+  });
+
+  afterAll(async () => {
+    await bridge.stop();
+  });
+
+  it("should cleanly reject a 64-char multi-byte token (401) and stay alive", async () => {
+    // "é".repeat(64) has String length 64 (same as the hex token) but a
+    // Buffer byteLength of 128: without a byte-length guard,
+    // crypto.timingSafeEqual throws RangeError and kills the process.
+    const multiByteToken = encodeURIComponent("é".repeat(64));
+
+    const result = await attemptWsUpgrade(PORT, "/thunderbird", multiByteToken);
+    expect(result.connected).toBe(false);
+    expect(result.closeCode).toBe(401);
+
+    // The bridge must still answer afterwards (process alive, port bound).
+    const after = await fetchToken(PORT);
+    expect(after.status).toBe(200);
+  });
+
+  it("should cleanly reject an upgrade with a malformed Host header and stay alive", async () => {
+    // "[::1" (unclosed bracket) makes `new URL(url, "http://[::1")` throw.
+    const response = await rawUpgradeWithHost(PORT, "[::1");
+
+    expect(response).not.toBeNull();
+    expect(response).toMatch(/^HTTP\/1\.1 4\d\d/);
+
+    const after = await fetchToken(PORT);
+    expect(after.status).toBe(200);
+  });
+});
+
+/**
+ * Helper: send a raw HTTP upgrade request with an arbitrary Host header
+ * (the ws client library always sends a well-formed Host, so we need a raw
+ * socket to exercise the malformed case). Resolves with the beginning of the
+ * HTTP response, or null if the connection died without any response.
+ */
+function rawUpgradeWithHost(
+  port: number,
+  hostHeader: string,
+): Promise<string | null> {
+  return new Promise((resolve) => {
+    let data = "";
+    let settled = false;
+    const finish = (): void => {
+      if (!settled) {
+        settled = true;
+        resolve(data.length > 0 ? data : null);
+      }
+    };
+
+    const socket = net.connect(port, "127.0.0.1", () => {
+      socket.write(
+        "GET /thunderbird?token=deadbeef HTTP/1.1\r\n" +
+          `Host: ${hostHeader}\r\n` +
+          "Upgrade: websocket\r\n" +
+          "Connection: Upgrade\r\n" +
+          "Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\n" +
+          "Sec-WebSocket-Version: 13\r\n\r\n",
+      );
+    });
+    socket.on("data", (chunk: Buffer) => {
+      data += chunk.toString();
+    });
+    socket.on("close", finish);
+    socket.on("error", finish);
+    socket.setTimeout(2000, () => {
+      socket.destroy();
+      finish();
+    });
+  });
+}
 
 /**
  * Helper: fetch auth token from a specific host address
