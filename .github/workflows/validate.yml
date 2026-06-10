@@ -1,6 +1,8 @@
 name: Validate
 
 on:
+  push:
+    branches: [main]
   pull_request:
     branches: [main]
 
@@ -35,4 +37,20 @@ jobs:
         run: npm test
 
       - name: Test Coverage
-        run: cd server && npx vitest run --coverage --reporter=default 2>/dev/null || true
+        run: npm run --workspace=server coverage
+
+      - name: Audit (high and critical)
+        run: npm audit --audit-level=high
+
+  docker:
+    name: Docker build smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build production image
+        run: docker compose build
+
+      - name: Build dev image
+        run: docker compose --profile dev build
