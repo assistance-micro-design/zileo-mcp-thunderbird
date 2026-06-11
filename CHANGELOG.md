@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-06-11
+
 ### Added
 
 - `thunderbird_messages_get`: new optional `includeHeaders` parameter
@@ -37,14 +39,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   priority, `thunderbird_tasks_update`/`_complete` no longer wipe fields
   absent from the update, and `thunderbird_events_search` text matching
   works again.
-
-### Planned
-
-- HTTP+SSE transport option for remote connections
-- Resource subscription support
-- Additional prompts for common email workflows
-- Performance optimizations for large mailboxes
-- Configurable bridge port on the extension side
 
 ---
 
@@ -479,7 +473,8 @@ Completes the 8-fix security plan (initial score: 72/100 B-, target: ~92/100):
 
 ---
 
-[Unreleased]: https://github.com/assistance-micro-design/zileo-mcp-thunderbird/compare/v1.4.0...HEAD
+[Unreleased]: https://github.com/assistance-micro-design/zileo-mcp-thunderbird/compare/v1.5.0...HEAD
+[1.5.0]: https://github.com/assistance-micro-design/zileo-mcp-thunderbird/releases/tag/v1.5.0
 [1.4.0]: https://github.com/assistance-micro-design/zileo-mcp-thunderbird/releases/tag/v1.4.0
 [1.3.1]: https://github.com/assistance-micro-design/zileo-mcp-thunderbird/releases/tag/v1.3.1
 [1.3.0]: https://github.com/assistance-micro-design/zileo-mcp-thunderbird/releases/tag/v1.3.0
