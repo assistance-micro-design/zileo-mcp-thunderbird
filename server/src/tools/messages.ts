@@ -82,7 +82,67 @@ const messagesListUnreadSchema = z.object({
 const messagesGetSchema = z.object({
   messageId: z.number().int(),
   format: z.enum(["headers", "full", "raw"]).optional().default("headers"),
+  includeHeaders: z.boolean().optional().default(false),
 });
+
+/**
+ * RFC 822 headers kept by default in format "full" responses. Everything
+ * else (DKIM signatures, received chains, spam scores, fields already
+ * extracted at the root such as from/to/subject/date) is dropped unless
+ * includeHeaders: true is passed.
+ */
+const THREADING_HEADERS: readonly string[] = [
+  "references",
+  "in-reply-to",
+  "reply-to",
+  "list-id",
+];
+
+/**
+ * Remove the MIME headers of a message part, recursively over nested parts.
+ * Content type, body, and attachment metadata are preserved.
+ */
+function stripPartHeaders(part: unknown): unknown {
+  if (typeof part !== "object" || part === null || Array.isArray(part)) {
+    return part;
+  }
+  const cleaned = { ...(part as Record<string, unknown>) };
+  delete cleaned.headers;
+  if (Array.isArray(cleaned.parts)) {
+    cleaned.parts = cleaned.parts.map(stripPartHeaders);
+  }
+  return cleaned;
+}
+
+/**
+ * Reduce a format "full" payload to LLM-relevant content: the raw RFC 822
+ * header map is filtered down to the threading whitelist and per-part MIME
+ * headers are removed. Extracted root fields and part bodies are untouched.
+ */
+function filterFullMessageResponse(data: unknown): unknown {
+  if (typeof data !== "object" || data === null || Array.isArray(data)) {
+    return data;
+  }
+  const message = data as Record<string, unknown>;
+  const result: Record<string, unknown> = { ...message };
+
+  const headers = message.headers;
+  if (typeof headers === "object" && headers !== null && !Array.isArray(headers)) {
+    const filtered: Record<string, unknown> = {};
+    for (const [name, value] of Object.entries(headers)) {
+      if (THREADING_HEADERS.includes(name.toLowerCase())) {
+        filtered[name] = value;
+      }
+    }
+    result.headers = filtered;
+  }
+
+  if (Array.isArray(message.parts)) {
+    result.parts = message.parts.map(stripPartHeaders);
+  }
+
+  return result;
+}
 
 /** Upper bound for bulk message operations (move/copy/delete/archive) */
 const MAX_MESSAGE_IDS = 1000;
@@ -206,6 +266,10 @@ export async function handleMessagesGet(
             ? MessageActions.MESSAGES_GET_FULL
             : MessageActions.MESSAGES_GET,
       transformParams: (parsed) => ({ messageId: parsed.messageId }),
+      transformResponse: (data, parsed) =>
+        parsed.format === "full" && parsed.includeHeaders !== true
+          ? filterFullMessageResponse(data)
+          : data,
     },
   );
 }
@@ -476,13 +540,14 @@ Note: optional accountId is obtained from thunderbird_accounts_list. Omit to sca
   },
   {
     name: "thunderbird_messages_get",
-    description: `Fetch one message by ID at a chosen detail level: headers (metadata only), full (with MIME parts and body), or raw (RFC 822 source).
+    description: `Fetch one message by ID at a chosen detail level: headers (metadata only), full (with MIME parts and body), or raw (RFC 822 source). With format "full", the raw RFC 822 header map is reduced to threading headers (references, in-reply-to, reply-to, list-id) and per-part MIME headers are dropped; pass includeHeaders: true to get the complete raw header map instead.
 
 Example:
   Input: { messageId: 42, format: "full" }
   Output: { id: 42, subject: "Hello", author: "alice@example.com",
            recipients: ["bob@example.com"], date: "2026-01-15T10:00:00Z",
-           body: "Hi Bob, ...", attachments: [...] }
+           parts: [{ contentType: "text/html", body: "Hi Bob, ..." }],
+           headers: { references: ["<msg-1@example.com>"] } }
 
 Note: messageId is obtained from thunderbird_messages_list, thunderbird_messages_search, or thunderbird_messages_list_recent.`,
     inputSchema: {
@@ -495,6 +560,12 @@ Note: messageId is obtained from thunderbird_messages_list, thunderbird_messages
           description:
             "Detail level: headers (metadata only), full (with MIME parts), raw (RFC 822 source)",
           default: "headers",
+        },
+        includeHeaders: {
+          type: "boolean",
+          description:
+            "With format 'full', return the complete raw RFC 822 header map and per-part MIME headers instead of the default threading-headers whitelist",
+          default: false,
         },
       },
       required: ["messageId"],

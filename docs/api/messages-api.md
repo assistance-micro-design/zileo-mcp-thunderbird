@@ -246,16 +246,27 @@ Fetches a single message with configurable detail level. Three formats are avail
 
 #### Parameters
 
-| Name        | Type   | Required | Default   | Description                                  |
-| ----------- | ------ | -------- | --------- | -------------------------------------------- |
-| `messageId` | number | Yes      | -         | Unique numeric identifier of the message     |
-| `format`    | string | No       | `headers` | Level of detail: `headers`, `full`, or `raw` |
+| Name             | Type    | Required | Default   | Description                                                                      |
+| ---------------- | ------- | -------- | --------- | -------------------------------------------------------------------------------- |
+| `messageId`      | number  | Yes      | -         | Unique numeric identifier of the message                                          |
+| `format`         | string  | No       | `headers` | Level of detail: `headers`, `full`, or `raw`                                      |
+| `includeHeaders` | boolean | No       | `false`   | With `format: "full"`, return the complete raw RFC 822 header map (see filtering) |
 
 #### Format Options
 
 - **headers**: Message metadata only (subject, from, to, date, flags, size)
 - **full**: Headers + MIME parts array with decoded body content
 - **raw**: Complete RFC 822 message source as plain text
+
+#### Header Filtering (format `full`)
+
+By default, the raw RFC 822 header map returned with `format: "full"` is
+reduced to the threading whitelist (`references`, `in-reply-to`, `reply-to`,
+`list-id`) and the per-part MIME headers are removed. Everything else (DKIM
+signatures, received chains, spam scores, fields already extracted at the
+root such as from/to/subject/date) is noise for most consumers and is
+dropped. Pass `includeHeaders: true` to get the unfiltered map and per-part
+headers back. The `raw` format is always unfiltered.
 
 #### Response Format
 
@@ -281,7 +292,7 @@ Fetches a single message with configurable detail level. Three formats are avail
 }
 ```
 
-**Full format:**
+**Full format** (default, filtered headers):
 
 ```json
 {
@@ -295,13 +306,17 @@ Fetches a single message with configurable detail level. Three formats are avail
         {\"contentType\": \"text/html\", \"body\": \"<html>...\"}
       ],
       \"headers\": {
-        \"message-id\": \"<...>\",
-        \"references\": \"<...>\"
+        \"references\": [\"<...>\"],
+        \"in-reply-to\": [\"<...>\"]
       }
     }"
   }]
 }
 ```
+
+With `includeHeaders: true`, `headers` contains the complete raw RFC 822
+header map (dkim-signature, received, authentication-results, etc.) and each
+MIME part keeps its own `headers` object.
 
 **Raw format:**
 

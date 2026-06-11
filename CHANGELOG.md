@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `thunderbird_messages_get`: new optional `includeHeaders` parameter
+  (default `false`) to opt back into the complete raw RFC 822 header map
+  with `format: "full"`.
+
+### Changed
+
+- `thunderbird_messages_get` with `format: "full"` now reduces the raw
+  RFC 822 header map to threading headers (`references`, `in-reply-to`,
+  `reply-to`, `list-id`) and drops per-part MIME headers by default. The
+  extracted root fields (author, recipients, subject, date, tags, folder)
+  and part bodies are unchanged; pass `includeHeaders: true` for the
+  previous unfiltered payload. The `raw` format is unaffected.
+
+### Fixed
+
+- Tasks and event search returned empty fields: the jCal extractors used by
+  `thunderbird_tasks_*` and the `thunderbird_events_search` text filter read
+  the `vcalendar` wrapper properties instead of the inner `vtodo`/`vevent`
+  component. Tasks now return their title/description/dueDate/completed/
+  priority, `thunderbird_tasks_update`/`_complete` no longer wipe fields
+  absent from the update, and `thunderbird_events_search` text matching
+  works again.
+
 ### Planned
 
 - HTTP+SSE transport option for remote connections

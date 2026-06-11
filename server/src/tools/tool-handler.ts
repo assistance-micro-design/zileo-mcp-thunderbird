@@ -33,8 +33,11 @@ import type { ToolCallResult } from "../types/mcp.js";
 interface ExecuteToolHandlerOptions {
   /** Transform parsed params before sending to the bridge */
   transformParams?: (parsed: Record<string, unknown>) => Record<string, unknown>;
-  /** Transform response data before returning to the client */
-  transformResponse?: (data: unknown) => unknown;
+  /** Transform response data before returning to the client (also receives the parsed params) */
+  transformResponse?: (
+    data: unknown,
+    parsed: Record<string, unknown>,
+  ) => unknown;
   /**
    * Pick the bridge action dynamically based on parsed params.
    * When provided, takes precedence over the static `action` argument.
@@ -87,7 +90,7 @@ export async function executeToolHandler(
     }
 
     const data = options?.transformResponse
-      ? options.transformResponse(response.data)
+      ? options.transformResponse(response.data, parsed)
       : response.data;
 
     return {
