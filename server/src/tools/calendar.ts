@@ -331,7 +331,7 @@ Note: eventId comes from thunderbird_events_list or thunderbird_events_search. c
   },
   {
     name: "thunderbird_events_create",
-    description: `(EXPERIMENTAL) Create a new event in one calendar with title, ISO 8601 start/end, optional location, description, attendees, and a recurrence rule.
+    description: `(EXPERIMENTAL) Create a new event in one calendar with title, ISO 8601 start/end (with timezone offset), optional location, description, attendees, and a recurrence rule.
 
 Example:
   Input: { calendarId: "cal1", title: "Team meeting",
