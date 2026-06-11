@@ -38,14 +38,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   absent from the update, and `thunderbird_events_search` text matching
   works again.
 
-### Planned
-
-- HTTP+SSE transport option for remote connections
-- Resource subscription support
-- Additional prompts for common email workflows
-- Performance optimizations for large mailboxes
-- Configurable bridge port on the extension side
-
 ---
 
 ## [1.4.0] - 2026-06-10
