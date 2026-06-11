@@ -330,31 +330,37 @@ export const CalendarAPI = {
   // ==================== HELPERS ====================
 
   /**
+   * Resolve the jCal props array of the inner component (vevent/vtodo).
+   * The calendar API returns items serialized as a full VCALENDAR, so the
+   * jCal array is ["vcalendar", [props], [["vevent"|"vtodo", [props], []]]].
+   * Bare components (["vevent"|"vtodo", [props], []]) are accepted too.
+   * @private
+   */
+  _resolveJCalProps(item) {
+    const jcal = item && item.item;
+    if (!jcal || !Array.isArray(jcal)) return [];
+
+    if (jcal[0] === "vcalendar" && Array.isArray(jcal[2])) {
+      // Find vevent or vtodo in subcomponents
+      const subcomp = jcal[2].find(
+        (c) => Array.isArray(c) && (c[0] === "vevent" || c[0] === "vtodo"),
+      );
+      return subcomp ? subcomp[1] || [] : [];
+    }
+    if (jcal[0] === "vevent" || jcal[0] === "vtodo") {
+      return jcal[1] || [];
+    }
+    return [];
+  },
+
+  /**
    * Format a calendar item (event) for consistent output
    * @private
    */
   _formatCalendarItem(item) {
     if (!item) return null;
 
-    // jCal format: item.item is the jCal array
-    // Structure: ["vcalendar", [props], [["vevent", [props], []]]]
-    // Or directly: ["vevent", [props], []]
-    const jcal = item.item;
-    let props = [];
-
-    if (jcal && Array.isArray(jcal)) {
-      if (jcal[0] === "vcalendar" && Array.isArray(jcal[2])) {
-        // Find vevent or vtodo in subcomponents
-        const subcomp = jcal[2].find(
-          (c) => c[0] === "vevent" || c[0] === "vtodo",
-        );
-        if (subcomp) {
-          props = subcomp[1] || [];
-        }
-      } else if (jcal[0] === "vevent" || jcal[0] === "vtodo") {
-        props = jcal[1] || [];
-      }
-    }
+    const props = this._resolveJCalProps(item);
 
     return {
       id: item.id,
@@ -418,16 +424,7 @@ export const CalendarAPI = {
    * @private
    */
   _extractTitle(item) {
-    try {
-      if (item.item && Array.isArray(item.item)) {
-        const props = item.item[1];
-        const summary = props.find((p) => p[0] === "summary");
-        return summary ? summary[3] : "";
-      }
-    } catch (_e) {
-      // ignore: jCal property absent or malformed
-    }
-    return "";
+    return this._getProp(this._resolveJCalProps(item), "summary") || "";
   },
 
   /**
@@ -435,16 +432,7 @@ export const CalendarAPI = {
    * @private
    */
   _extractDescription(item) {
-    try {
-      if (item.item && Array.isArray(item.item)) {
-        const props = item.item[1];
-        const desc = props.find((p) => p[0] === "description");
-        return desc ? desc[3] : "";
-      }
-    } catch (_e) {
-      // ignore: jCal property absent or malformed
-    }
-    return "";
+    return this._getProp(this._resolveJCalProps(item), "description") || "";
   },
 
   /**
@@ -452,16 +440,7 @@ export const CalendarAPI = {
    * @private
    */
   _extractLocation(item) {
-    try {
-      if (item.item && Array.isArray(item.item)) {
-        const props = item.item[1];
-        const loc = props.find((p) => p[0] === "location");
-        return loc ? loc[3] : "";
-      }
-    } catch (_e) {
-      // ignore: jCal property absent or malformed
-    }
-    return "";
+    return this._getProp(this._resolveJCalProps(item), "location") || "";
   },
 
   /**
@@ -469,16 +448,7 @@ export const CalendarAPI = {
    * @private
    */
   _extractDueDate(item) {
-    try {
-      if (item.item && Array.isArray(item.item)) {
-        const props = item.item[1];
-        const due = props.find((p) => p[0] === "due");
-        return due ? due[3] : null;
-      }
-    } catch (_e) {
-      // ignore: jCal property absent or malformed
-    }
-    return null;
+    return this._getProp(this._resolveJCalProps(item), "due");
   },
 
   /**
@@ -486,16 +456,8 @@ export const CalendarAPI = {
    * @private
    */
   _extractPriority(item) {
-    try {
-      if (item.item && Array.isArray(item.item)) {
-        const props = item.item[1];
-        const priority = props.find((p) => p[0] === "priority");
-        return priority ? parseInt(priority[3]) : 0;
-      }
-    } catch (_e) {
-      // ignore: jCal property absent or malformed
-    }
-    return 0;
+    const priority = this._getProp(this._resolveJCalProps(item), "priority");
+    return priority !== null ? parseInt(priority, 10) : 0;
   },
 
   /**
@@ -503,16 +465,7 @@ export const CalendarAPI = {
    * @private
    */
   _isTaskCompleted(item) {
-    try {
-      if (item.item && Array.isArray(item.item)) {
-        const props = item.item[1];
-        const status = props.find((p) => p[0] === "status");
-        return status ? status[3] === "COMPLETED" : false;
-      }
-    } catch (_e) {
-      // ignore: jCal property absent or malformed
-    }
-    return false;
+    return this._getProp(this._resolveJCalProps(item), "status") === "COMPLETED";
   },
 
   /**
