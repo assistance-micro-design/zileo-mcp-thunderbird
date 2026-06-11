@@ -246,11 +246,12 @@ Fetches a single message with configurable detail level. Three formats are avail
 
 #### Parameters
 
-| Name             | Type    | Required | Default   | Description                                                                      |
-| ---------------- | ------- | -------- | --------- | -------------------------------------------------------------------------------- |
-| `messageId`      | number  | Yes      | -         | Unique numeric identifier of the message                                          |
-| `format`         | string  | No       | `headers` | Level of detail: `headers`, `full`, or `raw`                                      |
-| `includeHeaders` | boolean | No       | `false`   | With `format: "full"`, return the complete raw RFC 822 header map (see filtering) |
+| Name             | Type    | Required | Default    | Description                                                                        |
+| ---------------- | ------- | -------- | ---------- | ----------------------------------------------------------------------------------- |
+| `messageId`      | number  | Yes      | -          | Unique numeric identifier of the message                                             |
+| `format`         | string  | No       | `headers`  | Level of detail: `headers`, `full`, or `raw`                                         |
+| `includeHeaders` | boolean | No       | `false`    | With `format: "full"`, return the complete raw RFC 822 header map (see filtering)    |
+| `bodyFormat`     | string  | No       | `original` | With `format: "full"`, `text` returns plain-text bodies (see body conversion below) |
 
 #### Format Options
 
@@ -267,6 +268,24 @@ signatures, received chains, spam scores, fields already extracted at the
 root such as from/to/subject/date) is noise for most consumers and is
 dropped. Pass `includeHeaders: true` to get the unfiltered map and per-part
 headers back. The `raw` format is always unfiltered.
+
+#### Body Conversion (format `full`)
+
+With `bodyFormat: "text"`, the MIME parts are projected to text-first
+content:
+
+- when the message carries a `text/plain` alternative, it is kept and the
+  redundant `text/html` part is dropped;
+- HTML-only bodies are converted to plain text server-side (style/script
+  blocks, comments, and tags removed, entities decoded); the converted part
+  reports `contentType: "text/plain"` plus `convertedFrom: "text/html"`;
+- non-text parts (attachments, inline images) keep their metadata
+  (`contentType`, `name`, `partName`, `size`) but lose their `body`, so the
+  presence of attachments stays visible.
+
+The default (`original`) returns bodies exactly as stored. The conversion is
+best-effort and aimed at LLM consumption; use the default or `format: "raw"`
+when exact markup matters.
 
 #### Response Format
 

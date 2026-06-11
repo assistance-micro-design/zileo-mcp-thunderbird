@@ -12,6 +12,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `thunderbird_messages_get`: new optional `includeHeaders` parameter
   (default `false`) to opt back into the complete raw RFC 822 header map
   with `format: "full"`.
+- `thunderbird_messages_get`: new optional `bodyFormat` parameter
+  (`original` | `text`, default `original`). With `text`, the existing
+  `text/plain` part is preferred (the redundant HTML alternative is
+  dropped), HTML-only bodies are converted to plain text server-side
+  (flagged with `convertedFrom: "text/html"`), and non-text parts keep
+  their metadata without body.
 
 ### Changed
 

@@ -47,9 +47,10 @@ const EXTENSION_DIR = path.resolve(__dirname, "../../../../extension");
  */
 const SERVER_SIDE_CONSUMED: Record<string, readonly string[]> = {
   // dispatched via resolveAction to MESSAGES_GET / _FULL / _RAW;
-  // transformParams strips `format` before send. `includeHeaders` gates the
-  // server-side response filtering (transformResponse) for format "full".
-  thunderbird_messages_get: ["format", "includeHeaders"],
+  // transformParams strips `format` before send. `includeHeaders` and
+  // `bodyFormat` gate the server-side response filtering (transformResponse)
+  // for format "full".
+  thunderbird_messages_get: ["format", "includeHeaders", "bodyFormat"],
   // transformParams converts `hoursAgo` into dateFrom/dateTo server-side;
   // the extension only ever sees the resolved date range.
   thunderbird_messages_list_recent: ["hoursAgo"],

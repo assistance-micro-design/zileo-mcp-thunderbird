@@ -83,7 +83,118 @@ const messagesGetSchema = z.object({
   messageId: z.number().int(),
   format: z.enum(["headers", "full", "raw"]).optional().default("headers"),
   includeHeaders: z.boolean().optional().default(false),
+  bodyFormat: z.enum(["original", "text"]).optional().default("original"),
 });
+
+/** Narrowing guard for plain JSON objects */
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+/**
+ * Best-effort conversion of an HTML e-mail body to readable plain text.
+ * Handles the common e-mail HTML shapes (style/script blocks, MSO
+ * conditional comments, block-level tags, basic entities); not a full HTML
+ * parser.
+ */
+function htmlToPlainText(html: string): string {
+  const text = html
+    .replace(/<(style|script|head)\b[^>]*>[\s\S]*?<\/\1\s*>/gi, " ")
+    .replace(/<!--[\s\S]*?-->/g, " ")
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/(p|div|tr|li|h[1-6]|table|blockquote|title)\s*>/gi, "\n")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#(\d+);/g, (_m, code: string) =>
+      String.fromCodePoint(Number(code)),
+    )
+    .replace(/&#x([0-9a-f]+);/gi, (_m, code: string) =>
+      String.fromCodePoint(parseInt(code, 16)),
+    )
+    .replace(/&amp;/gi, "&");
+
+  return text
+    .split("\n")
+    .map((line) =>
+      line
+        .replace(/[ \t\u00A0]+/g, " ")
+        // Inline tags are replaced by a space, which can land before
+        // punctuation ("word ,"). Not applied to !/? (French spacing).
+        .replace(/ ([,.])/g, "$1")
+        .trim(),
+    )
+    .join("\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
+/** True when a part subtree contains a non-empty text/plain body */
+function hasPlainTextBody(part: unknown): boolean {
+  if (!isRecord(part)) return false;
+  const contentType =
+    typeof part.contentType === "string" ? part.contentType.toLowerCase() : "";
+  if (contentType.startsWith("text/plain")) {
+    return typeof part.body === "string" && part.body.trim().length > 0;
+  }
+  return Array.isArray(part.parts) && part.parts.some(hasPlainTextBody);
+}
+
+/**
+ * Project one MIME part to text-first content. text/plain parts are kept;
+ * text/html parts are dropped when a plain alternative exists elsewhere in
+ * the message, otherwise their body is converted to plain text (flagged via
+ * convertedFrom). Non-text parts keep their metadata without body. Returns
+ * null when the part should be removed.
+ */
+function partToText(part: unknown, hasPlain: boolean): unknown {
+  if (!isRecord(part)) return part;
+  const contentType =
+    typeof part.contentType === "string" ? part.contentType.toLowerCase() : "";
+  const cleaned = { ...part };
+
+  if (Array.isArray(cleaned.parts)) {
+    cleaned.parts = cleaned.parts
+      .map((p) => partToText(p, hasPlain))
+      .filter((p) => p !== null);
+  }
+
+  if (contentType.startsWith("text/plain")) {
+    return cleaned;
+  }
+  if (contentType.startsWith("text/html")) {
+    if (hasPlain) return null;
+    if (typeof cleaned.body === "string") {
+      cleaned.body = htmlToPlainText(cleaned.body);
+      cleaned.contentType = "text/plain";
+      cleaned.convertedFrom = "text/html";
+    }
+    return cleaned;
+  }
+
+  // Containers and non-text leaves (attachments, images): metadata only
+  delete cleaned.body;
+  return cleaned;
+}
+
+/**
+ * Apply bodyFormat: "text" to a format "full" payload: prefer existing
+ * text/plain parts, convert HTML-only bodies server-side, keep attachment
+ * metadata. Root fields are untouched.
+ */
+function convertFullMessageToText(data: unknown): unknown {
+  if (!isRecord(data)) return data;
+  const result = { ...data };
+  if (Array.isArray(result.parts)) {
+    const hasPlain = result.parts.some(hasPlainTextBody);
+    result.parts = result.parts
+      .map((p) => partToText(p, hasPlain))
+      .filter((p) => p !== null);
+  }
+  return result;
+}
 
 /**
  * RFC 822 headers kept by default in format "full" responses. Everything
@@ -266,10 +377,17 @@ export async function handleMessagesGet(
             ? MessageActions.MESSAGES_GET_FULL
             : MessageActions.MESSAGES_GET,
       transformParams: (parsed) => ({ messageId: parsed.messageId }),
-      transformResponse: (data, parsed) =>
-        parsed.format === "full" && parsed.includeHeaders !== true
-          ? filterFullMessageResponse(data)
-          : data,
+      transformResponse: (data, parsed) => {
+        if (parsed.format !== "full") return data;
+        let result = data;
+        if (parsed.includeHeaders !== true) {
+          result = filterFullMessageResponse(result);
+        }
+        if (parsed.bodyFormat === "text") {
+          result = convertFullMessageToText(result);
+        }
+        return result;
+      },
     },
   );
 }
@@ -540,13 +658,13 @@ Note: optional accountId is obtained from thunderbird_accounts_list. Omit to sca
   },
   {
     name: "thunderbird_messages_get",
-    description: `Fetch one message by ID at a chosen detail level: headers (metadata only), full (with MIME parts and body), or raw (RFC 822 source). With format "full", the raw RFC 822 header map is reduced to threading headers (references, in-reply-to, reply-to, list-id) and per-part MIME headers are dropped; pass includeHeaders: true to get the complete raw header map instead.
+    description: `Fetch one message by ID at a chosen detail level: headers (metadata only), full (with MIME parts and body), or raw (RFC 822 source). With format "full", the raw RFC 822 header map is reduced to threading headers (references, in-reply-to, reply-to, list-id) and per-part MIME headers are dropped; pass includeHeaders: true to get the complete raw header map instead. Pass bodyFormat: "text" to get plain-text bodies (existing text/plain part preferred, HTML converted server-side otherwise; attachments keep metadata without body).
 
 Example:
-  Input: { messageId: 42, format: "full" }
+  Input: { messageId: 42, format: "full", bodyFormat: "text" }
   Output: { id: 42, subject: "Hello", author: "alice@example.com",
            recipients: ["bob@example.com"], date: "2026-01-15T10:00:00Z",
-           parts: [{ contentType: "text/html", body: "Hi Bob, ..." }],
+           parts: [{ contentType: "text/plain", body: "Hi Bob, ..." }],
            headers: { references: ["<msg-1@example.com>"] } }
 
 Note: messageId is obtained from thunderbird_messages_list, thunderbird_messages_search, or thunderbird_messages_list_recent.`,
@@ -566,6 +684,13 @@ Note: messageId is obtained from thunderbird_messages_list, thunderbird_messages
           description:
             "With format 'full', return the complete raw RFC 822 header map and per-part MIME headers instead of the default threading-headers whitelist",
           default: false,
+        },
+        bodyFormat: {
+          type: "string",
+          enum: ["original", "text"],
+          description:
+            "With format 'full': 'text' returns plain-text bodies (existing text/plain part preferred, HTML converted otherwise; non-text parts keep metadata only). Default: original (bodies as stored)",
+          default: "original",
         },
       },
       required: ["messageId"],
