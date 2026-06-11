@@ -1,3 +1,19 @@
+/*
+ * Copyright 2025-2026 Assistance Micro Design
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 /**
  * Calendar API - Wrapper for browser.calendar.* (experimental)
  * Provides calendar, events, and tasks operations
@@ -512,7 +528,7 @@ export const CalendarAPI = {
     attendees,
     recurrence,
   }) {
-    const uid = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}@thunderbird-mcp`;
+    const uid = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}@zileo-mcp-thunderbird`;
     const dtstamp =
       new Date().toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
     const dtstart = this._formatICalDate(start);
@@ -520,7 +536,7 @@ export const CalendarAPI = {
 
     let ical = `BEGIN:VCALENDAR
 VERSION:2.0
-PRODID:-//Thunderbird MCP//EN
+PRODID:-//Zileo MCP Thunderbird//EN
 BEGIN:VEVENT
 UID:${uid}
 DTSTAMP:${dtstamp}
@@ -554,13 +570,13 @@ END:VCALENDAR`;
    * @private
    */
   _buildICalTask({ title, description, dueDate, priority, completed }) {
-    const uid = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}@thunderbird-mcp`;
+    const uid = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}@zileo-mcp-thunderbird`;
     const dtstamp =
       new Date().toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
 
     let ical = `BEGIN:VCALENDAR
 VERSION:2.0
-PRODID:-//Thunderbird MCP//EN
+PRODID:-//Zileo MCP Thunderbird//EN
 BEGIN:VTODO
 UID:${uid}
 DTSTAMP:${dtstamp}

@@ -1,6 +1,6 @@
 # Resources API Documentation
 
-This document describes all MCP resources available in the Thunderbird MCP Server.
+This document describes all MCP resources available in the Zileo MCP — Thunderbird.
 
 ## Overview
 
@@ -692,13 +692,13 @@ Response:
 
 Resource operations may return these error codes:
 
-| Code   | Message                 | Description                           |
-| ------ | ----------------------- | ------------------------------------- |
-| -32000 | Thunderbird not running | Thunderbird application is not active |
-| -32001 | Extension not installed | Thunderbird MCP extension not found   |
-| -32003 | Resource not found      | Invalid URI or resource doesn't exist |
-| -32602 | Invalid params          | Malformed URI or missing parameters   |
-| -32603 | Internal error          | Resource generation failed            |
+| Code   | Message                 | Description                                 |
+| ------ | ----------------------- | ------------------------------------------- |
+| -32000 | Thunderbird not running | Thunderbird application is not active       |
+| -32001 | Extension not installed | Zileo MCP — Thunderbird extension not found |
+| -32003 | Resource not found      | Invalid URI or resource doesn't exist       |
+| -32602 | Invalid params          | Malformed URI or missing parameters         |
+| -32603 | Internal error          | Resource generation failed                  |
 
 ---
 

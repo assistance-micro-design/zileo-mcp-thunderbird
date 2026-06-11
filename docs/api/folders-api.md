@@ -1,6 +1,6 @@
 # Folders API Documentation
 
-This document describes all MCP tools for folder/mailbox operations in the Thunderbird MCP Server.
+This document describes all MCP tools for folder/mailbox operations in the Zileo MCP — Thunderbird.
 
 ## Overview
 
@@ -225,9 +225,9 @@ Changes the display name of a folder without affecting its contents or hierarchy
 
 #### Parameters
 
-| Name       | Type   | Required | Description                |
-| ---------- | ------ | -------- | -------------------------- |
-| `folderId` | string | Yes      | ID of the folder to rename |
+| Name       | Type   | Required | Description                                               |
+| ---------- | ------ | -------- | --------------------------------------------------------- |
+| `folderId` | string | Yes      | ID of the folder to rename                                |
 | `newName`  | string | Yes      | New name for the folder (1-255 chars, no path separators) |
 
 #### Response Format
@@ -438,7 +438,7 @@ All folder operations may return these error codes:
 | Code   | Message                 | Description                                                  |
 | ------ | ----------------------- | ------------------------------------------------------------ |
 | -32000 | Thunderbird not running | Thunderbird application is not active                        |
-| -32001 | Extension not installed | Thunderbird MCP extension not found                          |
+| -32001 | Extension not installed | Zileo MCP — Thunderbird extension not found                  |
 | -32002 | Permission denied       | Required permission not granted                              |
 | -32003 | Resource not found      | Folder or account not found                                  |
 | -32004 | Operation timeout       | Operation exceeded timeout limit (10s)                       |

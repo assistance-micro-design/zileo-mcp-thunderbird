@@ -22,7 +22,7 @@ We are committed to providing a welcoming and respectful environment for everyon
 
 ## Enforcement
 
-Project maintainers are responsible for enforcing these standards. Instances of unacceptable behavior may be reported via [GitHub Issues](https://github.com/assistance-micro-design/thunderbird-mcp/issues) (for non-sensitive matters) or via [GitHub Security Advisories](https://github.com/assistance-micro-design/thunderbird-mcp/security/advisories/new) (for private reports). All complaints will be reviewed and addressed appropriately.
+Project maintainers are responsible for enforcing these standards. Instances of unacceptable behavior may be reported via [GitHub Issues](https://github.com/assistance-micro-design/zileo-mcp-thunderbird/issues) (for non-sensitive matters) or via [GitHub Security Advisories](https://github.com/assistance-micro-design/zileo-mcp-thunderbird/security/advisories/new) (for private reports). All complaints will be reviewed and addressed appropriately.
 
 ## Attribution
 

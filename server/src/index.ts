@@ -1,8 +1,24 @@
 #!/usr/bin/env node
 
+/*
+ * Copyright 2025-2026 Assistance Micro Design
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 /**
- * Thunderbird MCP Server Entry Point
- * Main entry point for the Thunderbird MCP server
+ * Zileo MCP — Thunderbird Entry Point
+ * Main entry point for the Zileo MCP — Thunderbird server
  * @module index
  */
 
@@ -45,7 +61,7 @@ async function main(): Promise<void> {
       process.exit(1);
     });
 
-    logger.info("Thunderbird MCP Server is running");
+    logger.info("Zileo MCP — Thunderbird is running");
   } catch (error) {
     logger.error("Failed to start server", error);
     process.exit(1);

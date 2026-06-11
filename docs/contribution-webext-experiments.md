@@ -172,7 +172,7 @@ After applying this fix:
 ### Test Extension
 
 We have a working implementation at:
-https://github.com/assistance-micro-design/thunderbird-mcp
+https://github.com/assistance-micro-design/zileo-mcp-thunderbird
 
 This MCP (Model Context Protocol) server uses the Calendar experimental API with this fix applied.
 
@@ -207,5 +207,5 @@ This MCP (Model Context Protocol) server uses the Calendar experimental API with
 ## Contact
 
 **Author**: Assistance Micro Design
-**Project**: [thunderbird-mcp](https://github.com/assistance-micro-design/thunderbird-mcp)
+**Project**: [zileo-mcp-thunderbird](https://github.com/assistance-micro-design/zileo-mcp-thunderbird)
 **Email**: assistance-micro-design@pm.me

@@ -1,6 +1,6 @@
 # Messages API Documentation
 
-This document describes all MCP tools for email/message operations in the Thunderbird MCP Server.
+This document describes all MCP tools for email/message operations in the Zileo MCP — Thunderbird.
 
 ## Overview
 
@@ -600,10 +600,10 @@ Moves messages to the appropriate archive folder based on Thunderbird's archive 
 (`messages.continueList()`) before sorting and slicing, bounded by
 **`MAX_SCAN` = 5000** accumulated messages per request:
 
-| Field          | Meaning                                                                                       |
-| -------------- | --------------------------------------------------------------------------------------------- |
-| `total`        | Real number of matching messages when `scanComplete` is `true`; otherwise a **lower bound** (number scanned) |
-| `hasMore`      | More results exist beyond `limit`/`offset`, or the scan was incomplete                        |
+| Field          | Meaning                                                                                                                                                        |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `total`        | Real number of matching messages when `scanComplete` is `true`; otherwise a **lower bound** (number scanned)                                                   |
+| `hasMore`      | More results exist beyond `limit`/`offset`, or the scan was incomplete                                                                                         |
 | `scanComplete` | `false` means the `MAX_SCAN` bound was hit and the enumeration was released (`abortList()`) — narrow the filters (folder, date range) for an exhaustive result |
 
 Sorting (`sortBy`/`sortOrder`) is applied over the **full scan**, before
@@ -617,7 +617,7 @@ All message operations may return these JSON-RPC error codes:
 | Code   | Message                 | Description                                           |
 | ------ | ----------------------- | ----------------------------------------------------- |
 | -32000 | Thunderbird not running | Thunderbird application is not active                 |
-| -32001 | Extension not installed | Thunderbird MCP extension not found                   |
+| -32001 | Extension not installed | Zileo MCP — Thunderbird extension not found           |
 | -32002 | Permission denied       | Required permission not granted in extension          |
 | -32003 | Resource not found      | Message, folder, or account not found                 |
 | -32004 | Operation timeout       | Operation exceeded timeout limit                      |

@@ -1,6 +1,6 @@
-# @thunderbird-mcp/server
+# @zileo-mcp-thunderbird/server
 
-MCP server component of [Thunderbird-MCP](../README.md): exposes 56 MCP tools
+MCP server component of [Zileo MCP — Thunderbird](../README.md): exposes 56 MCP tools
 and 6 resources over stdio, and talks to the Thunderbird extension through the
 WebSocket bridge (`bridge-standalone.ts`, port 9876).
 

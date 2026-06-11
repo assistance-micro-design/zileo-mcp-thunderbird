@@ -1,9 +1,9 @@
-# Thunderbird MCP Server
+# Zileo MCP — Thunderbird
 
-[![Version](https://img.shields.io/badge/version-1.3.1-orange)](https://github.com/assistance-micro-design/thunderbird-mcp)
+[![Version](https://img.shields.io/badge/version-1.4.0-orange)](https://github.com/assistance-micro-design/zileo-mcp-thunderbird)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
-[![Status](https://img.shields.io/badge/status-beta-yellow)](https://github.com/assistance-micro-design/thunderbird-mcp)
-[![MCP Tools](https://img.shields.io/badge/MCP_tools-56-green)](https://github.com/assistance-micro-design/thunderbird-mcp)
+[![Status](https://img.shields.io/badge/status-beta-yellow)](https://github.com/assistance-micro-design/zileo-mcp-thunderbird)
+[![MCP Tools](https://img.shields.io/badge/MCP_tools-56-green)](https://github.com/assistance-micro-design/zileo-mcp-thunderbird)
 
 > Model Context Protocol (MCP) server for Thunderbird email client integration. This project enables AI assistants to interact with Thunderbird through a standardized protocol.
 
@@ -13,12 +13,12 @@
 
 ## Beta Warning
 
-| Risk | Description |
-|------|-------------|
-| Data Loss | This tool can perform destructive operations (delete, move, modify) on emails, contacts, calendar events, and tasks. These actions cannot be undone. |
-| AI Autonomy | When used with AI assistants, the AI may execute actions based on its interpretation of your requests. Always verify destructive operations before confirming. |
-| Breaking Changes | The MCP protocol and this implementation may change without notice during the beta phase. |
-| No Warranty | This software is provided "AS IS" without warranty of any kind. See the [LICENSE](LICENSE) for details. |
+| Risk             | Description                                                                                                                                                    |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Data Loss        | This tool can perform destructive operations (delete, move, modify) on emails, contacts, calendar events, and tasks. These actions cannot be undone.           |
+| AI Autonomy      | When used with AI assistants, the AI may execute actions based on its interpretation of your requests. Always verify destructive operations before confirming. |
+| Breaking Changes | The MCP protocol and this implementation may change without notice during the beta phase.                                                                      |
+| No Warranty      | This software is provided "AS IS" without warranty of any kind. See the [LICENSE](LICENSE) for details.                                                        |
 
 **Recommendation**: Back up your Thunderbird profile before first use. Test in a separate Thunderbird profile before connecting to production data. The Docker deployment is the recommended setup (process isolation, reproducible builds).
 
@@ -105,19 +105,20 @@ The Docker deployment provides process isolation and a multi-client architecture
 1. Clone and build:
 
 ```bash
-git clone https://github.com/assistance-micro-design/thunderbird-mcp.git
-cd thunderbird-mcp
+git clone https://github.com/assistance-micro-design/zileo-mcp-thunderbird.git
+cd zileo-mcp-thunderbird
 docker compose build
 ```
 
 2. Start the bridge server:
 
 ```bash
+cp .env.example .env   # optional — every variable has a safe default
 docker compose up -d
 ```
 
 3. Install the Thunderbird extension:
-   - Download the latest `thunderbird-mcp-x.y.z.xpi` from [GitHub Releases](https://github.com/assistance-micro-design/thunderbird-mcp/releases), or build it from the sources with `npm run package:extension` (output in `releases/`)
+   - Download the latest `zileo-mcp-thunderbird-x.y.z.xpi` from [GitHub Releases](https://github.com/assistance-micro-design/zileo-mcp-thunderbird/releases), or build it from the sources with `npm run package:extension` (output in `releases/`)
    - Open Thunderbird
    - Go to Tools > Add-ons and Themes
    - Click the gear icon > Install Add-on From File
@@ -151,8 +152,8 @@ curl http://localhost:9876/health
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/assistance-micro-design/thunderbird-mcp.git
-cd thunderbird-mcp
+git clone https://github.com/assistance-micro-design/zileo-mcp-thunderbird.git
+cd zileo-mcp-thunderbird
 ```
 
 2. Install dependencies and build:
@@ -176,7 +177,7 @@ Add the following to your MCP client configuration.
   "mcpServers": {
     "thunderbird": {
       "command": "node",
-      "args": ["/path/to/thunderbird-mcp/server/dist/index.js"],
+      "args": ["/path/to/zileo-mcp-thunderbird/server/dist/index.js"],
       "env": {
         "THUNDERBIRD_PORT": "9876",
         "LOG_LEVEL": "info"
@@ -186,17 +187,7 @@ Add the following to your MCP client configuration.
 }
 ```
 
-**Zileo Chat** (Settings > MCP Servers):
-
-```
-Name:    thunderbird
-Command: node
-Args:    /path/to/thunderbird-mcp/server/dist/index.js
-Env:     THUNDERBIRD_PORT=9876
-         LOG_LEVEL=info
-```
-
-Any MCP-compatible client can connect using the same `command` and `args` pattern.
+Any MCP-compatible client can connect using the same `command` and `args` pattern. For Zileo Chat, see [Use This MCP Server in Zileo Chat](#use-this-mcp-server-in-zileo-chat).
 
 ### MCP Client Configuration (Docker)
 
@@ -209,26 +200,19 @@ For Docker deployment, the container runs a standalone WebSocket bridge. MCP cli
   "mcpServers": {
     "thunderbird": {
       "command": "docker",
-      "args": ["exec", "-i", "thunderbird-mcp-server", "node", "dist/index.js"],
+      "args": [
+        "exec",
+        "-i",
+        "zileo-mcp-thunderbird-server",
+        "node",
+        "dist/index.js"
+      ],
       "env": {
         "LOG_LEVEL": "info"
       }
     }
   }
 }
-```
-
-**Zileo Chat** (Settings > MCP Servers):
-
-```
-Name:    thunderbird
-Command: docker
-Args:    exec
-         -i
-         thunderbird-mcp-server
-         node
-         dist/index.js
-Env:     LOG_LEVEL=info
 ```
 
 > **Important:** The container must be running (`docker compose up -d`) before starting the MCP client.
@@ -241,6 +225,46 @@ The MCP server automatically detects the running bridge and connects as a client
 | ------------------ | ----------------------------------------- | ------- |
 | `THUNDERBIRD_PORT` | WebSocket port for Thunderbird connection | 9876    |
 | `LOG_LEVEL`        | Logging level (debug, info, warn, error)  | info    |
+
+A `.env.example` template is provided — copy it to `.env` and adjust if needed. Every variable has a safe default.
+
+## Use This MCP Server in Zileo Chat
+
+This is a Model Context Protocol (MCP) server. To connect it to
+[Zileo Chat](https://github.com/assistance-micro-design/zileo-chat):
+
+**Prerequisites**: Docker Desktop running, the bridge container started
+(`docker compose up -d`), and the Thunderbird extension installed (see
+[Installation](#installation)).
+
+### Docker stdio transport — `docker exec` into the Compose-managed container
+
+The Compose stack keeps the container alive (`stdin_open: true`) and Zileo Chat
+attaches to it:
+
+1. In Zileo Chat: **Settings → MCP → Add server**.
+2. Fill in:
+   - **Name**: `thunderbird`
+   - **Command / Transport**: `Docker`
+   - **Args** (one per line):
+     ```
+     exec
+     -i
+     zileo-mcp-thunderbird-server
+     node
+     dist/index.js
+     ```
+   - **Env** (optional): `LOG_LEVEL = info`
+3. **Save**, then **Test** the connection — the discovered tools appear on the server card.
+
+> Zileo Chat hardens the Docker spawn. The invocation must start with `run` (or
+> `exec`); global flags before the subcommand are refused. Bind-mount sources must
+> be a named volume or a data sub-directory — host system paths (`/etc`, `/usr`,
+> `/var`, …), the host root, a bare home directory, and the Docker socket are all
+> refused, as are `--privileged`, `--network=host`, `--device`, `--cap-add`,
+> `--gpus`, `--env-file`, `--volumes-from`, and similar isolation-weakening flags.
+> This server is compatible by design: it runs unprivileged over stdio (`-i`) with
+> no bind mounts (logs live in the named Docker volume `zileo-mcp-thunderbird-logs`).
 
 ## Usage
 
@@ -386,7 +410,7 @@ Claude: [Uses thunderbird_events_create with appropriate parameters]
 ### Project Structure
 
 ```
-thunderbird-mcp/
+zileo-mcp-thunderbird/
 ├── server/                    # MCP server implementation
 │   ├── src/
 │   │   ├── index.ts          # Entry point
@@ -450,7 +474,7 @@ npm run lint
 - [API Documentation](./docs/api/) - Tool and resource reference
 - [Architecture](./docs/architecture/) - System design and diagrams
 - [Guides](./docs/guides/) - Installation and setup guides
-- [Tool Catalog](./docs/thunderbird-mcp-tools.md) - Full inventory of the 56 MCP tools
+- [Tool Catalog](./docs/zileo-mcp-thunderbird-tools.md) - Full inventory of the 56 MCP tools
 - [WebExtension Experiments Contribution](./docs/contribution-webext-experiments.md) - Calendar experimental API integration notes
 
 ## Security
@@ -471,15 +495,15 @@ See [SECURITY.md](SECURITY.md) for the full security policy.
 All 56 MCP tools are classified into three risk tiers, enforced both by the
 MCP server and by the WebSocket bridge:
 
-| Tier | Tools | Default | Examples |
-|------|-------|---------|----------|
-| `read` | 23 | **Enabled** | list, get, search |
-| `modify` | 25 | **Enabled** | create, update, move, copy, archive |
-| `destructive` | 8 | **Disabled** | delete, send |
+| Tier          | Tools | Default      | Examples                            |
+| ------------- | ----- | ------------ | ----------------------------------- |
+| `read`        | 23    | **Enabled**  | list, get, search                   |
+| `modify`      | 25    | **Enabled**  | create, update, move, copy, archive |
+| `destructive` | 8     | **Disabled** | delete, send                        |
 
 Destructive tools (every `*_delete` plus `compose_send`) are **disabled by
 default**: enable them per tool in the extension options page
-(Add-ons Manager > Thunderbird MCP Server > Options), which also offers
+(Add-ons Manager > Zileo MCP — Thunderbird > Options), which also offers
 bulk presets (Read Only, Read + Modify, Enable All). Changes apply
 immediately — no restart needed.
 
@@ -520,7 +544,7 @@ Third-party dependencies and their licenses are documented in [THIRD_PARTY_LICEN
 
 ## Support
 
-- GitHub Issues: [Report bugs or request features](https://github.com/assistance-micro-design/thunderbird-mcp/issues)
+- GitHub Issues: [Report bugs or request features](https://github.com/assistance-micro-design/zileo-mcp-thunderbird/issues)
 - Documentation: [docs/](./docs/)
 
 ## Contributing

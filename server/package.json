@@ -1,12 +1,12 @@
 {
-  "name": "@thunderbird-mcp/server",
+  "name": "@zileo-mcp-thunderbird/server",
   "version": "1.4.0",
-  "description": "MCP Server component for Thunderbird MCP",
+  "description": "MCP Server component for Zileo MCP — Thunderbird",
   "license": "Apache-2.0",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "thunderbird-mcp": "dist/index.js"
+    "zileo-mcp-thunderbird": "dist/index.js"
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",

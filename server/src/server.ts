@@ -1,3 +1,19 @@
+/*
+ * Copyright 2025-2026 Assistance Micro Design
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 /**
  * MCP Server Configuration
  * Configures the Model Context Protocol server for Thunderbird
@@ -56,7 +72,7 @@ export class ThunderbirdMcpServer {
     // Create MCP server instance
     this.server = new Server(
       {
-        name: "thunderbird-mcp",
+        name: "zileo-mcp-thunderbird",
         version: SERVER_VERSION,
       },
       {
@@ -205,7 +221,7 @@ export class ThunderbirdMcpServer {
    * Start the MCP server
    */
   async start(): Promise<void> {
-    logger.info("Starting Thunderbird MCP Server");
+    logger.info("Starting Zileo MCP — Thunderbird");
 
     try {
       // Initialize WebSocket bridge for Thunderbird communication
@@ -246,7 +262,7 @@ export class ThunderbirdMcpServer {
    * Stop the MCP server
    */
   async stop(): Promise<void> {
-    logger.info("Stopping Thunderbird MCP Server");
+    logger.info("Stopping Zileo MCP — Thunderbird");
     await stopWebSocketBridge();
     await this.server.close();
   }

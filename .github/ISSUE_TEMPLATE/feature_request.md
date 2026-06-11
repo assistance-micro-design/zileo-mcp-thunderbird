@@ -1,6 +1,6 @@
 ---
 name: Feature Request
-about: Suggest a new feature for Thunderbird-MCP
+about: Suggest a new feature for Zileo MCP — Thunderbird
 title: "[Feature] "
 labels: enhancement
 assignees: ""

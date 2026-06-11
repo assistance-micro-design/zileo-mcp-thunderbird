@@ -1,6 +1,6 @@
 # Extension Installation Guide
 
-Detailed guide for installing and configuring the Thunderbird MCP extension.
+Detailed guide for installing and configuring the Zileo MCP — Thunderbird extension.
 
 ## Overview
 
@@ -19,8 +19,8 @@ The Thunderbird extension is a **MailExtension (Manifest V3)** that:
 
 ### Method 1: From GitHub Releases (Recommended)
 
-1. Download the latest `thunderbird-mcp-x.y.z.xpi` asset from
-   [GitHub Releases](https://github.com/assistance-micro-design/thunderbird-mcp/releases)
+1. Download the latest `zileo-mcp-thunderbird-x.y.z.xpi` asset from
+   [GitHub Releases](https://github.com/assistance-micro-design/zileo-mcp-thunderbird/releases)
 
 2. (Alternative — build the package from the sources)
 
@@ -30,7 +30,7 @@ The Thunderbird extension is a **MailExtension (Manifest V3)** that:
 
    This zips the **content** of `extension/` (manifest.json at the root of
    the archive, as Thunderbird requires) into
-   `releases/thunderbird-mcp-<version>.xpi`. No signing is required for
+   `releases/zileo-mcp-thunderbird-<version>.xpi`. No signing is required for
    Thunderbird add-ons installed from file.
 
 3. Open Thunderbird
@@ -82,7 +82,7 @@ If using a custom port, the extension automatically reads the port from the serv
 ### Check Extension Status
 
 1. Go to **Tools** > **Add-ons and Themes**
-2. Find "Thunderbird MCP" in the list
+2. Find "Zileo MCP — Thunderbird" in the list
 3. Verify it shows as "Enabled"
 
 ### Check Connection
@@ -105,20 +105,20 @@ curl http://localhost:9876/health
 
 The extension requires these permissions:
 
-| Permission            | Purpose                                  |
-| --------------------- | ---------------------------------------- |
-| `messagesRead`        | Read email messages                      |
-| `messagesMove`        | Move, copy, and delete messages          |
-| `messagesUpdate`      | Update message properties (flags)        |
-| `messagesTags`        | Create and manage tags                   |
-| `messagesTagsList`    | List available tags                      |
-| `accountsRead`        | Read account information                 |
-| `accountsFolders`     | Manage folder structure                  |
-| `addressBooks`        | Access contacts and address books        |
-| `alarms`              | Keep-alive mechanism (MV3)               |
-| `compose`             | Create and manage compose windows        |
-| `compose.save`        | Save drafts and templates                |
-| `storage`             | Extension state storage                  |
+| Permission         | Purpose                           |
+| ------------------ | --------------------------------- |
+| `messagesRead`     | Read email messages               |
+| `messagesMove`     | Move, copy, and delete messages   |
+| `messagesUpdate`   | Update message properties (flags) |
+| `messagesTags`     | Create and manage tags            |
+| `messagesTagsList` | List available tags               |
+| `accountsRead`     | Read account information          |
+| `accountsFolders`  | Manage folder structure           |
+| `addressBooks`     | Access contacts and address books |
+| `alarms`           | Keep-alive mechanism (MV3)        |
+| `compose`          | Create and manage compose windows |
+| `compose.save`     | Save drafts and templates         |
+| `storage`          | Extension state storage           |
 
 ### Experimental APIs
 
@@ -177,7 +177,7 @@ Calendar and tasks functionality uses `experiment_apis` in the manifest (not a p
 1. **Check server logs:**
 
    ```bash
-   docker compose logs -f thunderbird-mcp
+   docker compose logs -f zileo-mcp-thunderbird
    ```
 
 2. **Restart Thunderbird:**
@@ -235,7 +235,7 @@ The extension does not auto-update. Updates must be installed manually.
 ## Uninstalling
 
 1. Open **Tools** > **Add-ons and Themes**
-2. Find "Thunderbird MCP"
+2. Find "Zileo MCP — Thunderbird"
 3. Click the three-dot menu
 4. Select **Remove**
 5. Confirm removal
@@ -262,4 +262,4 @@ extension/
 
 - [Quick Start](./quick-start.md) - Complete setup guide
 - [Docker Setup](./docker-setup.md) - Docker deployment
-- [Tools Reference](../thunderbird-mcp-tools.md) - Available tools
+- [Tools Reference](../zileo-mcp-thunderbird-tools.md) - Available tools

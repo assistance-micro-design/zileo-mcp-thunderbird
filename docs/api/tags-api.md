@@ -1,6 +1,6 @@
 # Tags API Documentation
 
-This document describes all MCP tools for email tag/label operations in the Thunderbird MCP Server.
+This document describes all MCP tools for email tag/label operations in the Zileo MCP — Thunderbird.
 
 ## Overview
 
@@ -173,11 +173,11 @@ Modifies the display name and/or color of an existing tag. At least one of `tag`
 
 #### Parameters
 
-| Name    | Type   | Required | Description                       |
-| ------- | ------ | -------- | --------------------------------- |
+| Name    | Type   | Required | Description                             |
+| ------- | ------ | -------- | --------------------------------------- |
 | `key`   | string | Yes      | Key of the tag to update (max 50 chars) |
-| `tag`   | string | No       | New display name (1-100 chars)    |
-| `color` | string | No       | New color in hex format (#RRGGBB) |
+| `tag`   | string | No       | New display name (1-100 chars)          |
+| `color` | string | No       | New color in hex format (#RRGGBB)       |
 
 **Note**: At least one of `tag` or `color` must be provided.
 
@@ -249,8 +249,8 @@ Permanently removes a tag. The tag is also removed from all messages that had it
 
 #### Parameters
 
-| Name  | Type   | Required | Description              |
-| ----- | ------ | -------- | ------------------------ |
+| Name  | Type   | Required | Description                             |
+| ----- | ------ | -------- | --------------------------------------- |
 | `key` | string | Yes      | Key of the tag to delete (max 50 chars) |
 
 #### Response Format
@@ -296,7 +296,7 @@ All tag operations may return these error codes:
 | Code   | Message                 | Description                                     |
 | ------ | ----------------------- | ----------------------------------------------- |
 | -32000 | Thunderbird not running | Thunderbird application is not active           |
-| -32001 | Extension not installed | Thunderbird MCP extension not found             |
+| -32001 | Extension not installed | Zileo MCP — Thunderbird extension not found     |
 | -32002 | Permission denied       | messagesTags permission not granted             |
 | -32003 | Resource not found      | Tag key does not exist                          |
 | -32602 | Invalid params          | Invalid key format, color format, or empty name |

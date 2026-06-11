@@ -1,6 +1,6 @@
 ---
 name: Bug Report
-about: Report a bug in Thunderbird-MCP
+about: Report a bug in Zileo MCP — Thunderbird
 title: "[Bug] "
 labels: bug
 assignees: ""
@@ -15,7 +15,7 @@ A clear description of the bug.
 - **OS**: (e.g., Ubuntu 24.04, Windows 11, macOS 14)
 - **Node.js version**: (e.g., 20.10.0)
 - **Thunderbird version**: (e.g., 128.0)
-- **Thunderbird-MCP version**: (e.g., 1.3.1)
+- **Zileo MCP — Thunderbird version**: (e.g., 1.3.1)
 - **MCP Client**: (e.g., Claude Desktop, custom client)
 
 ## Steps to Reproduce

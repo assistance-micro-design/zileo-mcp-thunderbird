@@ -1,8 +1,8 @@
-# Thunderbird MCP Server - Architecture Overview
+# Zileo MCP — Thunderbird — Architecture Overview
 
 ## System Overview
 
-The Thunderbird MCP Server exposes Thunderbird email client functionality to AI models through the Model Context Protocol (MCP). The architecture is a three-layer WebSocket-based design with clear separation between the MCP server, WebSocket bridge, and Thunderbird extension.
+The Zileo MCP — Thunderbird exposes Thunderbird email client functionality to AI models through the Model Context Protocol (MCP). The architecture is a three-layer WebSocket-based design with clear separation between the MCP server, WebSocket bridge, and Thunderbird extension.
 
 ## High-Level Architecture
 
@@ -91,25 +91,25 @@ sequenceDiagram
 
 ## Security Model
 
-| Layer | Mechanism |
-|-------|-----------|
-| Network | Localhost-only binding (127.0.0.1) |
-| Authentication | 32-byte random token on WebSocket upgrade (SEC-WS-001) |
-| Origin | Allowlist: localhost, moz-extension:// (SEC-WS-003) |
-| Payload | Max 5 MiB per message (SEC-WS-002) |
-| Validation | Zod schemas on all tool inputs |
-| Permissions | Extension manifest declares granular Thunderbird permissions |
-| Data | Headers-only by default; full body on explicit request |
-| Errors | Stack traces never sent to clients; sensitive data at DEBUG level only |
+| Layer          | Mechanism                                                              |
+| -------------- | ---------------------------------------------------------------------- |
+| Network        | Localhost-only binding (127.0.0.1)                                     |
+| Authentication | 32-byte random token on WebSocket upgrade (SEC-WS-001)                 |
+| Origin         | Allowlist: localhost, moz-extension:// (SEC-WS-003)                    |
+| Payload        | Max 5 MiB per message (SEC-WS-002)                                     |
+| Validation     | Zod schemas on all tool inputs                                         |
+| Permissions    | Extension manifest declares granular Thunderbird permissions           |
+| Data           | Headers-only by default; full body on explicit request                 |
+| Errors         | Stack traces never sent to clients; sensitive data at DEBUG level only |
 
 ## Key Architectural Decisions
 
-| Decision | Rationale |
-|----------|-----------|
+| Decision                        | Rationale                                                              |
+| ------------------------------- | ---------------------------------------------------------------------- |
 | WebSocket over Native Messaging | Bidirectional, connection-aware, auto-reconnect, no platform manifests |
-| Three-layer architecture | Independent evolution, testability, transport flexibility |
-| TypeScript for server | Type safety, Zod integration, better tooling |
-| Experimental Calendar API | Official calendar APIs not yet in stable Thunderbird WebExtensions |
+| Three-layer architecture        | Independent evolution, testability, transport flexibility              |
+| TypeScript for server           | Type safety, Zod integration, better tooling                           |
+| Experimental Calendar API       | Official calendar APIs not yet in stable Thunderbird WebExtensions     |
 
 ## Docker Architecture (Multi-Client)
 
@@ -127,19 +127,19 @@ graph TB
     MCP2[MCP Client #2<br/>docker exec] -->|WebSocket| PathMCP
 ```
 
-Container runs only the bridge. MCP clients connect via `docker exec -i thunderbird-mcp-server node dist/index.js`. Auto-detection: if bridge exists on port, MCP server connects as client.
+Container runs only the bridge. MCP clients connect via `docker exec -i zileo-mcp-thunderbird-server node dist/index.js`. Auto-detection: if bridge exists on port, MCP server connects as client.
 
 ## Technology Stack
 
-| Layer | Technology |
-|-------|-----------|
-| MCP Server | Node.js 20+ / TypeScript |
-| SDK | @modelcontextprotocol/sdk |
-| Validation | Zod |
-| Logging | Winston |
-| WebSocket | ws library (server), Browser API (extension) |
-| Extension | Manifest V3 MailExtension, JavaScript ES6+ |
-| Data Storage | SQLite, mbox, ICS (Thunderbird native) |
+| Layer        | Technology                                   |
+| ------------ | -------------------------------------------- |
+| MCP Server   | Node.js 20+ / TypeScript                     |
+| SDK          | @modelcontextprotocol/sdk                    |
+| Validation   | Zod                                          |
+| Logging      | Winston                                      |
+| WebSocket    | ws library (server), Browser API (extension) |
+| Extension    | Manifest V3 MailExtension, JavaScript ES6+   |
+| Data Storage | SQLite, mbox, ICS (Thunderbird native)       |
 
 ## Extensibility
 

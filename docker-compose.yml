@@ -1,4 +1,4 @@
-# Thunderbird MCP Server - Docker Compose Configuration
+# Zileo MCP — Thunderbird — Docker Compose Configuration
 #
 # Architecture:
 #   The container runs a standalone WebSocket bridge server on port 9876.
@@ -10,22 +10,21 @@
 #   docker-compose down                               # Stop and remove
 #
 # Running MCP commands:
-#   docker exec -i thunderbird-mcp-server node dist/index.js
+#   docker exec -i zileo-mcp-thunderbird-server node dist/index.js
 #
 #   The MCP server will automatically connect to the running bridge in client mode.
 #   Multiple MCP instances can share the same bridge.
 #
 # For MCP client integration (Claude Desktop, etc.):
-#   Configure command: docker exec -i thunderbird-mcp-server node dist/index.js
-
+#   Configure command: docker exec -i zileo-mcp-thunderbird-server node dist/index.js
 
 services:
-  thunderbird-mcp:
+  zileo-mcp-thunderbird:
     build:
       context: .
       dockerfile: Dockerfile
-    image: thunderbird-mcp:latest
-    container_name: thunderbird-mcp-server
+    image: zileo-mcp-thunderbird:latest
+    container_name: zileo-mcp-thunderbird-server
 
     # Environment configuration
     environment:
@@ -41,7 +40,7 @@ services:
 
     # Volume for persistent logs
     volumes:
-      - thunderbird-mcp-logs:/app/logs
+      - zileo-mcp-thunderbird-logs:/app/logs
 
     # Resource limits
     deploy:
@@ -78,12 +77,12 @@ services:
     stdin_open: true
 
   # Optional: Development mode with hot reload
-  thunderbird-mcp-dev:
+  zileo-mcp-thunderbird-dev:
     build:
       context: .
       dockerfile: Dockerfile.dev
-    image: thunderbird-mcp:dev
-    container_name: thunderbird-mcp-dev
+    image: zileo-mcp-thunderbird:dev
+    container_name: zileo-mcp-thunderbird-dev
     profiles:
       - dev
 
@@ -98,7 +97,7 @@ services:
 
     volumes:
       - ./server/src:/app/server/src:ro
-      - thunderbird-mcp-logs:/app/logs
+      - zileo-mcp-thunderbird-logs:/app/logs
 
     # Same operational guarantees as production:
     # stdin open for `docker exec -i`, health check, resource limits.
@@ -130,7 +129,7 @@ services:
       - mcp-network
 
 volumes:
-  thunderbird-mcp-logs:
+  zileo-mcp-thunderbird-logs:
     driver: local
 
 networks:

@@ -1,6 +1,6 @@
 # Compose API Documentation
 
-This document describes all MCP tools for email composition operations in the Thunderbird MCP Server.
+This document describes all MCP tools for email composition operations in the Zileo MCP — Thunderbird.
 
 ## Overview
 
@@ -418,15 +418,15 @@ Sending an email is irreversible. Ensure the composition is complete and correct
 
 All compose operations may return these error codes:
 
-| Code   | Message                 | Description                               |
-| ------ | ----------------------- | ----------------------------------------- |
-| -32000 | Thunderbird not running | Thunderbird application is not active     |
-| -32001 | Extension not installed | Thunderbird MCP extension not found       |
-| -32002 | Permission denied       | compose permission not granted            |
-| -32003 | Resource not found      | Message, tab, or identity not found       |
-| -32004 | Operation timeout       | Operation exceeded timeout limit (10s)    |
-| -32602 | Invalid params          | Invalid email addresses or missing tab ID |
-| -32603 | Internal error          | Compose window closed or send failed      |
+| Code   | Message                 | Description                                 |
+| ------ | ----------------------- | ------------------------------------------- |
+| -32000 | Thunderbird not running | Thunderbird application is not active       |
+| -32001 | Extension not installed | Zileo MCP — Thunderbird extension not found |
+| -32002 | Permission denied       | compose permission not granted              |
+| -32003 | Resource not found      | Message, tab, or identity not found         |
+| -32004 | Operation timeout       | Operation exceeded timeout limit (10s)      |
+| -32602 | Invalid params          | Invalid email addresses or missing tab ID   |
+| -32603 | Internal error          | Compose window closed or send failed        |
 
 ---
 

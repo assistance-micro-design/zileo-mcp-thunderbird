@@ -1,6 +1,6 @@
 # Docker Setup Guide
 
-This guide explains how to run the Thunderbird MCP Server using Docker.
+This guide explains how to run the Zileo MCP — Thunderbird using Docker.
 
 ## Architecture Overview
 
@@ -51,7 +51,7 @@ curl http://localhost:9876/health
 # Returns: {"status":"ok","thunderbird":false,"mcpClients":0}
 
 # View logs
-docker compose logs -f thunderbird-mcp
+docker compose logs -f zileo-mcp-thunderbird
 
 # Stop the server
 docker compose down
@@ -64,7 +64,7 @@ Once the container is running, test an MCP connection:
 ```bash
 # Send an MCP initialize request
 echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"1.0.0"}}}' | \
-  docker exec -i thunderbird-mcp-server node dist/index.js
+  docker exec -i zileo-mcp-thunderbird-server node dist/index.js
 ```
 
 Expected output includes:
@@ -102,7 +102,13 @@ Configure Claude Desktop (`~/.config/Claude/claude_desktop_config.json`):
   "mcpServers": {
     "thunderbird": {
       "command": "docker",
-      "args": ["exec", "-i", "thunderbird-mcp-server", "node", "dist/index.js"],
+      "args": [
+        "exec",
+        "-i",
+        "zileo-mcp-thunderbird-server",
+        "node",
+        "dist/index.js"
+      ],
       "env": {
         "LOG_LEVEL": "info"
       }
@@ -122,7 +128,7 @@ Name:    thunderbird
 Command: docker
 Args:    exec
          -i
-         thunderbird-mcp-server
+         zileo-mcp-thunderbird-server
          node
          dist/index.js
 Env:     LOG_LEVEL=info
@@ -132,7 +138,7 @@ Env:     LOG_LEVEL=info
 
 ### How It Works
 
-1. Claude Desktop spawns `docker exec -i thunderbird-mcp-server node dist/index.js`
+1. Claude Desktop spawns `docker exec -i zileo-mcp-thunderbird-server node dist/index.js`
 2. The MCP server inside the container detects the running bridge
 3. It fetches an auth token via `GET http://127.0.0.1:9876/auth/token`
 4. It connects to `ws://127.0.0.1:9876/mcp?token=xxx` as a client
@@ -141,13 +147,13 @@ Env:     LOG_LEVEL=info
 
 ## Endpoints
 
-| Endpoint                          | Protocol  | Purpose                        |
-| --------------------------------- | --------- | ------------------------------ |
-| `ws://localhost:9876/`            | WebSocket | Thunderbird extension (single) |
-| `ws://localhost:9876/thunderbird` | WebSocket | Thunderbird extension (alias)  |
-| `ws://localhost:9876/mcp`         | WebSocket | MCP clients (multiple)         |
-| `http://localhost:9876/health`    | HTTP      | Health check endpoint          |
-| `http://localhost:9876/auth/token`| HTTP      | Auth token for WebSocket auth  |
+| Endpoint                           | Protocol  | Purpose                        |
+| ---------------------------------- | --------- | ------------------------------ |
+| `ws://localhost:9876/`             | WebSocket | Thunderbird extension (single) |
+| `ws://localhost:9876/thunderbird`  | WebSocket | Thunderbird extension (alias)  |
+| `ws://localhost:9876/mcp`          | WebSocket | MCP clients (multiple)         |
+| `http://localhost:9876/health`     | HTTP      | Health check endpoint          |
+| `http://localhost:9876/auth/token` | HTTP      | Auth token for WebSocket auth  |
 
 All WebSocket endpoints require a valid auth token as query parameter (`?token=xxx`). The token is fetched from `GET /auth/token` and validated on every upgrade request.
 
@@ -182,7 +188,7 @@ If you need the container to share the host network:
 
 ```yaml
 services:
-  thunderbird-mcp:
+  zileo-mcp-thunderbird:
     network_mode: host
 ```
 
@@ -204,10 +210,10 @@ Logs are stored in a Docker volume:
 
 ```bash
 # View log volume
-docker volume inspect thunderbird-mcp_thunderbird-mcp-logs
+docker volume inspect zileo-mcp-thunderbird_zileo-mcp-thunderbird-logs
 
 # Access logs inside container
-docker compose exec thunderbird-mcp cat /app/logs/combined.log
+docker compose exec zileo-mcp-thunderbird cat /app/logs/combined.log
 ```
 
 ### Development Mounts
@@ -225,7 +231,7 @@ volumes:
 
 ```bash
 # Check logs
-docker compose logs thunderbird-mcp
+docker compose logs zileo-mcp-thunderbird
 
 # Common issues:
 # - Port 9876 already in use
@@ -252,7 +258,7 @@ websocat ws://localhost:9876/health 2>/dev/null || echo "Not a WebSocket endpoin
 curl -v http://localhost:9876/health
 
 # Check bridge logs
-docker compose logs --tail=50 thunderbird-mcp
+docker compose logs --tail=50 zileo-mcp-thunderbird
 ```
 
 ### MCP client can't connect
@@ -275,20 +281,20 @@ docker compose logs --tail=50 thunderbird-mcp
 
 ```bash
 # Build production image
-docker build -t thunderbird-mcp:latest .
+docker build -t zileo-mcp-thunderbird:latest .
 
 # Build with specific version tag
-docker build -t thunderbird-mcp:1.3.1 .
+docker build -t zileo-mcp-thunderbird:1.3.1 .
 ```
 
 ### Push to registry
 
 ```bash
 # Tag for registry
-docker tag thunderbird-mcp:latest your-registry/thunderbird-mcp:latest
+docker tag zileo-mcp-thunderbird:latest your-registry/zileo-mcp-thunderbird:latest
 
 # Push
-docker push your-registry/thunderbird-mcp:latest
+docker push your-registry/zileo-mcp-thunderbird:latest
 ```
 
 ## Resource Limits
@@ -339,10 +345,10 @@ docker compose down
 docker compose logs -f
 
 # Shell access
-docker compose exec thunderbird-mcp sh
+docker compose exec zileo-mcp-thunderbird sh
 
 # Run MCP command
-docker exec -i thunderbird-mcp-server node dist/index.js
+docker exec -i zileo-mcp-thunderbird-server node dist/index.js
 
 # Restart
 docker compose restart

@@ -1,9 +1,9 @@
 {
-  "name": "@thunderbird-mcp/extension",
+  "name": "@zileo-mcp-thunderbird/extension",
   "version": "1.4.0",
-  "description": "Thunderbird WebExtension for Thunderbird MCP",
+  "description": "Thunderbird WebExtension for Zileo MCP — Thunderbird",
   "private": true,
   "scripts": {
-    "package": "rm -f ../releases/thunderbird-mcp-${npm_package_version}.xpi && mkdir -p ../releases && zip -qr ../releases/thunderbird-mcp-${npm_package_version}.xpi . -x 'package.json' -x '*.xpi' -x '.*' -x 'node_modules/*' && echo \"Packaged releases/thunderbird-mcp-${npm_package_version}.xpi\""
+    "package": "rm -f ../releases/zileo-mcp-thunderbird-${npm_package_version}.xpi && mkdir -p ../releases && zip -qr ../releases/zileo-mcp-thunderbird-${npm_package_version}.xpi . -x 'package.json' -x '*.xpi' -x '.*' -x 'node_modules/*' && echo \"Packaged releases/zileo-mcp-thunderbird-${npm_package_version}.xpi\""
   }
 }

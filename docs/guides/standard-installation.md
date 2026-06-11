@@ -21,8 +21,8 @@ npm --version    # Should be v10.x or higher
 ### Step 1: Clone Repository
 
 ```bash
-git clone https://github.com/assistance-micro-design/thunderbird-mcp.git
-cd thunderbird-mcp
+git clone https://github.com/assistance-micro-design/zileo-mcp-thunderbird.git
+cd zileo-mcp-thunderbird
 ```
 
 ### Step 2: Install Dependencies
@@ -44,7 +44,7 @@ This compiles the TypeScript server code.
 ### Step 4: Install Thunderbird Extension
 
 1. Get the extension package:
-   - download the latest `thunderbird-mcp-x.y.z.xpi` from [GitHub Releases](https://github.com/assistance-micro-design/thunderbird-mcp/releases), or
+   - download the latest `zileo-mcp-thunderbird-x.y.z.xpi` from [GitHub Releases](https://github.com/assistance-micro-design/zileo-mcp-thunderbird/releases), or
    - build it from the sources: `npm run package:extension` (output in `releases/`)
 2. Open Thunderbird
 3. Navigate to **Tools** > **Add-ons and Themes**
@@ -64,7 +64,7 @@ Edit `~/.config/Claude/claude_desktop_config.json`:
   "mcpServers": {
     "thunderbird": {
       "command": "node",
-      "args": ["/absolute/path/to/thunderbird-mcp/server/dist/index.js"],
+      "args": ["/absolute/path/to/zileo-mcp-thunderbird/server/dist/index.js"],
       "env": {
         "THUNDERBIRD_PORT": "9876",
         "LOG_LEVEL": "info"
@@ -83,7 +83,7 @@ Edit `%APPDATA%\Claude\claude_desktop_config.json`:
   "mcpServers": {
     "thunderbird": {
       "command": "node",
-      "args": ["C:\\path\\to\\thunderbird-mcp\\server\\dist\\index.js"],
+      "args": ["C:\\path\\to\\zileo-mcp-thunderbird\\server\\dist\\index.js"],
       "env": {
         "THUNDERBIRD_PORT": "9876",
         "LOG_LEVEL": "info"
@@ -181,11 +181,11 @@ chmod +x server/dist/index.js
 2. Uninstall extension from Thunderbird
 3. Delete the project folder:
    ```bash
-   rm -rf thunderbird-mcp
+   rm -rf zileo-mcp-thunderbird
    ```
 
 ## Next Steps
 
 - [Extension Installation](./extension-installation.md) - Detailed extension guide
 - [Docker Setup](./docker-setup.md) - Alternative Docker deployment
-- [Tools Reference](../thunderbird-mcp-tools.md) - Available MCP tools
+- [Tools Reference](../zileo-mcp-thunderbird-tools.md) - Available MCP tools

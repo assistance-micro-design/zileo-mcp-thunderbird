@@ -1,6 +1,6 @@
 # Tasks API Documentation
 
-This document describes all MCP tools for task management operations in the Thunderbird MCP Server.
+This document describes all MCP tools for task management operations in the Zileo MCP — Thunderbird.
 
 ## Overview
 

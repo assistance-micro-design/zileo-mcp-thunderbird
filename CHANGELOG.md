@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to the Thunderbird MCP Server project will be documented in this file.
+All notable changes to the Zileo MCP — Thunderbird project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
@@ -29,7 +29,7 @@ tests-first, zero-regression strategy (389 tests, 0 npm audit vulnerability).
 
 - **License changed from MIT to Apache License 2.0.** The Apache 2.0
   license adds an explicit patent grant (Section 3) that the MIT license
-  lacks, aligning Thunderbird-MCP with the default license of the
+  lacks, aligning Zileo MCP — Thunderbird with the default license of the
   Assistance Micro Design organization. All previous releases
   (v1.0.0 through v1.3.1) remain published under MIT as released; this
   change applies prospectively from v1.4.0. See `LICENSE` for the
@@ -38,7 +38,7 @@ tests-first, zero-regression strategy (389 tests, 0 npm audit vulnerability).
 - **Message list/search responses are now pagination envelopes.**
   `thunderbird_messages_search`, `_list_unread` and `_list_recent` used to
   return a bare array; they now return `{ messages, total, hasMore,
-  scanComplete }` (and `_list` additionally echoes `limit`/`offset`).
+scanComplete }` (and `_list` additionally echoes `limit`/`offset`).
   `scanComplete: false` signals the 5000-message scan bound (`MAX_SCAN`)
   was reached — truncation is never silent.
 - `sortBy`/`sortOrder` parameters added to all 4 message listing tools
@@ -93,7 +93,7 @@ tests-first, zero-regression strategy (389 tests, 0 npm audit vulnerability).
   zombie replacement), bridge-client lifecycle, tool tiers coherence
   (server vs options.js), version coherence, logger metadata.
 - `npm run package:extension`: zips the content of `extension/` into
-  `releases/thunderbird-mcp-<version>.xpi` (manifest at the zip root).
+  `releases/zileo-mcp-thunderbird-<version>.xpi` (manifest at the zip root).
 - CI: runs on push to main and PRs; blocking coverage step
   (`@vitest/coverage-v8`), blocking `npm audit --audit-level=high`, and a
   `docker compose build` smoke job. Weekly Dependabot (npm +
@@ -190,7 +190,7 @@ tests-first, zero-regression strategy (389 tests, 0 npm audit vulnerability).
 ### Documentation
 
 - Installation docs fixed end-to-end: the four references to a
-  non-existent `releases/thunderbird-mcp-1.3.1.xpi` now point to GitHub
+  non-existent `releases/zileo-mcp-thunderbird-1.3.1.xpi` now point to GitHub
   Releases, with a documented from-source packaging procedure.
 - README gains a tool permission tiers section (read/modify/destructive,
   defaults, options UI) and the `messagesDelete` re-approval note.
@@ -217,6 +217,7 @@ tests-first, zero-regression strategy (389 tests, 0 npm audit vulnerability).
 ## [1.3.1] - 2026-02-27
 
 ### Security
+
 - Add isLocalAddress() IP check to /auth/token endpoint (SEC-REVIEW-002)
 - Patch MCP SDK vulnerability GHSA-345p-7cg4-v4c7 via npm audit fix
 - Bind standalone bridge to 127.0.0.1 by default (SEC-REVIEW-002)
@@ -231,13 +232,13 @@ tests-first, zero-regression strategy (389 tests, 0 npm audit vulnerability).
 
 Implements the top 5 priorities from the security review (score: 80/100 B+):
 
-| # | Finding | Fix |
-|---|---------|-----|
-| P1 | SEC-REVIEW-008: Docker port 0.0.0.0 | Bind to `127.0.0.1` in docker-compose.yml |
-| P2 | SEC-REVIEW-005/006: Missing .max() | Added to folders, tags, accounts schemas |
-| P3 | SEC-REVIEW-001: CORS `*` on /auth/token | Dynamic origin reflection (allowed origins only) + rate limiter (10 req/min/IP) |
-| P4 | SEC-REVIEW-009: No bridge permission check | `isToolAllowed()` in `relayRequestToThunderbird()`, error code -5 |
-| P5 | SEC-REVIEW-010/011: Log exposure + no rotation | Winston `maxsize: 10MiB, maxFiles: 5`, sensitive data removed from logs |
+| #   | Finding                                        | Fix                                                                             |
+| --- | ---------------------------------------------- | ------------------------------------------------------------------------------- |
+| P1  | SEC-REVIEW-008: Docker port 0.0.0.0            | Bind to `127.0.0.1` in docker-compose.yml                                       |
+| P2  | SEC-REVIEW-005/006: Missing .max()             | Added to folders, tags, accounts schemas                                        |
+| P3  | SEC-REVIEW-001: CORS `*` on /auth/token        | Dynamic origin reflection (allowed origins only) + rate limiter (10 req/min/IP) |
+| P4  | SEC-REVIEW-009: No bridge permission check     | `isToolAllowed()` in `relayRequestToThunderbird()`, error code -5               |
+| P5  | SEC-REVIEW-010/011: Log exposure + no rotation | Winston `maxsize: 10MiB, maxFiles: 5`, sensitive data removed from logs         |
 
 - Extension `console.log` sanitized: logs only message type+id (SEC-REVIEW-015)
 - Internal security review conducted (2026-02-27, score 80/100 B+)
@@ -274,17 +275,17 @@ Implements the top 5 priorities from the security review (score: 80/100 B+):
 
 Completes the 8-fix security plan (initial score: 72/100 B-, target: ~92/100):
 
-| Phase | Finding | Severity | Fix |
-|-------|---------|----------|-----|
-| 5 | SEC-AUTH-001 | CRITICAL | Tool authorization tier system |
-| 5 | SEC-AUTH-002 | CRITICAL | Per-tool permission toggles in extension options |
-| 4 | SEC-WS-001 | HIGH | Token-based WebSocket authentication |
-| 1 | SEC-ERR-001 | HIGH | Stack trace removed from responses |
-| 1 | SEC-ERR-002 | HIGH | Error details sanitized |
-| 3 | SEC-WS-003 | MEDIUM | Origin validation on upgrade |
-| 1 | SEC-WS-002 | MEDIUM | 5 MiB maxPayload |
-| 1 | SEC-DATA-001/002 | MEDIUM | Sensitive data in DEBUG only |
-| 2 | SEC-INPUT-001/002 | LOW | Zod .max() and .datetime() bounds |
+| Phase | Finding           | Severity | Fix                                              |
+| ----- | ----------------- | -------- | ------------------------------------------------ |
+| 5     | SEC-AUTH-001      | CRITICAL | Tool authorization tier system                   |
+| 5     | SEC-AUTH-002      | CRITICAL | Per-tool permission toggles in extension options |
+| 4     | SEC-WS-001        | HIGH     | Token-based WebSocket authentication             |
+| 1     | SEC-ERR-001       | HIGH     | Stack trace removed from responses               |
+| 1     | SEC-ERR-002       | HIGH     | Error details sanitized                          |
+| 3     | SEC-WS-003        | MEDIUM   | Origin validation on upgrade                     |
+| 1     | SEC-WS-002        | MEDIUM   | 5 MiB maxPayload                                 |
+| 1     | SEC-DATA-001/002  | MEDIUM   | Sensitive data in DEBUG only                     |
+| 2     | SEC-INPUT-001/002 | LOW      | Zod .max() and .datetime() bounds                |
 
 ---
 
@@ -447,13 +448,13 @@ Completes the 8-fix security plan (initial score: 72/100 B-, target: ~92/100):
 
 ---
 
-[Unreleased]: https://github.com/assistance-micro-design/thunderbird-mcp/compare/v1.4.0...HEAD
-[1.4.0]: https://github.com/assistance-micro-design/thunderbird-mcp/releases/tag/v1.4.0
-[1.3.1]: https://github.com/assistance-micro-design/thunderbird-mcp/releases/tag/v1.3.1
-[1.3.0]: https://github.com/assistance-micro-design/thunderbird-mcp/releases/tag/v1.3.0
-[1.2.2]: https://github.com/assistance-micro-design/thunderbird-mcp/releases/tag/v1.2.2
-[1.2.0]: https://github.com/assistance-micro-design/thunderbird-mcp/releases/tag/v1.2.0
-[1.1.2]: https://github.com/assistance-micro-design/thunderbird-mcp/releases/tag/v1.1.2
-[1.1.1]: https://github.com/assistance-micro-design/thunderbird-mcp/releases/tag/v1.1.1
-[1.1.0]: https://github.com/assistance-micro-design/thunderbird-mcp/releases/tag/v1.1.0
-[1.0.0]: https://github.com/assistance-micro-design/thunderbird-mcp/releases/tag/v1.0.0
+[Unreleased]: https://github.com/assistance-micro-design/zileo-mcp-thunderbird/compare/v1.4.0...HEAD
+[1.4.0]: https://github.com/assistance-micro-design/zileo-mcp-thunderbird/releases/tag/v1.4.0
+[1.3.1]: https://github.com/assistance-micro-design/zileo-mcp-thunderbird/releases/tag/v1.3.1
+[1.3.0]: https://github.com/assistance-micro-design/zileo-mcp-thunderbird/releases/tag/v1.3.0
+[1.2.2]: https://github.com/assistance-micro-design/zileo-mcp-thunderbird/releases/tag/v1.2.2
+[1.2.0]: https://github.com/assistance-micro-design/zileo-mcp-thunderbird/releases/tag/v1.2.0
+[1.1.2]: https://github.com/assistance-micro-design/zileo-mcp-thunderbird/releases/tag/v1.1.2
+[1.1.1]: https://github.com/assistance-micro-design/zileo-mcp-thunderbird/releases/tag/v1.1.1
+[1.1.0]: https://github.com/assistance-micro-design/zileo-mcp-thunderbird/releases/tag/v1.1.0
+[1.0.0]: https://github.com/assistance-micro-design/zileo-mcp-thunderbird/releases/tag/v1.0.0

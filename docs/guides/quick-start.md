@@ -1,14 +1,14 @@
 # Quick Start Guide
 
-Get Thunderbird MCP running in 5 minutes.
+Get Zileo MCP — Thunderbird running in 5 minutes.
 
 ## Option 1: Docker (Recommended)
 
 ### Step 1: Clone and Build
 
 ```bash
-git clone https://github.com/assistance-micro-design/thunderbird-mcp.git
-cd thunderbird-mcp
+git clone https://github.com/assistance-micro-design/zileo-mcp-thunderbird.git
+cd zileo-mcp-thunderbird
 docker compose build
 ```
 
@@ -20,7 +20,7 @@ docker compose up -d
 
 ### Step 3: Install Extension
 
-1. Download the latest `thunderbird-mcp-x.y.z.xpi` from [GitHub Releases](https://github.com/assistance-micro-design/thunderbird-mcp/releases) (or build it: `npm run package:extension` → `releases/`)
+1. Download the latest `zileo-mcp-thunderbird-x.y.z.xpi` from [GitHub Releases](https://github.com/assistance-micro-design/zileo-mcp-thunderbird/releases) (or build it: `npm run package:extension` → `releases/`)
 2. Open Thunderbird
 3. Go to **Tools** > **Add-ons and Themes**
 4. Click gear icon > **Install Add-on From File**
@@ -35,7 +35,13 @@ Edit `~/.config/Claude/claude_desktop_config.json`:
   "mcpServers": {
     "thunderbird": {
       "command": "docker",
-      "args": ["exec", "-i", "thunderbird-mcp-server", "node", "dist/index.js"]
+      "args": [
+        "exec",
+        "-i",
+        "zileo-mcp-thunderbird-server",
+        "node",
+        "dist/index.js"
+      ]
     }
   }
 }
@@ -59,8 +65,8 @@ Restart Claude Desktop and start using Thunderbird tools.
 ### Step 1: Clone and Build
 
 ```bash
-git clone https://github.com/assistance-micro-design/thunderbird-mcp.git
-cd thunderbird-mcp
+git clone https://github.com/assistance-micro-design/zileo-mcp-thunderbird.git
+cd zileo-mcp-thunderbird
 npm install
 npm run build
 ```
@@ -78,7 +84,7 @@ Edit `~/.config/Claude/claude_desktop_config.json`:
   "mcpServers": {
     "thunderbird": {
       "command": "node",
-      "args": ["/path/to/thunderbird-mcp/server/dist/index.js"],
+      "args": ["/path/to/zileo-mcp-thunderbird/server/dist/index.js"],
       "env": {
         "THUNDERBIRD_PORT": "9876"
       }
@@ -105,7 +111,7 @@ Claude should use `thunderbird_messages_list_unread` and return your unread mess
 
 - [Docker Setup Guide](./docker-setup.md) - Complete Docker documentation
 - [Standard Installation](./standard-installation.md) - Manual setup details
-- [Tools Reference](../thunderbird-mcp-tools.md) - All 56 available tools
+- [Tools Reference](../zileo-mcp-thunderbird-tools.md) - All 56 available tools
 
 ## Troubleshooting
 
@@ -122,7 +128,7 @@ Claude should use `thunderbird_messages_list_unread` and return your unread mess
 docker ps | grep thunderbird
 
 # View logs
-docker compose logs -f thunderbird-mcp
+docker compose logs -f zileo-mcp-thunderbird
 ```
 
 ### Claude not finding tools

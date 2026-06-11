@@ -1,4 +1,4 @@
-# Thunderbird MCP Server Dockerfile
+# Zileo MCP — Thunderbird Dockerfile
 # Multi-stage build for optimized production image
 
 # Version injected into OCI labels (kept in sync by version-coherence.test.ts)
@@ -38,11 +38,11 @@ FROM ${NODE_IMAGE} AS production
 ARG APP_VERSION
 
 # Add labels for container identification
-LABEL org.opencontainers.image.title="Thunderbird MCP Server"
+LABEL org.opencontainers.image.title="Zileo MCP — Thunderbird"
 LABEL org.opencontainers.image.description="MCP Server for Thunderbird email client integration"
 LABEL org.opencontainers.image.version="${APP_VERSION}"
 LABEL org.opencontainers.image.vendor="Assistance Micro Design"
-LABEL org.opencontainers.image.source="https://github.com/assistance-micro-design/thunderbird-mcp"
+LABEL org.opencontainers.image.source="https://github.com/assistance-micro-design/zileo-mcp-thunderbird"
 
 # Create non-root user for security
 RUN addgroup -g 1001 -S mcp && \

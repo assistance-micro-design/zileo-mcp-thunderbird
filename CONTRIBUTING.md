@@ -1,6 +1,6 @@
-# Contributing to Thunderbird-MCP
+# Contributing to Zileo MCP — Thunderbird
 
-Thank you for your interest in contributing to Thunderbird-MCP.
+Thank you for your interest in contributing to Zileo MCP — Thunderbird.
 
 Please read our [Code of Conduct](CODE_OF_CONDUCT.md) before participating.
 
@@ -17,8 +17,8 @@ Please read our [Code of Conduct](CODE_OF_CONDUCT.md) before participating.
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/assistance-micro-design/thunderbird-mcp.git
-   cd thunderbird-mcp
+   git clone https://github.com/assistance-micro-design/zileo-mcp-thunderbird.git
+   cd zileo-mcp-thunderbird
    ```
 
 2. Install dependencies:
@@ -46,7 +46,7 @@ Please read our [Code of Conduct](CODE_OF_CONDUCT.md) before participating.
 - All functions must have explicit parameter and return types
 - Use Zod schemas for input validation on all tool handlers
 - Use `executeToolHandler()` from `tools/tool-handler.ts` for standard handlers
-- Follow MCP protocol conventions (snake_case tool names with `thunderbird_` prefix)
+- Follow MCP protocol conventions (snake*case tool names with `thunderbird*` prefix)
 
 ### Logging
 
@@ -77,7 +77,7 @@ return {
 ## Project Structure
 
 ```
-thunderbird-mcp/
+zileo-mcp-thunderbird/
 ├── server/           # MCP server (TypeScript)
 │   ├── src/
 │   │   ├── tools/    # MCP tool handlers

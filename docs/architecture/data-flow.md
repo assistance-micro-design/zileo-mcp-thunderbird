@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document details the data flows through the Thunderbird MCP system, illustrating how requests travel from MCP clients through the server, WebSocket bridge, and Thunderbird extension to access email data.
+This document details the data flows through the Zileo MCP — Thunderbird system, illustrating how requests travel from MCP clients through the server, WebSocket bridge, and Thunderbird extension to access email data.
 
 ## MCP Lifecycle Flow
 
@@ -61,7 +61,7 @@ sequenceDiagram
     }
   },
   "serverInfo": {
-    "name": "thunderbird-mcp",
+    "name": "zileo-mcp-thunderbird",
     "version": "1.3.1"
   },
   "tools": 56,

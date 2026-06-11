@@ -1,6 +1,6 @@
 # Architecture Documentation
 
-Comprehensive architecture documentation for the Thunderbird MCP Server project.
+Comprehensive architecture documentation for the Zileo MCP — Thunderbird project.
 
 ## Documents
 
@@ -90,7 +90,7 @@ Topics covered:
 - Security considerations
 - Troubleshooting and debugging
 - Performance optimization
-Start here for: Understanding WebSocket bridge implementation and connection management.
+  Start here for: Understanding WebSocket bridge implementation and connection management.
 
 ## Architecture Overview Diagram
 
@@ -231,7 +231,7 @@ overview.md
 ### Project Structure
 
 ```
-Thunderbird-mcp/
+zileo-mcp-thunderbird/
 ├── docs/
 │   ├── architecture/          ← You are here
 │   ├── api/                   API reference

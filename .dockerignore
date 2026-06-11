@@ -1,4 +1,4 @@
-# Docker ignore file for Thunderbird MCP
+# Docker ignore file for Zileo MCP — Thunderbird
 
 # Dependencies
 node_modules/

@@ -1,3 +1,19 @@
+/*
+ * Copyright 2025-2026 Assistance Micro Design
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 /**
  * Tool Authorization Tiers
  * SEC-AUTH-001, SEC-AUTH-002: Classifies MCP tools by risk level
@@ -179,7 +195,7 @@ export function buildToolDeniedResult(toolName: string): ToolCallResult {
     content: [
       {
         type: "text",
-        text: `Error ${denied.code}: ${denied.message} — Tool "${toolName}" is disabled (tier: ${tier}). Enable it in the Thunderbird extension options (Add-ons Manager > Thunderbird MCP Server > Options).`,
+        text: `Error ${denied.code}: ${denied.message} — Tool "${toolName}" is disabled (tier: ${tier}). Enable it in the Thunderbird extension options (Add-ons Manager > Zileo MCP — Thunderbird > Options).`,
       },
     ],
     isError: true,

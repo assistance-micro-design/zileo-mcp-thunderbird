@@ -1,6 +1,6 @@
 # Calendar API Documentation
 
-This document describes all MCP tools for calendar and event operations in the Thunderbird MCP Server.
+This document describes all MCP tools for calendar and event operations in the Zileo MCP — Thunderbird.
 
 **EXPERIMENTAL**: This API uses the experimental `browser.calendar` WebExtension API (webext-experiments) and may change in future Thunderbird versions.
 
@@ -368,16 +368,16 @@ Modifies event properties with support for updating single instances or entire r
 
 #### Parameters
 
-| Name          | Type     | Required | Default | Description                                      |
-| ------------- | -------- | -------- | ------- | ------------------------------------------------ |
-| `eventId`     | string   | Yes      | -       | ID of the event to update                        |
-| `calendarId`  | string   | Yes      | -       | ID of the calendar containing the event          |
-| `title`       | string   | No       | -       | New title (1-500 characters)                     |
-| `start`       | string   | No       | -       | New start date/time (ISO 8601)                   |
-| `end`         | string   | No       | -       | New end date/time (ISO 8601)                     |
-| `location`    | string   | No       | -       | New location (max 500 characters)                |
-| `description` | string   | No       | -       | New description                                  |
-| `attendees`   | string[] | No       | -       | New attendee list (email addresses)              |
+| Name          | Type     | Required | Default | Description                             |
+| ------------- | -------- | -------- | ------- | --------------------------------------- |
+| `eventId`     | string   | Yes      | -       | ID of the event to update               |
+| `calendarId`  | string   | Yes      | -       | ID of the calendar containing the event |
+| `title`       | string   | No       | -       | New title (1-500 characters)            |
+| `start`       | string   | No       | -       | New start date/time (ISO 8601)          |
+| `end`         | string   | No       | -       | New end date/time (ISO 8601)            |
+| `location`    | string   | No       | -       | New location (max 500 characters)       |
+| `description` | string   | No       | -       | New description                         |
+| `attendees`   | string[] | No       | -       | New attendee list (email addresses)     |
 
 > Note: recurring events are updated as a whole. A per-occurrence `scope`
 > parameter existed in older versions but was removed on 2026-05-16: the
@@ -486,10 +486,10 @@ Removes an event from the calendar with support for deleting single or multiple 
 
 #### Parameters
 
-| Name         | Type   | Required | Default | Description                                      |
-| ------------ | ------ | -------- | ------- | ------------------------------------------------ |
-| `eventId`    | string | Yes      | -       | ID of the event to delete                        |
-| `calendarId` | string | Yes      | -       | ID of the calendar containing the event          |
+| Name         | Type   | Required | Default | Description                             |
+| ------------ | ------ | -------- | ------- | --------------------------------------- |
+| `eventId`    | string | Yes      | -       | ID of the event to delete               |
+| `calendarId` | string | Yes      | -       | ID of the calendar containing the event |
 
 #### Response Format
 
@@ -538,7 +538,7 @@ All calendar operations may return these error codes:
 | Code   | Message                 | Description                                                      |
 | ------ | ----------------------- | ---------------------------------------------------------------- |
 | -32000 | Thunderbird not running | Thunderbird application is not active                            |
-| -32001 | Extension not installed | Thunderbird MCP extension not found                              |
+| -32001 | Extension not installed | Zileo MCP — Thunderbird extension not found                      |
 | -32002 | Permission denied       | Calendar permission not granted                                  |
 | -32003 | Resource not found      | Calendar, event, or task not found                               |
 | -32004 | Operation timeout       | Operation exceeded timeout limit (10s)                           |

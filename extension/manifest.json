@@ -4,11 +4,11 @@
   "description": "__MSG_extensionDescription__",
   "version": "1.4.0",
   "author": "Assistance Micro Design",
-  "homepage_url": "https://github.com/assistance-micro-design/thunderbird-mcp",
+  "homepage_url": "https://github.com/assistance-micro-design/zileo-mcp-thunderbird",
 
   "browser_specific_settings": {
     "gecko": {
-      "id": "thunderbird-mcp@assistance-micro-design.com",
+      "id": "zileo-mcp-thunderbird@assistance-micro-design.fr",
       "strict_min_version": "128.0"
     }
   },

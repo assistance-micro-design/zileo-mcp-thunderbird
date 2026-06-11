@@ -1,6 +1,6 @@
 # Contacts API Documentation
 
-This document describes all MCP tools for contact and address book operations in the Thunderbird MCP Server.
+This document describes all MCP tools for contact and address book operations in the Zileo MCP — Thunderbird.
 
 ## Overview
 
@@ -22,10 +22,10 @@ Performs a search for contacts matching the query string against name, email, an
 
 #### Parameters
 
-| Name            | Type   | Required | Description                                           |
-| --------------- | ------ | -------- | ----------------------------------------------------- |
-| `query`         | string | Yes      | Search term to match against contact fields           |
-| `addressBookId` | string | No       | Specific address book to search within (omit for all) |
+| Name            | Type   | Required | Description                                                 |
+| --------------- | ------ | -------- | ----------------------------------------------------------- |
+| `query`         | string | Yes      | Search term to match against contact fields                 |
+| `addressBookId` | string | No       | Specific address book to search within (omit for all)       |
 | `limit`         | number | No       | Maximum number of results to return (default: 50, max: 500) |
 
 #### Response Format
@@ -99,11 +99,11 @@ Retrieves a paginated list of contacts from an address book.
 
 #### Parameters
 
-| Name            | Type   | Required | Description                                                    |
-| --------------- | ------ | -------- | -------------------------------------------------------------- |
-| `addressBookId` | string | Yes      | ID of the address book to list contacts from                   |
+| Name            | Type   | Required | Description                                                   |
+| --------------- | ------ | -------- | ------------------------------------------------------------- |
+| `addressBookId` | string | Yes      | ID of the address book to list contacts from                  |
 | `limit`         | number | No       | Maximum number of contacts to return (default: 100, max: 500) |
-| `offset`        | number | No       | Number of contacts to skip for pagination (default: 0)         |
+| `offset`        | number | No       | Number of contacts to skip for pagination (default: 0)        |
 
 #### Response Format
 
@@ -577,7 +577,7 @@ All contact operations may return these error codes:
 | Code   | Message                 | Description                                                  |
 | ------ | ----------------------- | ------------------------------------------------------------ |
 | -32000 | Thunderbird not running | Thunderbird application is not active                        |
-| -32001 | Extension not installed | Thunderbird MCP extension not found                          |
+| -32001 | Extension not installed | Zileo MCP — Thunderbird extension not found                  |
 | -32002 | Permission denied       | addressBooks permission not granted                          |
 | -32003 | Resource not found      | Contact or address book not found                            |
 | -32004 | Operation timeout       | Operation exceeded timeout limit (10s)                       |

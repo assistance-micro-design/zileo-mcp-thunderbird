@@ -1,4 +1,4 @@
-# Thunderbird MCP Server - Development Dockerfile
+# Zileo MCP — Thunderbird — Development Dockerfile
 # With hot-reload support for development
 
 # Base image pinned by digest (same as production Dockerfile)

@@ -1,6 +1,6 @@
 # Accounts API Documentation
 
-This document describes all MCP tools for account and identity operations in the Thunderbird MCP Server.
+This document describes all MCP tools for account and identity operations in the Zileo MCP — Thunderbird.
 
 ## Overview
 
@@ -103,8 +103,8 @@ Retrieves complete account details including server configuration, folder struct
 
 #### Parameters
 
-| Name        | Type   | Required | Description                      |
-| ----------- | ------ | -------- | -------------------------------- |
+| Name        | Type   | Required | Description                                      |
+| ----------- | ------ | -------- | ------------------------------------------------ |
 | `accountId` | string | Yes      | Unique identifier of the account (max 200 chars) |
 
 #### Response Format
@@ -188,8 +188,8 @@ Retrieves all configured identities for a specific account. Identities define th
 
 #### Parameters
 
-| Name        | Type   | Required | Description                       |
-| ----------- | ------ | -------- | --------------------------------- |
+| Name        | Type   | Required | Description                                       |
+| ----------- | ------ | -------- | ------------------------------------------------- |
 | `accountId` | string | Yes      | Account ID to list identities for (max 200 chars) |
 
 #### Response Format
@@ -260,14 +260,14 @@ Retrieves all configured identities for a specific account. Identities define th
 
 All account operations may return these error codes:
 
-| Code   | Message                 | Description                           |
-| ------ | ----------------------- | ------------------------------------- |
-| -32000 | Thunderbird not running | Thunderbird application is not active |
-| -32001 | Extension not installed | Thunderbird MCP extension not found   |
-| -32002 | Permission denied       | accountsRead permission not granted   |
-| -32003 | Resource not found      | Account or identity not found         |
-| -32602 | Invalid params          | Missing or invalid accountId          |
-| -32603 | Internal error          | Unexpected error accessing accounts   |
+| Code   | Message                 | Description                                 |
+| ------ | ----------------------- | ------------------------------------------- |
+| -32000 | Thunderbird not running | Thunderbird application is not active       |
+| -32001 | Extension not installed | Zileo MCP — Thunderbird extension not found |
+| -32002 | Permission denied       | accountsRead permission not granted         |
+| -32003 | Resource not found      | Account or identity not found               |
+| -32602 | Invalid params          | Missing or invalid accountId                |
+| -32603 | Internal error          | Unexpected error accessing accounts         |
 
 ---
 

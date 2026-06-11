@@ -1,12 +1,12 @@
-# @thunderbird-mcp/extension
+# @zileo-mcp-thunderbird/extension
 
 Thunderbird MailExtension (Manifest V3) component of
-[Thunderbird-MCP](../README.md): connects to the WebSocket bridge on
+[Zileo MCP — Thunderbird](../README.md): connects to the WebSocket bridge on
 `localhost:9876` and executes `messenger.*` API calls routed by
 `routing/handler.js`.
 
 ```bash
-npm run package    # builds ../releases/thunderbird-mcp-<version>.xpi
+npm run package    # builds ../releases/zileo-mcp-thunderbird-<version>.xpi
 ```
 
 Install the packaged `.xpi` via Thunderbird > Tools > Add-ons and Themes >

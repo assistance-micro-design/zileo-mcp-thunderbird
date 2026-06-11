@@ -1,5 +1,5 @@
 {
-  "name": "thunderbird-mcp",
+  "name": "zileo-mcp-thunderbird",
   "version": "1.4.0",
   "description": "MCP Server for Thunderbird email client",
   "type": "module",
@@ -17,7 +17,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/assistance-micro-design/thunderbird-mcp"
+    "url": "https://github.com/assistance-micro-design/zileo-mcp-thunderbird"
   },
   "author": "Assistance Micro Design",
   "license": "Apache-2.0",
@@ -45,8 +45,8 @@
     "ai-assistant",
     "webextension"
   ],
-  "homepage": "https://github.com/assistance-micro-design/thunderbird-mcp#readme",
+  "homepage": "https://github.com/assistance-micro-design/zileo-mcp-thunderbird#readme",
   "bugs": {
-    "url": "https://github.com/assistance-micro-design/thunderbird-mcp/issues"
+    "url": "https://github.com/assistance-micro-design/zileo-mcp-thunderbird/issues"
   }
 }

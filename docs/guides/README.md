@@ -1,6 +1,6 @@
-# Thunderbird MCP Guides
+# Zileo MCP — Thunderbird Guides
 
-User guides for installing and configuring Thunderbird MCP Server.
+User guides for installing and configuring Zileo MCP — Thunderbird.
 
 ## Available Guides
 
@@ -38,6 +38,6 @@ See [Docker Setup Guide](./docker-setup.md) for details.
 
 ## Quick Links
 
-- [Tools Reference](../thunderbird-mcp-tools.md) - All 56 MCP tools
+- [Tools Reference](../zileo-mcp-thunderbird-tools.md) - All 56 MCP tools
 - [API Documentation](../api/) - Detailed API reference
 - [Architecture](../architecture/) - System design

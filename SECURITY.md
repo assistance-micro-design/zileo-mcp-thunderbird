@@ -4,15 +4,16 @@
 
 | Version | Supported |
 | ------- | --------- |
-| 1.3.x   | Yes       |
-| < 1.3   | No        |
+| 1.4.x   | Yes       |
+| < 1.4   | No        |
 
 ## Reporting a Vulnerability
 
 **Do NOT create public GitHub issues for security vulnerabilities.**
 
 Please report vulnerabilities via:
-- [GitHub Security Advisories](https://github.com/assistance-micro-design/thunderbird-mcp/security/advisories/new)
+
+- [GitHub Security Advisories](https://github.com/assistance-micro-design/zileo-mcp-thunderbird/security/advisories/new)
 
 We will respond within 7 days and work with you to understand and resolve the issue.
 
@@ -26,38 +27,38 @@ We will respond within 7 days and work with you to understand and resolve the is
 
 ### In Scope
 
-Security issues in Thunderbird-MCP code that we will triage and fix:
+Security issues in Zileo MCP — Thunderbird code that we will triage and fix:
 
-| Area | Examples |
-|------|----------|
-| MCP Server | Command injection, unauthorized tool execution, input validation bypass, tier system bypass |
-| WebSocket Bridge | Authentication bypass, origin validation bypass, payload attacks, token leakage |
-| Tool Authorization | Permission escalation across read/modify/destructive tiers |
-| Extension | Handler injection, storage manipulation, XSS in options UI |
-| Docker Deployment | Container escape, unintended port exposure, privilege escalation |
-| Logging | Sensitive data leakage in logs (email content, subjects, addresses) |
+| Area               | Examples                                                                                    |
+| ------------------ | ------------------------------------------------------------------------------------------- |
+| MCP Server         | Command injection, unauthorized tool execution, input validation bypass, tier system bypass |
+| WebSocket Bridge   | Authentication bypass, origin validation bypass, payload attacks, token leakage             |
+| Tool Authorization | Permission escalation across read/modify/destructive tiers                                  |
+| Extension          | Handler injection, storage manipulation, XSS in options UI                                  |
+| Docker Deployment  | Container escape, unintended port exposure, privilege escalation                            |
+| Logging            | Sensitive data leakage in logs (email content, subjects, addresses)                         |
 
 ### Out of Scope
 
 Vulnerabilities in upstream components must be reported to their maintainers:
 
-| Area | Report To |
-|------|-----------|
-| Thunderbird core | [Thunderbird Security](https://www.thunderbird.net/en-US/security/) |
-| MCP SDK | [MCP SDK Security](https://github.com/modelcontextprotocol/typescript-sdk/security) |
-| Node.js runtime | [Node.js Security](https://nodejs.org/en/security) |
-| Docker engine | [Docker Security](https://www.docker.com/security/) |
+| Area             | Report To                                                                           |
+| ---------------- | ----------------------------------------------------------------------------------- |
+| Thunderbird core | [Thunderbird Security](https://www.thunderbird.net/en-US/security/)                 |
+| MCP SDK          | [MCP SDK Security](https://github.com/modelcontextprotocol/typescript-sdk/security) |
+| Node.js runtime  | [Node.js Security](https://nodejs.org/en/security)                                  |
+| Docker engine    | [Docker Security](https://www.docker.com/security/)                                 |
 
 ### Not Applicable
 
 The following are documented design decisions, not vulnerabilities:
 
-| Class | Why it is not in scope |
-|-------|------------------------|
-| Destructive operations exposed to AI | By design, gated behind the `destructive` permission tier disabled by default. Users opt in explicitly via the extension options page. |
+| Class                                       | Why it is not in scope                                                                                                                                                            |
+| ------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Destructive operations exposed to AI        | By design, gated behind the `destructive` permission tier disabled by default. Users opt in explicitly via the extension options page.                                            |
 | Local network access without authentication | The bridge listens on `127.0.0.1` only. Reports requiring an attacker on `localhost` with shell access are out of scope (such an attacker already controls Thunderbird directly). |
-| MITM on non-localhost deployments | Out of the supported deployment model. Production usage must keep the bridge on localhost or behind an authenticated reverse proxy. |
-| Denial of service via legitimate API usage | Rate limiting is in place on `/auth/token`. Abuse of MCP tool calls by a permitted client is treated as a usage issue, not a CVE. |
+| MITM on non-localhost deployments           | Out of the supported deployment model. Production usage must keep the bridge on localhost or behind an authenticated reverse proxy.                                               |
+| Denial of service via legitimate API usage  | Rate limiting is in place on `/auth/token`. Abuse of MCP tool calls by a permitted client is treated as a usage issue, not a CVE.                                                 |
 
 ## Security Measures
 
