@@ -22,12 +22,12 @@
   "author": "Assistance Micro Design",
   "license": "Apache-2.0",
   "devDependencies": {
-    "@eslint/js": "^9.39.2",
-    "@types/node": "^20.0.0",
-    "eslint": "^9.0.0",
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^25.9.3",
+    "eslint": "^10.4.1",
     "globals": "^17.3.0",
-    "typescript": "^5.5.0",
-    "typescript-eslint": "^8.54.0"
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.61.0"
   },
   "overrides": {
     "hono": ">=4.12.18",
