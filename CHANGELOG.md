@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-06-11
+
 ### Added
 
 - `thunderbird_messages_get`: new optional `includeHeaders` parameter
@@ -471,7 +473,8 @@ Completes the 8-fix security plan (initial score: 72/100 B-, target: ~92/100):
 
 ---
 
-[Unreleased]: https://github.com/assistance-micro-design/zileo-mcp-thunderbird/compare/v1.4.0...HEAD
+[Unreleased]: https://github.com/assistance-micro-design/zileo-mcp-thunderbird/compare/v1.5.0...HEAD
+[1.5.0]: https://github.com/assistance-micro-design/zileo-mcp-thunderbird/releases/tag/v1.5.0
 [1.4.0]: https://github.com/assistance-micro-design/zileo-mcp-thunderbird/releases/tag/v1.4.0
 [1.3.1]: https://github.com/assistance-micro-design/zileo-mcp-thunderbird/releases/tag/v1.3.1
 [1.3.0]: https://github.com/assistance-micro-design/zileo-mcp-thunderbird/releases/tag/v1.3.0

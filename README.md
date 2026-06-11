@@ -1,6 +1,6 @@
 # Zileo MCP — Thunderbird
 
-[![Version](https://img.shields.io/badge/version-1.4.0-orange)](https://github.com/assistance-micro-design/zileo-mcp-thunderbird)
+[![Version](https://img.shields.io/badge/version-1.5.0-orange)](https://github.com/assistance-micro-design/zileo-mcp-thunderbird)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
 [![Status](https://img.shields.io/badge/status-beta-yellow)](https://github.com/assistance-micro-design/zileo-mcp-thunderbird)
 [![MCP Tools](https://img.shields.io/badge/MCP_tools-56-green)](https://github.com/assistance-micro-design/zileo-mcp-thunderbird)

@@ -1,6 +1,6 @@
 {
   "name": "zileo-mcp-thunderbird",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "description": "MCP Server for Thunderbird email client",
   "type": "module",
   "private": true,
