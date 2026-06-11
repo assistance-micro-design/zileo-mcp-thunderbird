@@ -148,7 +148,7 @@ describe("messages.ts schema hardening", () => {
       // If error, it should NOT be a Zod validation error about datetime
       if (result.isError) {
         const text = getErrorText(result);
-        expect(text).not.toContain("Invalid datetime");
+        expect(text).not.toContain("ISO 8601 with timezone offset");
         expect(text).not.toContain("invalid_string");
       }
     });
@@ -162,7 +162,7 @@ describe("messages.ts schema hardening", () => {
       });
       if (result.isError) {
         const text = getErrorText(result);
-        expect(text).not.toContain("Invalid datetime");
+        expect(text).not.toContain("ISO 8601 with timezone offset");
         expect(text).not.toContain("invalid_string");
       }
     });
@@ -513,7 +513,7 @@ describe("calendar.ts schema hardening", () => {
       });
       if (result.isError) {
         const text = getErrorText(result);
-        expect(text).not.toContain("Invalid datetime");
+        expect(text).not.toContain("ISO 8601 with timezone offset");
         expect(text).not.toContain("invalid_string");
       }
     });
@@ -787,7 +787,7 @@ describe("tasks.ts schema hardening", () => {
       });
       if (result.isError) {
         const text = getErrorText(result);
-        expect(text).not.toContain("Invalid datetime");
+        expect(text).not.toContain("ISO 8601 with timezone offset");
         expect(text).not.toContain("invalid_string");
       }
     });

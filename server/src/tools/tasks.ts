@@ -8,6 +8,7 @@ import { z } from "zod";
 import { MessageActions } from "../types/native-messaging.js";
 import type { McpTool, ToolCallResult } from "../types/mcp.js";
 import { executeToolHandler } from "./tool-handler.js";
+import { isoDatetime } from "./schema-helpers.js";
 
 // =============================================================================
 // Schemas
@@ -16,8 +17,8 @@ import { executeToolHandler } from "./tool-handler.js";
 const tasksListSchema = z.object({
   calendarId: z.string().max(200).optional(),
   completed: z.boolean().optional(),
-  dueBefore: z.string().datetime({ offset: true }).optional(),
-  dueAfter: z.string().datetime({ offset: true }).optional(),
+  dueBefore: isoDatetime().optional(),
+  dueAfter: isoDatetime().optional(),
   limit: z.number().int().positive().max(500).optional().default(100),
 });
 
@@ -29,7 +30,7 @@ const tasksGetSchema = z.object({
 const tasksCreateSchema = z.object({
   calendarId: z.string().max(200),
   title: z.string().min(1).max(500),
-  dueDate: z.string().datetime({ offset: true }).optional(),
+  dueDate: isoDatetime().optional(),
   priority: z.number().int().min(0).max(9).optional(),
   description: z.string().max(10000).optional(),
 });
@@ -38,7 +39,7 @@ const tasksUpdateSchema = z.object({
   taskId: z.string().max(200),
   calendarId: z.string().max(200),
   title: z.string().min(1).max(500).optional(),
-  dueDate: z.string().datetime({ offset: true }).optional(),
+  dueDate: isoDatetime().optional(),
   priority: z.number().int().min(0).max(9).optional(),
   description: z.string().max(10000).optional(),
   completed: z.boolean().optional(),
@@ -123,7 +124,7 @@ Example:
   Output: { tasks: [{ id: "task1", title: "Finish report",
            dueDate: "2026-01-20T17:00:00Z", priority: 1, completed: false }] }
 
-Note: optional calendarId comes from thunderbird_calendars_list. Experimental API.`,
+Note: optional calendarId comes from thunderbird_calendars_list. dueBefore/dueAfter must be ISO 8601 with offset. Experimental API.`,
     inputSchema: {
       type: "object",
       properties: {
@@ -137,11 +138,11 @@ Note: optional calendarId comes from thunderbird_calendars_list. Experimental AP
         },
         dueBefore: {
           type: "string",
-          description: "Optional: show tasks due before this date (ISO 8601)",
+          description: "Optional: show tasks due before this date (ISO 8601 with timezone offset, e.g. 2026-01-15T10:00:00Z)",
         },
         dueAfter: {
           type: "string",
-          description: "Optional: show tasks due after this date (ISO 8601)",
+          description: "Optional: show tasks due after this date (ISO 8601 with timezone offset, e.g. 2026-01-15T10:00:00Z)",
         },
         limit: {
           type: "number",
@@ -192,7 +193,7 @@ Note: calendarId comes from thunderbird_calendars_list. dueDate ISO 8601 with of
         title: { type: "string", description: "Task title (1-500 characters)" },
         dueDate: {
           type: "string",
-          description: "Due date (ISO 8601) (optional)",
+          description: "Due date (ISO 8601 with timezone offset, e.g. 2026-01-15T10:00:00Z) (optional)",
         },
         priority: {
           type: "number",
@@ -216,7 +217,7 @@ Example:
            dueDate: "2026-01-22T17:00:00Z", priority: 5 }
   Output: { id: "task1", success: true }
 
-Note: taskId comes from thunderbird_tasks_list. calendarId from thunderbird_calendars_list. Experimental API.`,
+Note: taskId comes from thunderbird_tasks_list. calendarId from thunderbird_calendars_list. dueDate must be ISO 8601 with offset. Experimental API.`,
     inputSchema: {
       type: "object",
       properties: {
@@ -225,7 +226,7 @@ Note: taskId comes from thunderbird_tasks_list. calendarId from thunderbird_cale
         title: { type: "string", description: "New title (optional)" },
         dueDate: {
           type: "string",
-          description: "New due date (ISO 8601) (optional)",
+          description: "New due date (ISO 8601 with timezone offset, e.g. 2026-01-15T10:00:00Z) (optional)",
         },
         priority: {
           type: "number",

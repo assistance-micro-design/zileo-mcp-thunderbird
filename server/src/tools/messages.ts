@@ -8,6 +8,7 @@ import { z } from "zod";
 import { MessageActions } from "../types/native-messaging.js";
 import type { McpTool, ToolCallResult } from "../types/mcp.js";
 import { executeToolHandler } from "./tool-handler.js";
+import { isoDatetime } from "./schema-helpers.js";
 
 // =============================================================================
 // Schemas
@@ -35,8 +36,8 @@ const messageSearchSchema = z.object({
   tags: z.array(z.string().max(50)).max(100).optional(),
   unread: z.boolean().optional(),
   flagged: z.boolean().optional(),
-  dateFrom: z.string().datetime({ offset: true }).optional(),
-  dateTo: z.string().datetime({ offset: true }).optional(),
+  dateFrom: isoDatetime().optional(),
+  dateTo: isoDatetime().optional(),
   folderId: z.string().max(500).optional(),
   accountId: z.string().max(200).optional(),
   limit: z.number().int().positive().max(1000).optional().default(50),
@@ -319,7 +320,7 @@ Example:
            folderId: "imap://user@host/INBOX" }],
            total: 1, hasMore: false, scanComplete: true }
 
-Note: optional folderId is obtained from thunderbird_folders_list (full URI, not "INBOX"); accountId from thunderbird_accounts_list. For unscoped "show my latest emails", prefer thunderbird_messages_list_recent. scanComplete: false means the scan stopped at the 5000-message bound, so total is a lower bound; narrow the filters for an exhaustive result.`,
+Note: optional folderId is obtained from thunderbird_folders_list (full URI, not "INBOX"); accountId from thunderbird_accounts_list. dateFrom/dateTo must be ISO 8601 with offset. For unscoped "show my latest emails", prefer thunderbird_messages_list_recent. scanComplete: false means the scan stopped at the 5000-message bound, so total is a lower bound; narrow the filters for an exhaustive result.`,
     inputSchema: {
       type: "object",
       properties: {
@@ -337,8 +338,8 @@ Note: optional folderId is obtained from thunderbird_folders_list (full URI, not
           description: "Filter by read/unread status",
         },
         flagged: { type: "boolean", description: "Filter by flagged status" },
-        dateFrom: { type: "string", description: "Start date (ISO 8601)" },
-        dateTo: { type: "string", description: "End date (ISO 8601)" },
+        dateFrom: { type: "string", description: "Start date (ISO 8601 with timezone offset, e.g. 2026-01-15T10:00:00Z)" },
+        dateTo: { type: "string", description: "End date (ISO 8601 with timezone offset, e.g. 2026-01-15T10:00:00Z)" },
         folderId: {
           type: "string",
           description:

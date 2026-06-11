@@ -4,6 +4,7 @@
  * @module utils/errors
  */
 
+import { ZodError } from "zod";
 import { JsonRpcErrorCode, McpErrorCode, JsonRpcError } from "../types/mcp.js";
 
 /**
@@ -115,6 +116,19 @@ export class OperationTimeoutError extends Error {
  * Convert a native error to JSON-RPC error
  */
 export function nativeErrorToJsonRpc(nativeError: unknown): JsonRpcError {
+  // Zod validation failures are client-input errors, not server errors:
+  // surface them as InvalidParams (-32602) with the failing field paths
+  // so the caller can self-correct.
+  if (nativeError instanceof ZodError) {
+    const details = nativeError.issues
+      .map((issue) => `${issue.path.join(".") || "(root)"}: ${issue.message}`)
+      .join("; ");
+    return createJsonRpcError(
+      JsonRpcErrorCode.InvalidParams,
+      `Invalid params: ${details}`,
+    );
+  }
+
   if (typeof nativeError === "object" && nativeError !== null) {
     const err = nativeError as Record<string, unknown>;
 

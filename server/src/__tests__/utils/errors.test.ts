@@ -4,6 +4,7 @@
  */
 
 import { describe, it, expect } from "vitest";
+import { z } from "zod";
 import {
   nativeErrorToJsonRpc,
   createInternalError,
@@ -118,6 +119,69 @@ describe("createResourceNotFoundError", () => {
     const error = createResourceNotFoundError("inbox");
     expect(error.code).toBe(-32003);
     expect(error.data).toEqual({ resource: "inbox" });
+  });
+});
+
+describe("nativeErrorToJsonRpc - ZodError mapping", () => {
+  const schema = z.object({
+    dateFrom: z.string().datetime({ offset: true }),
+    limit: z.number().int(),
+  });
+
+  function getZodError(input: unknown): z.ZodError {
+    const result = schema.safeParse(input);
+    if (result.success) {
+      throw new Error("expected validation failure");
+    }
+    return result.error;
+  }
+
+  it("should map ZodError to InvalidParams (-32602), not InternalError", () => {
+    const error = getZodError({ dateFrom: "2026-01-15", limit: 1 });
+
+    const result = nativeErrorToJsonRpc(error);
+
+    expect(result.code).toBe(-32602);
+  });
+
+  it("should produce an actionable message with the failing field path", () => {
+    const error = getZodError({ dateFrom: "2026-01-15", limit: 1 });
+
+    const result = nativeErrorToJsonRpc(error);
+
+    expect(result.message).toMatch(/^Invalid params: /);
+    expect(result.message).toContain("dateFrom");
+    // The raw stringified issues array must not be the message
+    expect(result.message).not.toMatch(/^\[/);
+  });
+
+  it("should join multiple issues with '; '", () => {
+    const error = getZodError({ dateFrom: "not-a-date", limit: 1.5 });
+
+    const result = nativeErrorToJsonRpc(error);
+
+    expect(result.message).toContain("dateFrom");
+    expect(result.message).toContain("limit");
+    expect(result.message).toContain("; ");
+  });
+
+  it("should render root-level issues as (root)", () => {
+    const rootResult = z.string().safeParse(42);
+    expect(rootResult.success).toBe(false);
+    if (rootResult.success) return;
+
+    const result = nativeErrorToJsonRpc(rootResult.error);
+
+    expect(result.code).toBe(-32602);
+    expect(result.message).toContain("(root)");
+  });
+
+  it("should not leak issue details in the data field", () => {
+    const error = getZodError({ dateFrom: "2026-01-15", limit: 1 });
+
+    const result = nativeErrorToJsonRpc(error);
+
+    expect(result.data).toBeUndefined();
   });
 });
 

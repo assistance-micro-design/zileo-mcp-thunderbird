@@ -50,6 +50,34 @@ describe("Tool descriptions format", () => {
     }
   });
 
+  it("property descriptions mentioning ISO 8601 must require the offset", () => {
+    const collectDescriptions = (
+      node: unknown,
+      path: string,
+      out: Array<{ path: string; description: string }>,
+    ): void => {
+      if (typeof node !== "object" || node === null) return;
+      const obj = node as Record<string, unknown>;
+      if (typeof obj.description === "string") {
+        out.push({ path, description: obj.description });
+      }
+      for (const [key, value] of Object.entries(obj)) {
+        if (key === "description") continue;
+        collectDescriptions(value, `${path}.${key}`, out);
+      }
+    };
+
+    for (const tool of allTools) {
+      const descriptions: Array<{ path: string; description: string }> = [];
+      collectDescriptions(tool.inputSchema, tool.name, descriptions);
+      for (const { path, description } of descriptions) {
+        if (description.includes("ISO 8601")) {
+          expect(description, path).toMatch(/offset/i);
+        }
+      }
+    }
+  });
+
   const toolsConsumingExternalIds = allTools.filter((t) => {
     const required = (t.inputSchema.required ?? []) as string[];
     return required.some((p) => ID_SUFFIX_PATTERN.test(p));

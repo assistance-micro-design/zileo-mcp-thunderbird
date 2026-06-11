@@ -25,6 +25,7 @@ vi.mock("../../utils/logger.js", () => ({
 }));
 
 import { executeToolHandler } from "../../tools/tool-handler.js";
+import { isoDatetime } from "../../tools/schema-helpers.js";
 
 describe("executeToolHandler", () => {
   beforeEach((): void => {
@@ -97,6 +98,32 @@ describe("executeToolHandler", () => {
 
     expect(result.isError).toBe(true);
     expect(mockSendRequest).not.toHaveBeenCalled();
+    const text = (result.content[0] as { text: string }).text;
+    const jsonRpcError = JSON.parse(text) as { code: number; message: string };
+    expect(jsonRpcError.code).toBe(-32602);
+    expect(jsonRpcError.message).toContain("Invalid params");
+    expect(jsonRpcError.message).toContain("id");
+  });
+
+  it("should return an actionable message for invalid datetime params", async () => {
+    const dateSchema = z.object({ dateFrom: isoDatetime().optional() });
+
+    const result = await executeToolHandler(
+      { dateFrom: "2026-01-15" }, // missing timezone offset
+      dateSchema,
+      "test.action",
+      "handleTest",
+    );
+
+    expect(result.isError).toBe(true);
+    expect(mockSendRequest).not.toHaveBeenCalled();
+    const text = (result.content[0] as { text: string }).text;
+    const jsonRpcError = JSON.parse(text) as { code: number; message: string };
+    expect(jsonRpcError.code).toBe(-32602);
+    expect(jsonRpcError.message).toContain("dateFrom");
+    expect(jsonRpcError.message).toContain(
+      "ISO 8601 with timezone offset, e.g. 2026-01-15T10:00:00Z",
+    );
   });
 
   it("should return isError when response.success is false", async () => {

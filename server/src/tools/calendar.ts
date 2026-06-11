@@ -8,6 +8,7 @@ import { z } from "zod";
 import { MessageActions } from "../types/native-messaging.js";
 import type { McpTool, ToolCallResult } from "../types/mcp.js";
 import { executeToolHandler } from "./tool-handler.js";
+import { isoDatetime } from "./schema-helpers.js";
 
 // =============================================================================
 // Schemas
@@ -22,15 +23,15 @@ const calendarsGetSchema = z.object({
 const eventsSearchSchema = z.object({
   query: z.string().max(1000).optional(),
   calendarId: z.string().max(200).optional(),
-  dateFrom: z.string().datetime({ offset: true }),
-  dateTo: z.string().datetime({ offset: true }),
+  dateFrom: isoDatetime(),
+  dateTo: isoDatetime(),
   limit: z.number().int().positive().max(500).optional().default(100),
 });
 
 const eventsListSchema = z.object({
   calendarId: z.string().max(200),
-  dateFrom: z.string().datetime({ offset: true }),
-  dateTo: z.string().datetime({ offset: true }),
+  dateFrom: isoDatetime(),
+  dateTo: isoDatetime(),
   limit: z.number().int().positive().max(500).optional().default(100),
 });
 
@@ -42,8 +43,8 @@ const eventsGetSchema = z.object({
 const eventsCreateSchema = z.object({
   calendarId: z.string().max(200),
   title: z.string().min(1).max(500),
-  start: z.string().datetime({ offset: true }),
-  end: z.string().datetime({ offset: true }),
+  start: isoDatetime(),
+  end: isoDatetime(),
   location: z.string().max(500).optional(),
   description: z.string().max(10000).optional(),
   attendees: z.array(z.string().email()).max(200).optional(),
@@ -51,7 +52,7 @@ const eventsCreateSchema = z.object({
     .object({
       frequency: z.enum(["daily", "weekly", "monthly", "yearly"]),
       interval: z.number().int().positive().optional(),
-      until: z.string().datetime({ offset: true }).optional(),
+      until: isoDatetime().optional(),
       count: z.number().int().positive().optional(),
     })
     .optional(),
@@ -65,8 +66,8 @@ const eventsUpdateSchema = z.object({
   eventId: z.string().max(200),
   calendarId: z.string().max(200),
   title: z.string().min(1).max(500).optional(),
-  start: z.string().datetime({ offset: true }).optional(),
-  end: z.string().datetime({ offset: true }).optional(),
+  start: isoDatetime().optional(),
+  end: isoDatetime().optional(),
   location: z.string().max(500).optional(),
   description: z.string().max(10000).optional(),
   attendees: z.array(z.string().email()).max(200).optional(),
@@ -75,8 +76,8 @@ const eventsUpdateSchema = z.object({
 const eventsMoveSchema = z.object({
   eventId: z.string().max(200),
   calendarId: z.string().max(200),
-  newStart: z.string().datetime({ offset: true }),
-  newEnd: z.string().datetime({ offset: true }),
+  newStart: isoDatetime(),
+  newEnd: isoDatetime(),
 });
 
 // Same rationale as eventsUpdateSchema above: `scope` was removed because
@@ -270,8 +271,8 @@ Note: optional calendarId comes from thunderbird_calendars_list. Dates must be I
           type: "string",
           description: "Optional: limit to specific calendar",
         },
-        dateFrom: { type: "string", description: "Start date (ISO 8601)" },
-        dateTo: { type: "string", description: "End date (ISO 8601)" },
+        dateFrom: { type: "string", description: "Start date (ISO 8601 with timezone offset, e.g. 2026-01-15T10:00:00Z)" },
+        dateTo: { type: "string", description: "End date (ISO 8601 with timezone offset, e.g. 2026-01-15T10:00:00Z)" },
         limit: {
           type: "number",
           description: "Maximum results (default: 100, max: 500)",
@@ -297,8 +298,8 @@ Note: calendarId comes from thunderbird_calendars_list. Dates ISO 8601 with offs
       type: "object",
       properties: {
         calendarId: { type: "string", description: "Calendar ID" },
-        dateFrom: { type: "string", description: "Start date (ISO 8601)" },
-        dateTo: { type: "string", description: "End date (ISO 8601)" },
+        dateFrom: { type: "string", description: "Start date (ISO 8601 with timezone offset, e.g. 2026-01-15T10:00:00Z)" },
+        dateTo: { type: "string", description: "End date (ISO 8601 with timezone offset, e.g. 2026-01-15T10:00:00Z)" },
         limit: {
           type: "number",
           description: "Maximum results (default: 100, max: 500)",
@@ -350,8 +351,8 @@ Note: calendarId comes from thunderbird_calendars_list. All dates ISO 8601 with 
           type: "string",
           description: "Event title (1-500 characters)",
         },
-        start: { type: "string", description: "Start date/time (ISO 8601)" },
-        end: { type: "string", description: "End date/time (ISO 8601)" },
+        start: { type: "string", description: "Start date/time (ISO 8601 with timezone offset, e.g. 2026-01-15T10:00:00Z)" },
+        end: { type: "string", description: "End date/time (ISO 8601 with timezone offset, e.g. 2026-01-15T10:00:00Z)" },
         location: {
           type: "string",
           description: "Event location (optional, max 500 chars)",
@@ -377,7 +378,7 @@ Note: calendarId comes from thunderbird_calendars_list. All dates ISO 8601 with 
               type: "number",
               description: "Interval between occurrences",
             },
-            until: { type: "string", description: "End date (ISO 8601)" },
+            until: { type: "string", description: "End date (ISO 8601 with timezone offset, e.g. 2026-01-15T10:00:00Z)" },
             count: { type: "number", description: "Number of occurrences" },
           },
           required: ["frequency"],
@@ -404,11 +405,11 @@ Note: eventId comes from thunderbird_events_list or thunderbird_events_search. c
         title: { type: "string", description: "New title (optional)" },
         start: {
           type: "string",
-          description: "New start date/time (ISO 8601) (optional)",
+          description: "New start date/time (ISO 8601 with timezone offset, e.g. 2026-01-15T10:00:00Z) (optional)",
         },
         end: {
           type: "string",
-          description: "New end date/time (ISO 8601) (optional)",
+          description: "New end date/time (ISO 8601 with timezone offset, e.g. 2026-01-15T10:00:00Z) (optional)",
         },
         location: { type: "string", description: "New location (optional)" },
         description: {
@@ -441,9 +442,9 @@ Note: eventId comes from thunderbird_events_list or thunderbird_events_search. c
         calendarId: { type: "string", description: "Calendar ID" },
         newStart: {
           type: "string",
-          description: "New start date/time (ISO 8601)",
+          description: "New start date/time (ISO 8601 with timezone offset, e.g. 2026-01-15T10:00:00Z)",
         },
-        newEnd: { type: "string", description: "New end date/time (ISO 8601)" },
+        newEnd: { type: "string", description: "New end date/time (ISO 8601 with timezone offset, e.g. 2026-01-15T10:00:00Z)" },
       },
       required: ["eventId", "calendarId", "newStart", "newEnd"],
     },
