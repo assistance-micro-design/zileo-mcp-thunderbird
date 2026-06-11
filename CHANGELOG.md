@@ -9,6 +9,8 @@ and this project adheres to
 
 ## [Unreleased]
 
+## [1.5.1] - 2026-06-11
+
 ### Changed
 
 - Upgrade zod to v4 — validation behaviour and MCP error mapping unchanged.
@@ -515,7 +517,9 @@ Completes the 8-fix security plan (initial score: 72/100 B-, target: ~92/100):
 ---
 
 [Unreleased]:
-  https://github.com/assistance-micro-design/zileo-mcp-thunderbird/compare/v1.5.0...HEAD
+  https://github.com/assistance-micro-design/zileo-mcp-thunderbird/compare/v1.5.1...HEAD
+[1.5.1]:
+  https://github.com/assistance-micro-design/zileo-mcp-thunderbird/releases/tag/v1.5.1
 [1.5.0]:
   https://github.com/assistance-micro-design/zileo-mcp-thunderbird/releases/tag/v1.5.0
 [1.4.0]:
