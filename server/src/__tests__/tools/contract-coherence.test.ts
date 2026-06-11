@@ -9,8 +9,7 @@
  * tool is silently lying to its callers — the param goes through the wire,
  * Zod accepts it, but nothing downstream honors it. This pattern was the
  * source of three real bugs fixed on 2026-05-16 (folders.list/includeSubFolders,
- * events.update/scope, events.delete/scope), tracked in
- * docs/specs/2026-05-16_spec-silent-ignored-params.md.
+ * events.update/scope, events.delete/scope).
  *
  * Params that are legitimately consumed server-side (transformParams /
  * resolveAction in tool-handler.ts) never reach the extension and must be

@@ -44,6 +44,6 @@ WORKDIR /app/server
 USER mcp
 
 # Run the standalone bridge with tsx hot-reload.
-# Rule (docker.md): the container main process is ALWAYS the bridge —
+# Architecture rule: the container main process is ALWAYS the bridge —
 # the MCP server is started on demand via `docker exec`.
 CMD ["npx", "tsx", "watch", "src/bridge-standalone.ts"]

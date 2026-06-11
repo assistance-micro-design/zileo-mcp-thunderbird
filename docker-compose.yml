@@ -100,7 +100,7 @@ services:
       - ./server/src:/app/server/src:ro
       - thunderbird-mcp-logs:/app/logs
 
-    # Same operational guarantees as production (docker.md rules):
+    # Same operational guarantees as production:
     # stdin open for `docker exec -i`, health check, resource limits.
     stdin_open: true
 

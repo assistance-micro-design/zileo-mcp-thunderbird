@@ -60,8 +60,7 @@ const eventsCreateSchema = z.object({
 // `scope` was removed from this schema on 2026-05-16: it was accepted and
 // validated but never honored downstream. Per-occurrence overrides require
 // iCal manipulation (RECURRENCE-ID / recurrenceInfo.modifyException) — see
-// extension/experiments/calendar/ext-calendar-utils.sys.mjs and the design
-// note in docs/specs/2026-05-16_spec-silent-ignored-params.md.
+// extension/experiments/calendar/ext-calendar-utils.sys.mjs.
 const eventsUpdateSchema = z.object({
   eventId: z.string().max(200),
   calendarId: z.string().max(200),
