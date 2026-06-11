@@ -63,7 +63,7 @@ const eventsCreateSchema = z.object({
   end: isoDatetime(),
   location: z.string().max(500).optional(),
   description: z.string().max(10000).optional(),
-  attendees: z.array(z.string().email()).max(200).optional(),
+  attendees: z.array(z.email()).max(200).optional(),
   recurrence: z
     .object({
       frequency: z.enum(["daily", "weekly", "monthly", "yearly"]),
@@ -86,7 +86,7 @@ const eventsUpdateSchema = z.object({
   end: isoDatetime().optional(),
   location: z.string().max(500).optional(),
   description: z.string().max(10000).optional(),
-  attendees: z.array(z.string().email()).max(200).optional(),
+  attendees: z.array(z.email()).max(200).optional(),
 });
 
 const eventsMoveSchema = z.object({

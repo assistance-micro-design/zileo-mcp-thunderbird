@@ -32,8 +32,8 @@ export const ISO_DATETIME_MESSAGE =
 /**
  * Schema for ISO 8601 datetime strings with a mandatory timezone
  * offset (Z or +HH:MM). Same validation as
- * `z.string().datetime({ offset: true })`, with an actionable message.
+ * `z.iso.datetime({ offset: true })`, with an actionable message.
  */
-export function isoDatetime(): z.ZodString {
-  return z.string().datetime({ offset: true, message: ISO_DATETIME_MESSAGE });
+export function isoDatetime(): z.iso.ZodISODateTime {
+  return z.iso.datetime({ offset: true, error: ISO_DATETIME_MESSAGE });
 }
