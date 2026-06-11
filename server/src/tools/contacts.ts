@@ -52,7 +52,7 @@ const contactsGetSchema = z.object({
 const contactsCreateSchema = z
   .object({
     addressBookId: z.string().max(200),
-    properties: z.record(z.string().max(5000)).optional(),
+    properties: z.record(z.string(), z.string().max(5000)).optional(),
     vCard: z.string().max(50000).optional(),
   })
   .refine((data) => data.properties || data.vCard, {
@@ -63,7 +63,7 @@ const contactsCreateSchema = z
 const contactsUpdateSchema = z
   .object({
     contactId: z.string().max(200),
-    properties: z.record(z.string().max(5000)).optional(),
+    properties: z.record(z.string(), z.string().max(5000)).optional(),
     vCard: z.string().max(50000).optional(),
   })
   .refine((data) => data.properties || data.vCard, {
