@@ -73,9 +73,7 @@ function expectZodValidationError(result: ToolCallResult): void {
 describe("messages.ts schema hardening", () => {
   describe("messageSearchSchema max constraints", () => {
     it("should reject subject exceeding 1000 chars with Zod validation error", async () => {
-      const { handleMessagesSearch } = await import(
-        "../../tools/messages.js"
-      );
+      const { handleMessagesSearch } = await import("../../tools/messages.js");
       const result = await handleMessagesSearch({
         subject: strOfLen(1001),
       });
@@ -83,9 +81,7 @@ describe("messages.ts schema hardening", () => {
     });
 
     it("should reject from exceeding 500 chars with Zod validation error", async () => {
-      const { handleMessagesSearch } = await import(
-        "../../tools/messages.js"
-      );
+      const { handleMessagesSearch } = await import("../../tools/messages.js");
       const result = await handleMessagesSearch({
         from: strOfLen(501),
       });
@@ -93,9 +89,7 @@ describe("messages.ts schema hardening", () => {
     });
 
     it("should reject to exceeding 500 chars with Zod validation error", async () => {
-      const { handleMessagesSearch } = await import(
-        "../../tools/messages.js"
-      );
+      const { handleMessagesSearch } = await import("../../tools/messages.js");
       const result = await handleMessagesSearch({
         to: strOfLen(501),
       });
@@ -103,9 +97,7 @@ describe("messages.ts schema hardening", () => {
     });
 
     it("should reject body exceeding 10000 chars with Zod validation error", async () => {
-      const { handleMessagesSearch } = await import(
-        "../../tools/messages.js"
-      );
+      const { handleMessagesSearch } = await import("../../tools/messages.js");
       const result = await handleMessagesSearch({
         body: strOfLen(10001),
       });
@@ -113,9 +105,7 @@ describe("messages.ts schema hardening", () => {
     });
 
     it("should reject folderId exceeding 500 chars with Zod validation error", async () => {
-      const { handleMessagesSearch } = await import(
-        "../../tools/messages.js"
-      );
+      const { handleMessagesSearch } = await import("../../tools/messages.js");
       const result = await handleMessagesSearch({
         folderId: strOfLen(501),
       });
@@ -123,9 +113,7 @@ describe("messages.ts schema hardening", () => {
     });
 
     it("should reject accountId exceeding 200 chars with Zod validation error", async () => {
-      const { handleMessagesSearch } = await import(
-        "../../tools/messages.js"
-      );
+      const { handleMessagesSearch } = await import("../../tools/messages.js");
       const result = await handleMessagesSearch({
         accountId: strOfLen(201),
       });
@@ -135,9 +123,7 @@ describe("messages.ts schema hardening", () => {
 
   describe("messageSearchSchema datetime constraints", () => {
     it("should reject invalid dateFrom format with Zod validation error", async () => {
-      const { handleMessagesSearch } = await import(
-        "../../tools/messages.js"
-      );
+      const { handleMessagesSearch } = await import("../../tools/messages.js");
       const result = await handleMessagesSearch({
         dateFrom: "not-a-date",
       });
@@ -145,9 +131,7 @@ describe("messages.ts schema hardening", () => {
     });
 
     it("should reject invalid dateTo format with Zod validation error", async () => {
-      const { handleMessagesSearch } = await import(
-        "../../tools/messages.js"
-      );
+      const { handleMessagesSearch } = await import("../../tools/messages.js");
       const result = await handleMessagesSearch({
         dateTo: "2024/01/01",
       });
@@ -155,9 +139,7 @@ describe("messages.ts schema hardening", () => {
     });
 
     it("should accept valid ISO 8601 datetime with Z suffix", async () => {
-      const { handleMessagesSearch } = await import(
-        "../../tools/messages.js"
-      );
+      const { handleMessagesSearch } = await import("../../tools/messages.js");
       const result = await handleMessagesSearch({
         dateFrom: "2024-01-01T00:00:00Z",
       });
@@ -170,9 +152,7 @@ describe("messages.ts schema hardening", () => {
     });
 
     it("should accept valid ISO 8601 datetime with offset", async () => {
-      const { handleMessagesSearch } = await import(
-        "../../tools/messages.js"
-      );
+      const { handleMessagesSearch } = await import("../../tools/messages.js");
       const result = await handleMessagesSearch({
         dateFrom: "2024-01-01T00:00:00+02:00",
       });
@@ -186,9 +166,7 @@ describe("messages.ts schema hardening", () => {
 
   describe("messagesListSchema max constraints", () => {
     it("should reject folderId exceeding 500 chars with Zod validation error", async () => {
-      const { handleMessagesList } = await import(
-        "../../tools/messages.js"
-      );
+      const { handleMessagesList } = await import("../../tools/messages.js");
       const result = await handleMessagesList({
         folderId: strOfLen(501),
       });
@@ -198,9 +176,8 @@ describe("messages.ts schema hardening", () => {
 
   describe("messagesListUnreadSchema max constraints", () => {
     it("should reject accountId exceeding 200 chars with Zod validation error", async () => {
-      const { handleMessagesListUnread } = await import(
-        "../../tools/messages.js"
-      );
+      const { handleMessagesListUnread } =
+        await import("../../tools/messages.js");
       const result = await handleMessagesListUnread({
         accountId: strOfLen(201),
       });
@@ -210,9 +187,7 @@ describe("messages.ts schema hardening", () => {
 
   describe("messagesMoveSchema max constraints", () => {
     it("should reject destinationFolderId exceeding 500 chars", async () => {
-      const { handleMessagesMove } = await import(
-        "../../tools/messages.js"
-      );
+      const { handleMessagesMove } = await import("../../tools/messages.js");
       const result = await handleMessagesMove({
         messageIds: [1],
         destinationFolderId: strOfLen(501),
@@ -223,9 +198,8 @@ describe("messages.ts schema hardening", () => {
 
   describe("messagesListRecentSchema max constraints", () => {
     it("should reject accountId exceeding 200 chars", async () => {
-      const { handleMessagesListRecent } = await import(
-        "../../tools/messages.js"
-      );
+      const { handleMessagesListRecent } =
+        await import("../../tools/messages.js");
       const result = await handleMessagesListRecent({
         accountId: strOfLen(201),
       });
@@ -263,9 +237,7 @@ describe("messages.ts schema hardening", () => {
     });
 
     it("messagesArchiveSchema: rejects more than 1000 messageIds", async () => {
-      const { handleMessagesArchive } = await import(
-        "../../tools/messages.js"
-      );
+      const { handleMessagesArchive } = await import("../../tools/messages.js");
       const result = await handleMessagesArchive({
         messageIds: tooManyIds,
       });
@@ -342,9 +314,7 @@ describe("messages.ts schema hardening", () => {
 describe("contacts.ts schema hardening", () => {
   describe("contactsSearchSchema constraints", () => {
     it("should reject query exceeding 500 chars", async () => {
-      const { handleContactsSearch } = await import(
-        "../../tools/contacts.js"
-      );
+      const { handleContactsSearch } = await import("../../tools/contacts.js");
       const result = await handleContactsSearch({
         query: strOfLen(501),
       });
@@ -352,9 +322,7 @@ describe("contacts.ts schema hardening", () => {
     });
 
     it("should reject addressBookId exceeding 200 chars", async () => {
-      const { handleContactsSearch } = await import(
-        "../../tools/contacts.js"
-      );
+      const { handleContactsSearch } = await import("../../tools/contacts.js");
       const result = await handleContactsSearch({
         query: "test",
         addressBookId: strOfLen(201),
@@ -365,9 +333,7 @@ describe("contacts.ts schema hardening", () => {
 
   describe("contactsGetSchema constraints", () => {
     it("should reject contactId exceeding 200 chars", async () => {
-      const { handleContactsGet } = await import(
-        "../../tools/contacts.js"
-      );
+      const { handleContactsGet } = await import("../../tools/contacts.js");
       const result = await handleContactsGet({
         contactId: strOfLen(201),
       });
@@ -377,9 +343,7 @@ describe("contacts.ts schema hardening", () => {
 
   describe("contactsCreateSchema constraints", () => {
     it("should reject vCard exceeding 50000 chars", async () => {
-      const { handleContactsCreate } = await import(
-        "../../tools/contacts.js"
-      );
+      const { handleContactsCreate } = await import("../../tools/contacts.js");
       const result = await handleContactsCreate({
         addressBookId: "book1",
         vCard: strOfLen(50001),
@@ -388,9 +352,7 @@ describe("contacts.ts schema hardening", () => {
     });
 
     it("should reject property values exceeding 5000 chars", async () => {
-      const { handleContactsCreate } = await import(
-        "../../tools/contacts.js"
-      );
+      const { handleContactsCreate } = await import("../../tools/contacts.js");
       const result = await handleContactsCreate({
         addressBookId: "book1",
         properties: { DisplayName: strOfLen(5001) },
@@ -399,22 +361,33 @@ describe("contacts.ts schema hardening", () => {
     });
 
     it("should reject addressBookId exceeding 200 chars", async () => {
-      const { handleContactsCreate } = await import(
-        "../../tools/contacts.js"
-      );
+      const { handleContactsCreate } = await import("../../tools/contacts.js");
       const result = await handleContactsCreate({
         addressBookId: strOfLen(201),
         properties: { DisplayName: "Test" },
       });
       expectZodValidationError(result);
     });
+
+    it("should accept a valid string-to-string properties record", async () => {
+      const { handleContactsCreate } = await import("../../tools/contacts.js");
+      const result = await handleContactsCreate({
+        addressBookId: "book1",
+        properties: { DisplayName: "Test", Email: "a@b.c" },
+      });
+      // Should pass Zod validation; runtime may fail because bridge is
+      // not initialized — that's a different error class.
+      if (result.isError) {
+        const text = getErrorText(result);
+        expect(text).not.toContain("Validation error");
+        expect(text).not.toContain("Invalid params");
+      }
+    });
   });
 
   describe("contactsDeleteSchema constraints", () => {
     it("should reject contactId exceeding 200 chars", async () => {
-      const { handleContactsDelete } = await import(
-        "../../tools/contacts.js"
-      );
+      const { handleContactsDelete } = await import("../../tools/contacts.js");
       const result = await handleContactsDelete({
         contactId: strOfLen(201),
       });
@@ -424,9 +397,8 @@ describe("contacts.ts schema hardening", () => {
 
   describe("addressBooksDeleteSchema constraints", () => {
     it("should reject addressBookId exceeding 200 chars", async () => {
-      const { handleAddressBooksDelete } = await import(
-        "../../tools/contacts.js"
-      );
+      const { handleAddressBooksDelete } =
+        await import("../../tools/contacts.js");
       const result = await handleAddressBooksDelete({
         addressBookId: strOfLen(201),
       });
@@ -442,9 +414,7 @@ describe("contacts.ts schema hardening", () => {
 describe("calendar.ts schema hardening", () => {
   describe("eventsSearchSchema datetime constraints", () => {
     it("should reject invalid dateFrom (not ISO datetime)", async () => {
-      const { handleEventsSearch } = await import(
-        "../../tools/calendar.js"
-      );
+      const { handleEventsSearch } = await import("../../tools/calendar.js");
       const result = await handleEventsSearch({
         dateFrom: "not-a-date",
         dateTo: "2024-12-31T23:59:59Z",
@@ -453,9 +423,7 @@ describe("calendar.ts schema hardening", () => {
     });
 
     it("should reject invalid dateTo (not ISO datetime)", async () => {
-      const { handleEventsSearch } = await import(
-        "../../tools/calendar.js"
-      );
+      const { handleEventsSearch } = await import("../../tools/calendar.js");
       const result = await handleEventsSearch({
         dateFrom: "2024-01-01T00:00:00Z",
         dateTo: "next-week",
@@ -466,9 +434,7 @@ describe("calendar.ts schema hardening", () => {
 
   describe("eventsSearchSchema max constraints", () => {
     it("should reject query exceeding 1000 chars (audit hardening)", async () => {
-      const { handleEventsSearch } = await import(
-        "../../tools/calendar.js"
-      );
+      const { handleEventsSearch } = await import("../../tools/calendar.js");
       const result = await handleEventsSearch({
         query: strOfLen(1001),
         dateFrom: "2024-01-01T00:00:00Z",
@@ -478,9 +444,7 @@ describe("calendar.ts schema hardening", () => {
     });
 
     it("should reject calendarId exceeding 200 chars", async () => {
-      const { handleEventsSearch } = await import(
-        "../../tools/calendar.js"
-      );
+      const { handleEventsSearch } = await import("../../tools/calendar.js");
       const result = await handleEventsSearch({
         calendarId: strOfLen(201),
         dateFrom: "2024-01-01T00:00:00Z",
@@ -492,9 +456,7 @@ describe("calendar.ts schema hardening", () => {
 
   describe("eventsCreateSchema datetime constraints", () => {
     it("should reject invalid start datetime", async () => {
-      const { handleEventsCreate } = await import(
-        "../../tools/calendar.js"
-      );
+      const { handleEventsCreate } = await import("../../tools/calendar.js");
       const result = await handleEventsCreate({
         calendarId: "cal1",
         title: "Test",
@@ -505,9 +467,7 @@ describe("calendar.ts schema hardening", () => {
     });
 
     it("should reject invalid end datetime", async () => {
-      const { handleEventsCreate } = await import(
-        "../../tools/calendar.js"
-      );
+      const { handleEventsCreate } = await import("../../tools/calendar.js");
       const result = await handleEventsCreate({
         calendarId: "cal1",
         title: "Test",
@@ -518,9 +478,7 @@ describe("calendar.ts schema hardening", () => {
     });
 
     it("should accept valid ISO datetime with offset", async () => {
-      const { handleEventsCreate } = await import(
-        "../../tools/calendar.js"
-      );
+      const { handleEventsCreate } = await import("../../tools/calendar.js");
       const result = await handleEventsCreate({
         calendarId: "cal1",
         title: "Test",
@@ -537,9 +495,7 @@ describe("calendar.ts schema hardening", () => {
 
   describe("eventsCreateSchema max constraints", () => {
     it("should reject description exceeding 10000 chars", async () => {
-      const { handleEventsCreate } = await import(
-        "../../tools/calendar.js"
-      );
+      const { handleEventsCreate } = await import("../../tools/calendar.js");
       const result = await handleEventsCreate({
         calendarId: "cal1",
         title: "Test",
@@ -551,9 +507,7 @@ describe("calendar.ts schema hardening", () => {
     });
 
     it("should reject calendarId exceeding 200 chars", async () => {
-      const { handleEventsCreate } = await import(
-        "../../tools/calendar.js"
-      );
+      const { handleEventsCreate } = await import("../../tools/calendar.js");
       const result = await handleEventsCreate({
         calendarId: strOfLen(201),
         title: "Test",
@@ -566,9 +520,7 @@ describe("calendar.ts schema hardening", () => {
 
   describe("eventsGetSchema max constraints", () => {
     it("should reject eventId exceeding 200 chars", async () => {
-      const { handleEventsGet } = await import(
-        "../../tools/calendar.js"
-      );
+      const { handleEventsGet } = await import("../../tools/calendar.js");
       const result = await handleEventsGet({
         eventId: strOfLen(201),
         calendarId: "cal1",
@@ -577,9 +529,7 @@ describe("calendar.ts schema hardening", () => {
     });
 
     it("should reject calendarId exceeding 200 chars", async () => {
-      const { handleEventsGet } = await import(
-        "../../tools/calendar.js"
-      );
+      const { handleEventsGet } = await import("../../tools/calendar.js");
       const result = await handleEventsGet({
         eventId: "evt1",
         calendarId: strOfLen(201),
@@ -590,9 +540,7 @@ describe("calendar.ts schema hardening", () => {
 
   describe("eventsMoveSchema datetime constraints", () => {
     it("should reject invalid newStart datetime", async () => {
-      const { handleEventsMove } = await import(
-        "../../tools/calendar.js"
-      );
+      const { handleEventsMove } = await import("../../tools/calendar.js");
       const result = await handleEventsMove({
         eventId: "evt1",
         calendarId: "cal1",
@@ -603,9 +551,7 @@ describe("calendar.ts schema hardening", () => {
     });
 
     it("should reject invalid newEnd datetime", async () => {
-      const { handleEventsMove } = await import(
-        "../../tools/calendar.js"
-      );
+      const { handleEventsMove } = await import("../../tools/calendar.js");
       const result = await handleEventsMove({
         eventId: "evt1",
         calendarId: "cal1",
@@ -618,9 +564,7 @@ describe("calendar.ts schema hardening", () => {
 
   describe("eventsDeleteSchema max constraints", () => {
     it("should reject eventId exceeding 200 chars", async () => {
-      const { handleEventsDelete } = await import(
-        "../../tools/calendar.js"
-      );
+      const { handleEventsDelete } = await import("../../tools/calendar.js");
       const result = await handleEventsDelete({
         eventId: strOfLen(201),
         calendarId: "cal1",
@@ -637,9 +581,7 @@ describe("calendar.ts schema hardening", () => {
 describe("compose.ts schema hardening", () => {
   describe("composeBeginNewSchema max constraints", () => {
     it("should reject subject exceeding 1000 chars", async () => {
-      const { handleComposeBeginNew } = await import(
-        "../../tools/compose.js"
-      );
+      const { handleComposeBeginNew } = await import("../../tools/compose.js");
       const result = await handleComposeBeginNew({
         subject: strOfLen(1001),
       });
@@ -647,9 +589,7 @@ describe("compose.ts schema hardening", () => {
     });
 
     it("should reject body exceeding 500000 chars", async () => {
-      const { handleComposeBeginNew } = await import(
-        "../../tools/compose.js"
-      );
+      const { handleComposeBeginNew } = await import("../../tools/compose.js");
       const result = await handleComposeBeginNew({
         body: strOfLen(500001),
       });
@@ -657,9 +597,7 @@ describe("compose.ts schema hardening", () => {
     });
 
     it("should reject identityId exceeding 200 chars", async () => {
-      const { handleComposeBeginNew } = await import(
-        "../../tools/compose.js"
-      );
+      const { handleComposeBeginNew } = await import("../../tools/compose.js");
       const result = await handleComposeBeginNew({
         identityId: strOfLen(201),
       });
@@ -667,9 +605,7 @@ describe("compose.ts schema hardening", () => {
     });
 
     it("should reject to array exceeding 200 entries", async () => {
-      const { handleComposeBeginNew } = await import(
-        "../../tools/compose.js"
-      );
+      const { handleComposeBeginNew } = await import("../../tools/compose.js");
       const emails = Array.from(
         { length: 201 },
         (_, i) => `user${i}@example.com`,
@@ -681,9 +617,7 @@ describe("compose.ts schema hardening", () => {
     });
 
     it("should reject cc array exceeding 200 entries", async () => {
-      const { handleComposeBeginNew } = await import(
-        "../../tools/compose.js"
-      );
+      const { handleComposeBeginNew } = await import("../../tools/compose.js");
       const emails = Array.from(
         { length: 201 },
         (_, i) => `cc${i}@example.com`,
@@ -695,9 +629,7 @@ describe("compose.ts schema hardening", () => {
     });
 
     it("should reject bcc array exceeding 200 entries", async () => {
-      const { handleComposeBeginNew } = await import(
-        "../../tools/compose.js"
-      );
+      const { handleComposeBeginNew } = await import("../../tools/compose.js");
       const emails = Array.from(
         { length: 201 },
         (_, i) => `bcc${i}@example.com`,
@@ -711,33 +643,29 @@ describe("compose.ts schema hardening", () => {
 
   describe("messageId / tabId integer bounds (audit hardening)", () => {
     it("composeBeginReplySchema: rejects negative messageId", async () => {
-      const { handleComposeBeginReply } = await import(
-        "../../tools/compose.js"
-      );
+      const { handleComposeBeginReply } =
+        await import("../../tools/compose.js");
       const result = await handleComposeBeginReply({ messageId: -1 });
       expectZodValidationError(result);
     });
 
     it("composeBeginReplySchema: rejects non-integer messageId", async () => {
-      const { handleComposeBeginReply } = await import(
-        "../../tools/compose.js"
-      );
+      const { handleComposeBeginReply } =
+        await import("../../tools/compose.js");
       const result = await handleComposeBeginReply({ messageId: 1.5 });
       expectZodValidationError(result);
     });
 
     it("composeBeginForwardSchema: rejects negative messageId", async () => {
-      const { handleComposeBeginForward } = await import(
-        "../../tools/compose.js"
-      );
+      const { handleComposeBeginForward } =
+        await import("../../tools/compose.js");
       const result = await handleComposeBeginForward({ messageId: -42 });
       expectZodValidationError(result);
     });
 
     it("composeGetDetailsSchema: rejects negative tabId", async () => {
-      const { handleComposeGetDetails } = await import(
-        "../../tools/compose.js"
-      );
+      const { handleComposeGetDetails } =
+        await import("../../tools/compose.js");
       const result = await handleComposeGetDetails({ tabId: -1 });
       expectZodValidationError(result);
     });
@@ -751,9 +679,8 @@ describe("compose.ts schema hardening", () => {
 
   describe("composeSetDetailsSchema max constraints", () => {
     it("should reject subject exceeding 1000 chars", async () => {
-      const { handleComposeSetDetails } = await import(
-        "../../tools/compose.js"
-      );
+      const { handleComposeSetDetails } =
+        await import("../../tools/compose.js");
       const result = await handleComposeSetDetails({
         tabId: 1,
         subject: strOfLen(1001),
@@ -762,9 +689,8 @@ describe("compose.ts schema hardening", () => {
     });
 
     it("should reject body exceeding 500000 chars", async () => {
-      const { handleComposeSetDetails } = await import(
-        "../../tools/compose.js"
-      );
+      const { handleComposeSetDetails } =
+        await import("../../tools/compose.js");
       const result = await handleComposeSetDetails({
         tabId: 1,
         body: strOfLen(500001),

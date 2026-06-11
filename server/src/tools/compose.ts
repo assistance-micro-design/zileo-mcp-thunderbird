@@ -34,12 +34,12 @@ import { executeToolHandler } from "./tool-handler.js";
  */
 export const composeBeginNewSchema = z.object({
   to: z
-    .array(z.string().email())
+    .array(z.email())
     .max(200)
     .optional()
     .describe("Recipient email addresses"),
-  cc: z.array(z.string().email()).max(200).optional().describe("CC email addresses"),
-  bcc: z.array(z.string().email()).max(200).optional().describe("BCC email addresses"),
+  cc: z.array(z.email()).max(200).optional().describe("CC email addresses"),
+  bcc: z.array(z.email()).max(200).optional().describe("BCC email addresses"),
   subject: z.string().max(1000).optional().describe("Email subject"),
   body: z.string().max(500000).optional().describe("Email body content"),
   isPlainText: z
@@ -94,12 +94,12 @@ export const composeGetDetailsSchema = z.object({
 export const composeSetDetailsSchema = z.object({
   tabId: z.number().int().nonnegative().describe("ID of the compose tab"),
   to: z
-    .array(z.string().email())
+    .array(z.email())
     .max(200)
     .optional()
     .describe("New recipient addresses"),
-  cc: z.array(z.string().email()).max(200).optional().describe("New CC addresses"),
-  bcc: z.array(z.string().email()).max(200).optional().describe("New BCC addresses"),
+  cc: z.array(z.email()).max(200).optional().describe("New CC addresses"),
+  bcc: z.array(z.email()).max(200).optional().describe("New BCC addresses"),
   subject: z.string().max(1000).optional().describe("New subject line"),
   body: z.string().max(500000).optional().describe("New body content"),
 });

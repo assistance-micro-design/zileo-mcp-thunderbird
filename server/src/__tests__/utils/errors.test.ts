@@ -140,7 +140,7 @@ describe("createResourceNotFoundError", () => {
 
 describe("nativeErrorToJsonRpc - ZodError mapping", () => {
   const schema = z.object({
-    dateFrom: z.string().datetime({ offset: true }),
+    dateFrom: z.iso.datetime({ offset: true }),
     limit: z.number().int(),
   });
 
