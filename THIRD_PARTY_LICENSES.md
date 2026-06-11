@@ -8,7 +8,7 @@ Generated: 2026-06-11
 
 ## Summary
 
-- Total packages in dependency tree: 265
+- Total packages in dependency tree: 266
 
 ### By License
 
@@ -19,7 +19,7 @@ Generated: 2026-06-11
 | BSD-2-Clause | 7 |
 | BSD-3-Clause | 7 |
 | ISC | 12 |
-| MIT | 219 |
+| MIT | 220 |
 | MPL-2.0 | 3 |
 
 All licenses observed above are permissive open-source licenses, compatible with the project's Apache License 2.0.
@@ -307,8 +307,9 @@ All resolved packages in the dependency tree (includes both runtime and developm
 | wrappy | 1.0.2 | ISC | https://github.com/npm/wrappy |
 | ws | 8.21.0 | MIT | https://github.com/websockets/ws |
 | yocto-queue | 0.1.0 | MIT | https://github.com/sindresorhus/yocto-queue |
-| @zileo-mcp-thunderbird/server | 1.5.0 | Apache-2.0 |  |
+| @zileo-mcp-thunderbird/server | 1.5.1 | Apache-2.0 |  |
 | zod | 3.25.76 | MIT | https://github.com/colinhacks/zod |
+| zod | 4.4.3 | MIT | https://github.com/colinhacks/zod |
 | zod-to-json-schema | 3.25.2 | ISC | https://github.com/StefanTerdell/zod-to-json-schema |
 
 ---
