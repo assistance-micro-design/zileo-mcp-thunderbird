@@ -283,9 +283,10 @@ content:
   (`contentType`, `name`, `partName`, `size`) but lose their `body`, so the
   presence of attachments stays visible.
 
-The default (`original`) returns bodies exactly as stored. The conversion is
-best-effort and aimed at LLM consumption; use the default or `format: "raw"`
-when exact markup matters.
+The default (`original`) returns bodies exactly as stored. `text` is the
+recommended mode for reading message content (the tool description steers
+LLM clients toward it); the conversion is best-effort, so use the default or
+`format: "raw"` when exact markup matters.
 
 #### Response Format
 

@@ -658,7 +658,7 @@ Note: optional accountId is obtained from thunderbird_accounts_list. Omit to sca
   },
   {
     name: "thunderbird_messages_get",
-    description: `Fetch one message by ID at a chosen detail level: headers (metadata only), full (with MIME parts and body), or raw (RFC 822 source). With format "full", the raw RFC 822 header map is reduced to threading headers (references, in-reply-to, reply-to, list-id) and per-part MIME headers are dropped; pass includeHeaders: true to get the complete raw header map instead. Pass bodyFormat: "text" to get plain-text bodies (existing text/plain part preferred, HTML converted server-side otherwise; attachments keep metadata without body).
+    description: `Fetch one message by ID at a chosen detail level: headers (metadata only), full (with MIME parts and body), or raw (RFC 822 source). With format "full", the raw RFC 822 header map is reduced to threading headers (references, in-reply-to, reply-to, list-id) and per-part MIME headers are dropped; pass includeHeaders: true to get the complete raw header map instead. Prefer bodyFormat: "text" when reading message content: it returns compact plain-text bodies (existing text/plain part preferred, HTML converted server-side otherwise; attachments keep metadata without body). Use the default "original" only when the exact HTML markup matters.
 
 Example:
   Input: { messageId: 42, format: "full", bodyFormat: "text" }
@@ -689,7 +689,7 @@ Note: messageId is obtained from thunderbird_messages_list, thunderbird_messages
           type: "string",
           enum: ["original", "text"],
           description:
-            "With format 'full': 'text' returns plain-text bodies (existing text/plain part preferred, HTML converted otherwise; non-text parts keep metadata only). Default: original (bodies as stored)",
+            "With format 'full': 'text' (recommended for reading content) returns plain-text bodies (existing text/plain part preferred, HTML converted otherwise; non-text parts keep metadata only). Default: original (bodies as stored), only needed when exact markup matters",
           default: "original",
         },
       },
