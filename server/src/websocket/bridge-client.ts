@@ -140,7 +140,9 @@ export class WebSocketBridgeClient extends EventEmitter {
     } catch (error) {
       const message =
         error instanceof Error ? error.message : String(error);
-      throw new Error(`Failed to authenticate with bridge: ${message}`);
+      throw new Error(`Failed to authenticate with bridge: ${message}`, {
+        cause: error,
+      });
     }
 
     return new Promise((resolve, reject) => {
